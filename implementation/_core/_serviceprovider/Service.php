@@ -1,5 +1,9 @@
 <?php
-    abstract class Service extends TFCoreFunctions{
+/**
+ * Class Service
+ *
+ */
+abstract class Service extends TFCoreFunctions{
         /**
          * name of the service
          * @var string

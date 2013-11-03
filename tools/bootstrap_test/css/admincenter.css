@@ -1,0 +1,55 @@
+body {
+    background: url(../images/interface/bg_dark.png);
+}
+
+.admincenter_header {
+    /*border-radius: 0px !important;*/
+    background: none !important;
+    margin-bottom: 0px !important;
+    border: 0px !Important;
+}
+
+.admincenter_sidebar .list-group {
+    border-radius: 0px 4px 4px 0px;
+    box-shadow: none;
+}
+
+.admincenter_sidebar .list-group .list-group-item {
+    background: none;
+    border: none;
+    color: #bbb;
+    text-shadow: 0 -1px 0 #333;
+}
+
+.admincenter_sidebar .list-group .list-group-item.active,
+.admincenter_sidebar .list-group .list-group-item:hover {
+    background: rgba(0, 0, 0, .4);
+    color: #fff;
+    text-shadow: 0 -1px 0 #333;
+}
+
+.list-group-item:first-child {
+    border-top-left-radius: 0px !important;
+}
+
+.list-group-item:last-child {
+    border-bottom-left-radius: 0px !important;
+}
+
+.admincenter_content {
+    background: white;
+    min-height: 500px;
+    height: 1000px;
+    border-radius: 4px 0px 0px 4px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 1px 5px rgba(0, 0, 0, 0.075);
+}
+
+.glyphicon-logout {
+    background-repeat: no-repeat;
+    background-position: top left;
+    background-image: url(../images/icons/icon-logout-white.png);
+}
+
+.dropdown .glyphicon-logout {
+    background: red;
+}

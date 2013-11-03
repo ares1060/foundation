@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Foundation Bootstrap admincenter test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/admincenter1.css">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Open+Sans:300">
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.1/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.1/css/bootstrap-theme.min.css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<!-- main Navigation -->
+<header>
+    <nav class="navbar navbar-static-top navbar-inverse tf_admc-main-navigation" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#tf_admc-main-navigation-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">
+                <img src="images/logo_light.png"
+                     style="margin: -15px -10px; top: 3px; position: absolute; height: 50px;"/>
+            </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="tf_admc-main-navigation-toggle">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#"><span class="glyphicon glyphicon-user" style="margin-right: 10px;"></span> Administrator</a>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><img
+                            src="images/icons/icon-view_as-white.png"/> <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Eigene Daten anzeigen</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#">Max Mustermann</a></li>
+                        <li><a href="#">Testbenutzer</a></li>
+                    </ul>
+                </li>
+                <li><a href="#"><img
+                        src="images/icons/icon-logout-white.png" style="margin-right: 10px;"/> Logout</a></li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </nav>
+</header>
+<!--<div class="container">-->
+<div class="tf_admc-main-container">
+    <!-- sidebar navigation -->
+    <div class="col-md-2" style="padding: 0px;">
+        <div class="tf_admc-main-sidebar hidden-print" role="complementary" data-spy="affix" data-offset-top="40">
+            <h4 class="header">ADMINCENTER</h4>
+            <ul class="nav tf_admc-main-sidebar-list">
+                <li><a href="#overview"><i class="icon-chevron-right"></i> Overview</a></li>
+                <li class="active"><a href="#overview"><i class="icon-chevron-right"></i> Overview 1</a></li>
+                <li><a href="#overview"><i class="icon-chevron-right"></i> Overview 2</a></li>
+                <li><a href="#overview"><i class="icon-chevron-right"></i> Overview 3</a></li>
+                <li><a href="#overview"><i class="icon-chevron-right"></i> Overview 4</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="tf_admc-main-content col-md-10" role="main">
+        <nav class="navbar navbar-default navbar-static-top tf_admc-content-navigation" role="navigation">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse"
+                        data-target="#tf_admc-content-navigation-toggle">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="tf_admc-content-navigation-toggle">
+                <ul class="nav navbar-nav navbar-left">
+                    <li class="active"><a href="#"> Tab 1</a></li>
+                    <li><a href="#"> Tab 2</a></li>
+                    <li><a href="#"> Tab 3</a></li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </nav>
+
+    </div>
+    <!--<ol class="breadcrumb">-->
+        <!--<li><a href="#">Home</a></li>-->
+        <!--<li><a href="#">Library</a></li>-->
+        <!--<li class="active">Data</li>-->
+    <!--</ol>-->
+
+</div>
+<!--</div>-->
+<!-- scripts -->
+<script src="https://code.jquery.com/jquery.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.1/js/bootstrap.min.js"></script>
+</body>
+</html>

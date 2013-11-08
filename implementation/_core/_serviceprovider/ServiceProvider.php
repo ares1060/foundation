@@ -48,11 +48,17 @@
 		 */
         private $services;
 
+		/**
+		 * @var ServiceProvider
+		 */
+        private static $instance = null;
+		
         const VERSION = '0.03A R7';
         
         public function __construct() {
         	
         	$GLOBALS['ServiceProvider'] = $this;
+			self::$instance = $this;
 			$this->services = array();
 			$this->settings = new Settings();
 			$this->services['settings'] =& $this->settings;
@@ -159,6 +165,14 @@
        	public function setup(){
        		return true;
        	}
+		
+		/**
+		 * @return ServiceProvider
+		 */
+		public static function getInstance(){
+			if(self::$instance == null) new ServiceProvider();
+			return self::$instance;
+		}
         
     }
 ?>

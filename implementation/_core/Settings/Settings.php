@@ -9,7 +9,7 @@
      * @version: version 0.1
      * @name: Settings
      */
-    class Settings extends Service implements IService {
+    class Settings extends AbstractService implements IService {
         /**
          * protected $name;
          * protected $sp;

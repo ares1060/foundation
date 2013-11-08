@@ -11,7 +11,7 @@ interface IService {
          *              'argumente...  //GET, POST
          *              );
          */
-    	y
+
     	/**
     	 * Renders a view of the Service results
     	 * @param array $args An array containing arguments

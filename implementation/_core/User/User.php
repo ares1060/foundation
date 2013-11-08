@@ -8,7 +8,7 @@
 	require_once('view/UserAdminView.php');
 	require_once('view/UserFrontView.php');
 	
-    class User extends Service implements IService  {
+    class User extends AbstractService implements IService  {
         // MVC Objects
         private $dataHelper;
         private $viewAdmin;

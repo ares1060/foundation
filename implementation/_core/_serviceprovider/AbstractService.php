@@ -3,7 +3,7 @@
  * Class Service
  *
  */
-abstract class Service extends TFCoreFunctions{
+abstract class AbstractService extends CoreService{
         /**
          * name of the service
          * @var string
@@ -25,12 +25,9 @@ abstract class Service extends TFCoreFunctions{
         public function __construct() {
         	parent::__construct();
             $this->config = array();
-            
-            // load old config file
-            if(isset($this->config_file) && $this->config_file != '') $this->loadConfig($this->config_file);
-            
-            // load new ini config 
-            if(isset($this->ini_file) && $this->ini_file != '') $this->loadConfigIni($this->ini_file, $this->name);
+
+            // load ini config 
+            if(isset($this->ini_file) && $this->ini_file != '') $this->loadConfig($this->ini_file, $this->name);
             
             // load localization
             if(isset($this->config['loc_folder']) && isset($this->sp->loc)) $this->sp->loc->loadLocalizationFile($this->config['loc_folder'], $this->name);
@@ -45,19 +42,6 @@ abstract class Service extends TFCoreFunctions{
             	
             	// preload Localization File -> fil will be loaded after initialization
             	else Localization::preloadLocalizationFolder($setting, $name);
-            }
-        }
-        
-        /**
-         * 
-         * Loads specified config file
-         * @param string $file
-         */
-        public function loadConfig($file){
-            if(is_file($file)){
-                require_once($file);
-            } else {
-            	$this->sp->msg->run(array('message'=>str_replace(array('{@pp:datei}'), array($file), $this->_('FILE_NOT_FOUND')), 'type'=>Messages::INFO));
             }
         }
         

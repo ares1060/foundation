@@ -2,7 +2,7 @@
 	require_once('classes/LocalizationHelper.php');
 	require_once('classes/POTCreator.php');
 	
-    class Localization extends Service implements IService{
+    class Localization extends AbstractService implements IService{
         protected $config_file;
         
         private $language;

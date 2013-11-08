@@ -7,7 +7,7 @@
 	 * 
 	 * @author matthias
 	 */
-	class TFCoreFunctions {
+	public abstract class CoreService {
         /**
          * @var ServiceProvider
          */
@@ -104,7 +104,7 @@
         
 		/* ------   Config functions ----- */
 	
-        protected function loadConfigIni($file, $cache = true){
+        protected function loadConfig($file, $cache = true){
         	if(is_file($file)){
         		$this->settings = $this->sp->settings->loadSettingFile($file, $this->name, $cache);
         	}

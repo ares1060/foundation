@@ -22,7 +22,7 @@
 	 *
 	 * @dependency: User
 	 */
-	class Rights extends Service implements IService  {
+	class Rights extends AbstractService implements IService  {
         
 		private $rightCache = array();
 		

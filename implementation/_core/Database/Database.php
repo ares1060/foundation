@@ -1,5 +1,5 @@
 <?php
-    class Database extends Service implements IService {
+    class Database extends AbstractService implements IService {
         private $temp;
         private $link;
         private $db;

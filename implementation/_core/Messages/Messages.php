@@ -5,7 +5,7 @@
 	 * @version: 0.1r2
      * @name: Messages
      */
-    class Messages extends Service implements IService  {
+    class Messages extends AbstractService implements IService  {
         
     	private $messages; // just needed if config[save_messages_in_session] = false
         

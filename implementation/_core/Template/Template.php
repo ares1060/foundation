@@ -1,6 +1,6 @@
 <?php
 	
-	class Template extends Service implements IService {
+	class Template extends AbstractService implements IService {
         private $templates;
         private $baseReplaces;
         
@@ -439,6 +439,10 @@
 				//split the template into chunks
 				$tplChunks = explode('{@', $tpl);
 				
+				//set localization domain
+				$domain = 'core';
+				if(isset($values['%loc_domain'])) $domain = $values['%loc_domain'];
+				
 				//split all the chunks again
 				foreach($tplChunks as &$chunk){
 					$parts = explode('}', $chunk, 2);
@@ -447,6 +451,7 @@
 					if(preg_match('/[^a-zA-Z0-9_]+/', $name[1]) < 1){
 						if($this->_setting('render.cache_level') == 1){
 							if($name[0] == 'pp') $chunk = '\'.@$values[\''.@$name[1].'\'].\''.@$parts[1];
+							else if($name[0] == 'loc' || $name[0] == 'lpp') $chunk = '\'.@ServiceProvider::getInstance()->loc->translate('.$name[1].', '.$domain.')[\''.@$name[1].'\'].\''.@$parts[1];
 							else if($name[0] == 'get' || $name[0] == 'GET') $chunk = '\'.@$_GET[\''.@$name[1].'\'].\''.@$parts[1];
 							else if($name[0] == 'post' || $name[0] == 'POST') $chunk = '\'.@$_POST[\''.@$name[1].'\'].\''.@$parts[1];
 							else if($name[0] == 'server' || $name[0] == 'SERVER') $chunk = '\'.@$_SERVER[\''.@$name[1].'\'].\''.@$parts[1];
@@ -454,6 +459,7 @@
 							else if($name[0] == 'globals' || $name[0] == 'GLOBALS') $chunk = '\'.@$GLOBALS[\''.@$name[1].'\'].\''.@$parts[1];
 						} else {
 							if($name[0] == 'pp') $chunk = @$values[$name[1]].@$parts[1];
+							else if($name[0] == 'loc' || $name[0] == 'lpp') $chunk = @$this->sp->loc->translate($name[1], $domain).@$parts[1];
 							else if($name[0] == 'get' || $name[0] == 'GET') $chunk = @$_GET[$name[1]].@$parts[1];
 							else if($name[0] == 'post' || $name[0] == 'POST') $chunk = @$_POST[$name[1]].@$parts[1];
 							else if($name[0] == 'server' || $name[0] == 'SERVER') $chunk = @$_SERVER[$name[1]].@$parts[1];

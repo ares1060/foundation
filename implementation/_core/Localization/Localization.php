@@ -30,35 +30,23 @@
         }
         public function getSettings() { return $this->settings; }
         
-        public function view($args){return ''; }
-        public function admin($args){ return ''; }
-        
-        public function run($args){
-        	$folder = (isset($args['folder'])) ? $args['folder'] : '';
-        	$lang = (isset($args['lang'])) ? $args['lang'] : '';
-        	$domain = (isset($args['domain'])) ? $args['domain'] : '';
-        	$action = (isset($args['action'])) ? $args['action'] : '';
-        	
-            switch($action){
-            	case 'load':
-            		return $this->loadLocalizationFile($folder, $domain, $lang);
-            		break;
-            }
-            return false;
-        }
-        
         /**
          *  $args['str'] ... string 
          */
-        public function data($args){
-            $service = (isset($args['service'])) ? $args['service'] : 'core';
+        public function render($args){
+			$domain = (isset($args['domain'])) ? $args['domain'] : '';
+            $folder = (isset($args['folder'])) ? $args['folder'] : '';
+			$service = (isset($args['service'])) ? $args['service'] : 'core';
             $str = (isset($args['str'])) ? $args['str'] : '';
-            $lang = (isset($args['language'])) ? $args['language'] : $this->language;
+            $lang = (isset($args['lang'])) ? $args['lang'] : $this->language;
         	$action = (isset($args['action'])) ? $args['action'] : 'translate';
             
             switch($action){
             	case 'translate':
             		return $this->translate($str, $service, $lang);
+            		break;
+				case 'load':
+            		return $this->loadLocalizationFile($folder, $domain, $lang);
             		break;
             }
         }

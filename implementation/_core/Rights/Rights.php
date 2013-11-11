@@ -35,19 +35,9 @@
 
         public function getSettings() { return $this->settings; }
         
-        public function view($args) {
+        public function render($args) {
             return '';
         }
-        public function admin($args){
-            return '';
-        }
-        public function run($args){
-           return false;
-        }
-        
-        public function data($args){
-        	return '';
-        }  
         
         public function setup(){
         	if(isset($GLOBALS['testDatabase']) && $GLOBALS['testDatabase']){

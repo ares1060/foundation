@@ -17,7 +17,7 @@ interface IService {
     	 * @param array $args An array containing arguments
     	 * @return string
     	 */
-        public function view($args);
+        public function render($args);
 
     }
 ?>

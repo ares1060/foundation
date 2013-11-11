@@ -20,14 +20,8 @@
         
         public function getSettings() { return $this->settings; }
         
-        public function view($args){return ''; }
-        public function admin($args){ return ''; }
-        
-        public function run($args){
-            return true;
-        }
-        
-        public function data($args){
+		
+        public function render($args){
             /** query = $query
              *  type = (row, array, insert(bool))
              *  action=(query)

@@ -67,7 +67,7 @@
          *  					e.g. news/news_item will load the dynamic "news_item" in the template "news". Note that the url has only two levels
          *  					max since Dynamic names have to be unique within the template.
          */
-        public function view($args) {
+        public function render($args) {
             if(isset($args['tpl_url']) && $args['tpl_url'] != ''){
             	$parts = explode('/', $args['tpl_url']);
             	if(count($parts) == 1){
@@ -77,18 +77,6 @@
             	}
             }
         	return '';
-        }
-        public function admin($args){
-            return '';
-        }
-        public function run($args){
-            return false;
-        }
-        public function data($args){
-            return '';
-        }
-	    public function setup(){
-        	return true;
         }
         
 

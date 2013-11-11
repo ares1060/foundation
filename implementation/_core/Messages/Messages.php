@@ -27,11 +27,14 @@
            // $this->sp->run('Localization', array('load'=>$this->config['loc_file']));
         }
         
-        public function getSettings() { return $this->settings; }
-        public function view($args) {
+        /**
+         * $args['message'] ... message
+         * $args['type'] ... type
+         */
+        public function render($args) {
             $action = (isset($args['action'])) ? $args['action'] : '';
             
-            if($action == 'div') {
+			if($action == 'div') {
             	
                 return $this->renderDiv($args);
             } if($action == 'viewType'){
@@ -39,33 +42,20 @@
             	if(isset($args['type'])){
             		return $this->renderType($args['type']);
             	}
+            } else if(isset($args['message']) && isset($args['type'])) {
+                return $this->addMsg($args['message'], $args['type']);
             } else {
                 return $this->renderMe();
             }
-        }
-        public function admin($args) {
-            //TODO: edit anzeigeStatus (error, debug, info, status)
-            return '';
-        }
-        public function data($args) {
-            return $this->messages;
-        }
-        
-        /**
-         * $args['message'] ... message
-         * $args['type'] ... type
-         */
-        public function run($args) {
-            if(isset($args['message']) && isset($args['type'])) {
-                return $this->addMsg($args['message'], $args['type']);
-            } else {
+			
+			/*else {
                 $a = array('type'=> Messages::DEBUG_ERROR, 
                 			'message'=>str_replace(array('{@pp:service}'), array('Messages'), $this->_('INTERNAL_ERROR')),
                 			'id'=>count($this->messages)+1);
                	$this->messages[] = $a;
                	unset($a);
                 return false;
-            }
+            }*/
         }
         
         public function setup(){

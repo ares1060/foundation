@@ -1,61 +1,68 @@
 <?php
-	/* Main includes (init the foundation) */
-	$to_root = '../';
-    $authorized = array();
-    $connector = true;
-    
-    $GLOBALS['connector_to_root'] = (isset($_POST['to_root'])) ? $_POST['to_root'] : $to_root; // possibility to set new root if ajax file is in other folder
-    $GLOBALS['connector_to_root'] = (isset($_GET['to_root'])) ? $_GET['to_root'] : $GLOBALS['connector_to_root'];
-    
-	require_once($to_root.'_core/theFoundation.php');
+	session_start();
 	
-	/**
-	 * HINTS:
-	 * 	.) AUTHORIZATION FOR PAGE:
-	 * 		$authorized ... Array |Êwill be checked in theFoundation.php
-	 * 		insert authorized user-groups
-	 * 		if $authorized = array() anyone will be authorized to view the page
-	 * 
-	 *  .) MESSAGES:
-	 *  	msg service -> will be added to the page further down 
-	 *  	@see: _core/Messages/Messages.php
-	 *  
-	 *  .) CSS and JS to header:
-	 *  	use $GLOBALS['extracss'] and $GLOBALS['extrajs'] in Template to add extra CSS and JS to the header
-	 */
-	error_reporting(E_ALL ^ E_NOTICE);
+	//if(isset($_SESSION['User'])) error_log('USER');
 	
-    /* create new ServiceProvider */
-    //$sp = new ServiceProvider();
-    
-    $args = array();
-    $args = (isset($_POST['args'])) ? array_merge($_POST['args'], $args) : $args;
-    $args = (isset($_GET['args'])) ? array_merge($_GET['args'], $args) : $args;
-
-    if(isset($args['working_dir'])) $GLOBALS['working_dir'] = $args['working_dir'];
-    if(isset($args['to_root'])) $GLOBALS['to_root'] =  $args['to_root'];
-	if(isset($args['template'])) $sp->ref('Template')->setTemplate($args['template']);
-	
-    $service_name = (isset($_GET['service_name'])) ? $_GET['service_name'] : ((isset($_POST['service_name'])) ? $_POST['service_name'] : '');
-    $service_method = (isset($_GET['service_method'])) ? $_GET['service_method'] : ((isset($_POST['service_method'])) ? $_POST['service_method'] : '');
-	
-    header('Cache-Control: no-cache, must-revalidate');
-	header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-	header('Content-type: application/json');
-    
-// 	error_log('TF:Connector: start');
-	if(isset($GLOBALS['session_expired']) && $GLOBALS['session_expired'] === true) {
-		// handles session expiration for ajax requests
-		echo json_encode(array('content'=>'session_expired', 'msg'=>''));
-	} else {
-		if(!isset($args['noMsg'])) {
-	    	echo json_encode(array('content'=>$sp->exe($service_name, $service_method, $args), 
-	    							'msg'=>$sp->view('Messages', array('action'=>'viewType', 'type'=>'error/info')),
-	    							'debug'=>$sp->view('Messages', array('action'=>'viewType', 'type'=>'debug'))));	
-	    } else {
-	  		echo json_encode(array('content'=>$sp->exe($service_name, $service_method, $args)));
-	    }
+	if(empty($_SERVER['REQUEST_URI'])) {
+	    $_SERVER['REQUEST_URI'] = $_SERVER['SCRIPT_NAME'];
 	}
-// 	error_log('TF:Connector: end');
 	
+    $GLOBALS['stat']['start'] = microtime(true);
+	$GLOBALS['config']['default_language'] = 'de';
+	$GLOBALS['config']['root'] = substr(dirname(__FILE__), 0, -5);	
+	$GLOBALS['to_root'] = isset($to_root) ? $to_root : '';
+	
+	//get abs link to main
+	$a = explode('/', $_SERVER['PHP_SELF']);
+	array_pop($a);
+	$folder = implode('/', $a).'/';
+	$GLOBALS['abs_root'] = 'http://'.$_SERVER['HTTP_HOST'].$folder.$GLOBALS['to_root'];
+	$GLOBALS['working_dir'] = 'spidernet/';
+	$GLOBALS['testDatabase'] = true; // if true the services databases will be deleted before install
+	
+	$root = '';
+	for($i=0;$i<((count(explode('/', $GLOBALS['config']['root']))-2)-(count(explode('/', $_SERVER['REQUEST_URI']))-2)-(count(explode('/', $_SERVER['DOCUMENT_ROOT']))-1))*(-1);$i++){
+		$root .= '../';
+	}
+    
+	$GLOBALS['config']['login'] = $GLOBALS['abs_root'].'_admincenter/login/';
+	$GLOBALS['tpl']['root'] = '';
+    
+	$GLOBALS['extra_css'] = array();
+	$GLOBALS['extra_js'] = array();
+	
+	/* -- Save active and previous page in session -- */
+	if(!isset($connector) || !$connector){
+		if(!isset($_SESSION['history']['prev_page'])) $_SESSION['history']['prev_page'] = $to_root.'';
+		if(isset($_SESSION['history']['active_page'])){
+			if(isset($_SESSION['history']['prev_page']) && $_SESSION['history']['prev_page'] != $_SESSION['history']['active_page']) $_SESSION['history']['prev_page'] = $_SESSION['history']['active_page'];
+		} else {
+			$_SESSION['history']['prev_page'] = 'index.php';
+		}
+		$get = '';
+		foreach($_GET as $k=>$g){
+			$w = ($get == '') ? '?' : '&';
+			$get .= $w.$k.'='.$g;
+		}
+		$_SESSION['history']['active_page'] = (substr($_SERVER['SCRIPT_FILENAME'], strlen($GLOBALS['config']['root']), strlen($_SERVER['SCRIPT_FILENAME'])-strlen($GLOBALS['config']['root']))).$get;
+	}
+	
+	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/TFCoreFunctions.php');
+	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/Service.php');
+	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/IService.php');
+	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/ServiceProvider.php');
+	require_once($GLOBALS['config']['root'].'_core/Template/ViewDescriptor.php');
+	require_once($GLOBALS['config']['root'].'_core/Template/SubViewDescriptor.php');
+		
+	$sp = new ServiceProvider();
+
+	/* check session expiration */
+	$sp->ref('User')->checkSessionExpiration();
+	//print_r($_SESSION);
+	/* check authorization */
+	if(isset($authorized) && is_array($authorized) && $authorized != array()) {
+		$gr = ($sp->ref('User')->isLoggedIn()) ? $sp->ref('User')->getLoggedInUser()->getGroup()->getId() : -1;
+		error_log('sdf');
+		if(!in_array(strtolower(User::getUserGroupNameFromId($gr)), $authorized) && !in_array($gr, $authorized)) {header('Location: '.$GLOBALS['config']['login']); exit(0);}
+	}
 ?>

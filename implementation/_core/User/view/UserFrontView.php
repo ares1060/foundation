@@ -1,5 +1,9 @@
 <?php
-	class UserFrontView extends CoreService{
+	
+	namespace at\foundation\core\User\view;
+	use at\foundation\core;
+	
+	class UserFrontView extends core\CoreService{
 		protected $name;
 		
 		private $dataHelper;

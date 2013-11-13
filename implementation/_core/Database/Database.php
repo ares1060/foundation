@@ -1,5 +1,8 @@
 <?php
-    class Database extends AbstractService implements IService {
+	namespace at\foundation\core\Database;
+	use at\foundation\core;
+
+    class Database extends core\AbstractService implements core\IService {
         private $temp;
         private $mysqli;
         private $querycount;
@@ -20,7 +23,7 @@
 			//init database
 			if(isset($this->mysqli)) $this->mysqli->close();
 
-			$this->mysqli = new mysqli($this->settings->host, $this->settings->user, $this->settings->password, $this->settings->table);
+			$this->mysqli = new \mysqli($this->settings->host, $this->settings->user, $this->settings->password, $this->settings->table);
             if (mysqli_connect_errno()) {
 				//TODO use foundation messages
 				printf("Connect failed: %s\n", mysqli_connect_error());

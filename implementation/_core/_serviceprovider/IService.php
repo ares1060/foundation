@@ -1,11 +1,14 @@
 <?php
-/**
- * Interface IService
- * Interface defining a service
- *
- * every service has to implement IService and
- */
-interface IService {
+
+	namespace at\foundation\core;
+
+	/**
+	 * Interface IService
+	 * Interface defining a service
+	 *
+	 * every service has to implement IService and
+	 */
+	interface IService {
         /**
          *  args: array('_action'=>$action, //page, list, etc
          *              'argumente...  //GET, POST

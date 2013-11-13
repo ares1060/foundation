@@ -1,11 +1,15 @@
 <?php
+	
+	namespace at\foundation\core\Messages;
+	use at\foundation\core;
+	
 	/**
 	 * Message Service | stores and displays messages
 	 * @author Matthias Eigner
 	 * @version: 0.1r2
      * @name: Messages
      */
-    class Messages extends AbstractService implements IService  {
+    class Messages extends core\AbstractService implements core\IService  {
         
     	private $messages; // just needed if config[save_messages_in_session] = false
         

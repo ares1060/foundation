@@ -1,6 +1,10 @@
 <?php
 	
-	class Template extends AbstractService implements IService {
+	namespace at\foundation\core\Template;
+	use at\foundation\core;
+	use at\foundation\core\Messages\Messages;
+	
+	class Template extends core\AbstractService implements core\IService {
         private $templates;
         private $baseReplaces;
         
@@ -38,8 +42,8 @@
             }*/
 			$this->template = ($this->_setting('tpl.template') == null) ? $this->_setting('tpl.base_template') : $this->_setting('tpl.template');
 			
-            $this->baseReplaces = array('version'=>'PerPedes V '.ServiceProvider::VERSION, 
-                                        'version_short'=>ServiceProvider::VERSION,
+            $this->baseReplaces = array('version'=>'PerPedes V '.core\ServiceProvider::VERSION, 
+                                        'version_short'=>core\ServiceProvider::VERSION,
                                         'root'=>(isset($GLOBALS['connector_to_root'])) ? $GLOBALS['connector_to_root']: $GLOBALS['to_root'], // connector gets new root if needen because of template rendering from other folder
             							'abs_root'=>$GLOBALS['abs_root'],
 //             							'working_dir'=>$GLOBALS['working_dir'],
@@ -439,7 +443,7 @@
 					if(preg_match('/[^a-zA-Z0-9_]+/', $name[1]) < 1){
 						if($this->_setting('render.cache_level') == 1){
 							if($name[0] == 'pp') $chunk = '\'.@$values[\''.@$name[1].'\'].\''.@$parts[1];
-							else if($name[0] == 'loc' || $name[0] == 'lpp') $chunk = '\'.@ServiceProvider::getInstance()->loc->translate('.$name[1].', '.$domain.')[\''.@$name[1].'\'].\''.@$parts[1];
+							else if($name[0] == 'loc' || $name[0] == 'lpp') $chunk = '\'.@core\ServiceProvider::getInstance()->loc->translate('.$name[1].', '.$domain.')[\''.@$name[1].'\'].\''.@$parts[1];
 							else if($name[0] == 'get' || $name[0] == 'GET') $chunk = '\'.@$_GET[\''.@$name[1].'\'].\''.@$parts[1];
 							else if($name[0] == 'post' || $name[0] == 'POST') $chunk = '\'.@$_POST[\''.@$name[1].'\'].\''.@$parts[1];
 							else if($name[0] == 'server' || $name[0] == 'SERVER') $chunk = '\'.@$_SERVER[\''.@$name[1].'\'].\''.@$parts[1];
@@ -500,7 +504,7 @@
 							}
 							unset($arg);
 							//get the service result 
-							if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
+							if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'core\ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
 							else $result = $this->sp->view(substr($parts[0], 0, $pos), $args);
 							$chunk = $result.$parts[1];
 						}
@@ -524,7 +528,7 @@
 							if(substr($jsonObj, -1) != '}') $jsonObj = $jsonObj.'}';
 							
 							//get the service result
-							if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
+							if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'core\ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
 							else $result = $this->sp->view(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
 							$chunk = $result.$parts[1];
 						}
@@ -550,7 +554,7 @@
 								if(substr($jsonObj, -1) != '}') $jsonObj = $jsonObj.'}';
 								
 								//get the service result
-								if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
+								if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'core\ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
 								else $result = $this->sp->view(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
 								$chunk = $result.$parts[1];
 							} else {
@@ -567,7 +571,7 @@
 								}
 								unset($arg);
 								//get the service result 
-								if($this->_setting('.rendercache_level') == 1) $result = '\'.$GLOBALS[\'ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
+								if($this->_setting('.rendercache_level') == 1) $result = '\'.$GLOBALS[\'core\ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
 								else $result = $this->sp->view(substr($parts[0], 0, $pos), $args);
 								$chunk = $result.$parts[1];
 							}

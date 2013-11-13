@@ -1,4 +1,8 @@
 <?php
+
+	namespace at\foundation\core\Settings;
+	use at\foundation\core;
+
 	/**
 	 * Class for handling setting Values
 	 * @author Matthias (scrapy1060@gmail.com)

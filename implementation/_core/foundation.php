@@ -1,6 +1,8 @@
 <?php
 	session_start();
 	
+	use at\foundation\core;
+	
 	//if(isset($_SESSION['User'])) error_log('USER');
 	
 	if(empty($_SERVER['REQUEST_URI'])) {
@@ -54,7 +56,7 @@
 	require_once($GLOBALS['config']['root'].'_core/Template/ViewDescriptor.php');
 	require_once($GLOBALS['config']['root'].'_core/Template/SubViewDescriptor.php');
 		
-	$sp = new ServiceProvider();
+	$sp = core\ServiceProvider::getInstance();
 
 	/* check session expiration */
 	$sp->user->checkSessionExpiration();

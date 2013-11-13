@@ -1,4 +1,7 @@
 <?php
+	
+	namespace at\foundation\core;
+	
 	/**
 	 * Class providing basic function to Services and Helperclasses
 	 * Provides Database Access, Messaging Functions and Rightmanagement
@@ -23,7 +26,7 @@
          * @param $query | mysql query
          */
         protected function mysqlArray($query, $return=true){
-        	return $this->sp->db->DbGetArray($query);
+        	return $this->sp->db->fetchAll($query);
         }
         
         /**
@@ -49,7 +52,7 @@
          * @param $query | mysql query
          */
         protected function mysqlBool($query, $return=false){
-        	return $this->sp->db->DbGetBool($query, $return);
+        	return $this->sp->db->fetchBool($query, $return);
         }
         
    	 	/**
@@ -57,7 +60,7 @@
          * @param $query | mysql query
          */
         protected function mysqlRow($query){
-        	return $this->sp->db->DbGetRow($query);
+        	return $this->sp->db->fetchRow($query);
         }
         
          /**
@@ -171,7 +174,7 @@
        	 * @param const $type |Êsee Message
        	 */
         protected function _msg($str, $type=Messages::ERROR){ 
-        	$this->sp->msg->run(array('message'=>$str, 'type'=>$type));
+        	$this->sp->msg->render(array('message'=>$str, 'type'=>$type));
        	}
     	/**
        	 * @see _msg
@@ -193,7 +196,7 @@
         	if(isset($this->name) && $service == '') 
         		$service = $this->name;
         	 
-        	return $this->sp->ref('Localization')->translate($str, $service);
+        	return $this->sp->loc->translate($str, $service);
        	}
    	}
 ?>

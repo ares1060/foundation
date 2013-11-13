@@ -1,4 +1,7 @@
 <?php
+namespace at\foundation\core\Localization;
+use at\foundation\core;
+
 /*
  * Copyright (c) 2009 David Soria Parra - edited by Matthias Eigner for TheFoundation
  *

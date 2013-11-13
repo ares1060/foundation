@@ -1,5 +1,8 @@
 <?php
 	
+	namespace at\foundation\core\Rights;
+	use at\foundation\core;
+	
 	/**
 	 * This Service manages rights and helps doing authorization checks.
 	 * 
@@ -22,7 +25,7 @@
 	 *
 	 * @dependency: User
 	 */
-	class Rights extends AbstractService implements IService  {
+	class Rights extends core\AbstractService implements core\IService  {
         
 		private $rightCache = array();
 		

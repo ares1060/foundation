@@ -1,4 +1,8 @@
 <?php
+	
+	namespace at\foundation\core\Settings;
+	use at\foundation\core;
+	
 	require_once('SettingFile.php');
 	require_once('SettingGroup.php');
 	require_once('SettingValue.php');	
@@ -9,7 +13,7 @@
      * @version: version 0.1
      * @name: Settings
      */
-    class Settings extends AbstractService implements IService {
+    class Settings extends core\AbstractService implements core\IService {
         /**
          * protected $name;
          * protected $sp;

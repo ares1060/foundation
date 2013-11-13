@@ -1,5 +1,12 @@
 <?php
-	require_once('model/UserObject.php');
+
+	namespace at\foundation\core\User;
+	use at\foundation\core;	
+	use at\foundation\core\User\model\UserDataHelper;
+	use at\foundation\core\User\view\UserAdminView;
+	use at\foundation\core\User\view\UserFrontView;
+
+	require_once('model/User.php');
 	require_once('model/UserGroup.php');
 	require_once('model/UserDataHelper.php');
 	require_once('model/UserData.php');
@@ -8,7 +15,7 @@
 	require_once('view/UserAdminView.php');
 	require_once('view/UserFrontView.php');
 	
-    class User extends AbstractService implements IService  {
+    class User extends core\AbstractService implements core\IService  {
         // MVC Objects
         private $dataHelper;
         private $viewAdmin;
@@ -56,7 +63,7 @@
             	$_SESSION['User']['viewingUser'] = $this->fixObject($_SESSION['User']['viewingUser']);
             	$_SESSION['User']['loggedInUser'] = $this->fixObject($_SESSION['User']['loggedInUser']);
             	
-            	if(get_class($_SESSION['User']['loggedInUser']) != 'UserObject') $this->debugVar('fixObject ERROR');
+            	if(get_class($_SESSION['User']['loggedInUser']) != 'model\User') $this->debugVar('fixObject ERROR');
             	
             	$this->loggedInUser = $_SESSION['User']['loggedInUser'];
             	
@@ -434,9 +441,9 @@
          }
          /**
           * sets Viewing User
-          * @param UserObject $u_id
+          * @param model\User $u_id
           */
-         public function setViewingUser(UserObject $user){
+         public function setViewingUser(model\User $user){
          	if($this->checkRight('can_change_viewing_user')){
          		$this->viewingUser = $user;
          		$_SESSION['User']['viewingUser'] = $user;
@@ -451,7 +458,7 @@
          	$this->setViewingUser($this->dataHelper->getUser($u_id));
          }
          
-         private function setLoggedInUser(UserObject $user) {
+         private function setLoggedInUser(model\User $user) {
          	if($user != null){
          		$this->loggedInUser = $user;
          		$_SESSION['User']['loggedInUser'] = $user;

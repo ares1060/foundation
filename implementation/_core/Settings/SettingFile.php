@@ -1,10 +1,14 @@
 <?php
+
+	namespace at\foundation\core\Settings;
+	use at\foundation\core;
+
 	/**
 	 * Class for handling setting files
 	 * @author Matthias (scrapy1060@gmail.com)
 	 * @version 0.1 
 	 */
-	class SettingFile extends CoreService{
+	class SettingFile extends core\CoreService{
 		private $service;
 		private $file;
 		private $file_hash;
@@ -64,6 +68,7 @@
 		 * fetches setting value if directly accessed 
 		 */
 		public function __get($name){
+		
 			$v = $this->getValue($name); 
 
 			if($v != null) return $v->getValue();

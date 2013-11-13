@@ -24,9 +24,6 @@
 	 *  	use $GLOBALS['extracss'] and $GLOBALS['extrajs'] in Template to add extra CSS and JS to the header
 	 */
 	error_reporting(E_ALL ^ E_NOTICE);
-	
-    /* create new ServiceProvider */
-    //$sp = new ServiceProvider();
     
     $args = array();
     $args = (isset($_POST['args'])) ? array_merge($_POST['args'], $args) : $args;

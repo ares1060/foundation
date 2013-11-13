@@ -1,5 +1,9 @@
 <?php
-	class UserDataHelper extends CoreService{
+
+	namespace at\foundation\core\User\model;
+	use at\foundation\core;
+
+	class UserDataHelper extends core\CoreService{
 		protected $name = 'User';
 		
 		private $users;
@@ -20,7 +24,7 @@
 		 * @param unknown_type $nick
 		 */
 		public function checkNickAvailability($nick){
-			$u = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user WHERE nick="'.mysql_real_escape_string($nick).'"');
+			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
 			if($u != array()) return false;
 			else return true;
 		}
@@ -38,9 +42,9 @@
 			$from = ($page-1)*($this->_setting('perpage.user'));
 			if($from > $all) $from = 0;
 			
-			$limit = ($page == -1) ? '' : 'LIMIT '.mysql_real_escape_string($from).', '.mysql_real_escape_string($this->_setting('perpage.user')).';';
+			$limit = ($page == -1) ? '' : 'LIMIT '.mysqli_real_escape_string($from).', '.mysqli_real_escape_string($this->_setting('perpage.user')).';';
 			
-			$u1 = $this->mysqlArray('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user '.$limit);
+			$u1 = $this->mysqlArray('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user '.$limit);
 			if($u1 != array()){
 				foreach($u1 as $u) 
 					$return[] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
@@ -56,7 +60,7 @@
 		 * returnes count of all users
 		 */
 		public function getAllUserCount(){
-			$u = $this->mysqlRow('SELECT COUNT(*) count FROM '.$GLOBALS['db']['db_prefix'].'user');
+			$u = $this->mysqlRow('SELECT COUNT(*) count FROM '.ServiceProvider::get()->db->prefix.'user');
 			if($u) return $u['count'];
 			else return -1;
 		}
@@ -66,7 +70,7 @@
 		 */
 		public function getUser($id){
 			if(!isset($this->users[$id])) {
-				$u = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user WHERE id="'.mysql_real_escape_string($id).'"');
+				$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE id="'.mysqli_real_escape_string($id).'"');
 				if($u != array()){
 					$this->users[$id] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
 				}
@@ -82,7 +86,7 @@
 			foreach($this->users as $u){
 				if($u->getNick() == $nick) return $nick;
 			}
-			$u = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user WHERE nick="'.mysql_real_escape_string($nick).'"');
+			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
 			if($u != array()){
 				$this->users[$u['id']] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
 				return $this->users[$u['id']];
@@ -98,9 +102,9 @@
 		public function getUserByData($data_id, $value){
 			if($data_id > 0 && $value != ''){
 				$array = $this->mysqlArray('SELECT * FROM
-						'.$GLOBALS['db']['db_prefix'].'userdata_user du
-						LEFT JOIN '.$GLOBALS['db']['db_prefix'].'user u ON du.u_id = u.id
-						WHERE du.value=\''.mysql_real_escape_string($value).'\' AND du.ud_id = \''.mysql_real_escape_string($data_id).'\';');
+						'.ServiceProvider::get()->db->prefix.'userdata_user du
+						LEFT JOIN '.ServiceProvider::get()->db->prefix.'user u ON du.u_id = u.id
+						WHERE du.value=\''.mysqli_real_escape_string($value).'\' AND du.ud_id = \''.mysqli_real_escape_string($data_id).'\';');
 				 
 				if($array != array()) {
 					$u = $array[0];
@@ -119,7 +123,7 @@
 			foreach($this->users as $u){
 				if($u->getEMail() == $nick) return $nick;
 			}
-			$u = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user WHERE email="'.mysql_real_escape_string($mail).'"');
+			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
 			if($u != array()){
 				$this->users[$u['id']] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
 				return $this->users[$u['id']];
@@ -131,7 +135,7 @@
 		 * @param unknown_type $mail
 		 */
 		public function getUserHashByEMail($mail){
-			$u = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user WHERE email="'.mysql_real_escape_string($mail).'"');
+			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
 	       	if($u != '' && $u != array() && isset($u['hash'])){
 	       		return $u['hash'];
 	       	} else return '';
@@ -142,7 +146,7 @@
 		 * @param unknown_type $nick
 		 */
 		public function getUserHashByNick($nick){
-			$u = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user WHERE nick="'.mysql_real_escape_string($nick).'"');
+			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
 	       	if($u != '' && $u != array() && isset($u['hash'])){
 	       		return $u['hash'];
 	       	} else return '';
@@ -155,7 +159,7 @@
 		 */
 		public function getUserGroup($id) {
 			if(!isset($this->groups[$id])){
-				$u = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'usergroup WHERE id="'.mysql_real_escape_string($id).'"');
+				$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'usergroup WHERE id="'.mysqli_real_escape_string($id).'"');
 				if($u != array()){
 					$this->groups[$id] = new UserGroup($u['id'], $u['name']);
 				}
@@ -167,7 +171,7 @@
 		 */
 		public function getGroups() {
 			$this->groups = array();
-			$g = $this->mysqlArray('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'usergroup');
+			$g = $this->mysqlArray('SELECT * FROM '.ServiceProvider::get()->db->prefix.'usergroup');
 			if($g != array()){
 				foreach($g as $group) {
 					$this->groups[] = new UserGroup($group['id'], $group['name']);
@@ -177,17 +181,17 @@
 		}
 		/* ========== USERDATA GROUP ========= */
 		public function getUserDataGroupById($id){
-		$q = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'userdata_datagroup WHERE id = "'.mysql_real_escape_string($id).'"');
+		$q = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup WHERE id = "'.mysqli_real_escape_string($id).'"');
 			if($q != null){
 				return new UserDataGroup($q['id'], $q['name']);
 			}
 		}
 		/* ========== USERDATA ========= */
 		public function getUserDataById($id){
-			$q = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'userdata WHERE id = "'.mysql_real_escape_string($id).'"');
+			$q = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE id = "'.mysqli_real_escape_string($id).'"');
 			if($q != null){
 				$t = new UserData($q['id'], $q['name'], $this->getUserDataGroupById($q['group']), $q['type'], $q['type'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
-				$q = $this->mysqlArray('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'userdata_usergroup WHERE ud_id = "'.mysql_real_escape_string($id).'"');
+				$q = $this->mysqlArray('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_usergroup WHERE ud_id = "'.mysqli_real_escape_string($id).'"');
 				foreach($q as $row){
 					$t->addUserGroup($row['ug_id']);
 				}
@@ -197,10 +201,10 @@
 		}
 		
 		public function getUserDataByName($name) {
-			$q = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'userdata WHERE name = "'.mysql_real_escape_string($name).'"');
+			$q = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE name = "'.mysqli_real_escape_string($name).'"');
 			if($q != null){
 				$t = new UserData($q['id'], $q['name'], $this->getUserDataGroupById($q['group']), $q['type'], $q['type'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
-				$q = $this->mysqlArray('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'userdata_usergroup WHERE ud_id = "'.mysql_real_escape_string($q['id']).'"');
+				$q = $this->mysqlArray('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_usergroup WHERE ud_id = "'.mysqli_real_escape_string($q['id']).'"');
 				foreach($q as $row){
 					$t->addUserGroup($row['ug_id']);
 				}
@@ -216,22 +220,22 @@
 		public function getUserDataByUserId($id){
 			$user = $this->getUser($id);
 			
-// 			$data = $this->mysqlArray('SELECT *, udg.name as gName, ud.name as dName FROM `'.$GLOBALS['db']['db_prefix'].'userdata` ud
-// 					LEFT JOIN `'.$GLOBALS['db']['db_prefix'].'userdata_usergroup` udg ON ud.g_id = udg.g_id
+// 			$data = $this->mysqlArray('SELECT *, udg.name as gName, ud.name as dName FROM `'.ServiceProvider::get()->db->prefix.'userdata` ud
+// 					LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdata_usergroup` udg ON ud.g_id = udg.g_id
 // 					LEFT JOIN 
-// 						(SELECT * FROM `'.$GLOBALS['db']['db_prefix'].'userdata_user` WHERE 
-// 								u_id="'.mysql_real_escape_string($user->getId()).'") uud ON uud.d_id = ud.ud_id
-// 					LEFT JOIN `'.$GLOBALS['db']['db_prefix'].'userdata_datagroup` ud_g ON ud.ud_id = ud_g.d_id
-// 					WHERE ud_g.g_id = "'.mysql_real_escape_string($user->getGroupId()).'"');
+// 						(SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata_user` WHERE 
+// 								u_id="'.mysqli_real_escape_string($user->getId()).'") uud ON uud.d_id = ud.ud_id
+// 					LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdata_datagroup` ud_g ON ud.ud_id = ud_g.d_id
+// 					WHERE ud_g.g_id = "'.mysqli_real_escape_string($user->getGroupId()).'"');
 
-			$data = $this->mysqlArray('SELECT * FROM `'.$GLOBALS['db']['db_prefix'].'userdata_user` ud_u
-												LEFT JOIN '.$GLOBALS['db']['db_prefix'].'userdata ud ON ud_u.ud_id = ud.id
+			$data = $this->mysqlArray('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata_user` ud_u
+												LEFT JOIN '.ServiceProvider::get()->db->prefix.'userdata ud ON ud_u.ud_id = ud.id
 												LEFT JOIN (
-													SELECT * FROM '.$GLOBALS['db']['db_prefix'].'userdata_usergroup WHERE 
-													ug_id = \''.mysql_real_escape_string($user->getGroupId()).'\'
+													SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_usergroup WHERE 
+													ug_id = \''.mysqli_real_escape_string($user->getGroupId()).'\'
 													) ud_ug ON ud_ug.ud_id = ud.id
-										WHERE ud_u.u_id = \''.mysql_real_escape_string($user->getId()).'\' AND
-											   ud_ug.ug_id = \''.mysql_real_escape_string($user->getGroupId()).'\'');
+										WHERE ud_u.u_id = \''.mysqli_real_escape_string($user->getId()).'\' AND
+											   ud_ug.ug_id = \''.mysqli_real_escape_string($user->getGroupId()).'\'');
 			
 			$data_ar = array();
 			if($data != array()) {
@@ -245,19 +249,19 @@
 		public function setUserDataByUserIdAndDataName($id, $name, $value){
 			$user = $this->getUser($id);
 			$data = $this->getUserDataByName($name);
-// 			echo 'UPDATE `'.$GLOBALS['db']['db_prefix'].'userdata_user` ud_u 
-// 													LEFT JOIN `'.$GLOBALS['db']['db_prefix'].'userdata` ud ON ud_u.ud_id = ud.id
-// 												SET ud_u.value ="'.mysql_real_escape_string($value).'"
-// 												WHERE ud.name ="'.mysql_real_escape_string($name).'" AND ud_u.u_id="'.mysql_real_escape_string($user->getId()).'"';
-			$query = $this->mysqlRow('SELECT COUNT(*) c FROM `'.$GLOBALS['db']['db_prefix'].'userdata_user` WHERE ud_id ="'.mysql_real_escape_string($data->getId()).'" AND u_id="'.mysql_real_escape_string($user->getId()).'"');
+// 			echo 'UPDATE `'.ServiceProvider::get()->db->prefix.'userdata_user` ud_u 
+// 													LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdata` ud ON ud_u.ud_id = ud.id
+// 												SET ud_u.value ="'.mysqli_real_escape_string($value).'"
+// 												WHERE ud.name ="'.mysqli_real_escape_string($name).'" AND ud_u.u_id="'.mysqli_real_escape_string($user->getId()).'"';
+			$query = $this->mysqlRow('SELECT COUNT(*) c FROM `'.ServiceProvider::get()->db->prefix.'userdata_user` WHERE ud_id ="'.mysqli_real_escape_string($data->getId()).'" AND u_id="'.mysqli_real_escape_string($user->getId()).'"');
 			
 			if($query) {
 				if($query['c'] > 0) {
-					$query = $this->mysqlUpdate('UPDATE `'.$GLOBALS['db']['db_prefix'].'userdata_user` SET value ="'.mysql_real_escape_string($value).'"
-												WHERE ud_id ="'.mysql_real_escape_string($data->getId()).'" AND u_id="'.mysql_real_escape_string($user->getId()).'"');
+					$query = $this->mysqlUpdate('UPDATE `'.ServiceProvider::get()->db->prefix.'userdata_user` SET value ="'.mysqli_real_escape_string($value).'"
+												WHERE ud_id ="'.mysqli_real_escape_string($data->getId()).'" AND u_id="'.mysqli_real_escape_string($user->getId()).'"');
 				} else {
-					$query = $this->mysqlUpdate('INSERT INTO `'.$GLOBALS['db']['db_prefix'].'userdata_user` (`value`, `ud_id`, `u_id`) values
-												("'.mysql_real_escape_string($value).'", "'.mysql_real_escape_string($data->getId()).'", "'.mysql_real_escape_string($user->getId()).'")');
+					$query = $this->mysqlUpdate('INSERT INTO `'.ServiceProvider::get()->db->prefix.'userdata_user` (`value`, `ud_id`, `u_id`) values
+												("'.mysqli_real_escape_string($value).'", "'.mysqli_real_escape_string($data->getId()).'", "'.mysqli_real_escape_string($user->getId()).'")');
 												
 				}
 				
@@ -273,17 +277,17 @@
 			$from = ($page-1)*($this->_setting('perpage.user_data'));
 			if($from > $all) $from = 0;
 			
-			$limit = ($page == -1) ? '' : 'LIMIT '.mysql_real_escape_string($from).', '.mysql_real_escape_string($this->_setting('perpage.user_data')).';';
+			$limit = ($page == -1) ? '' : 'LIMIT '.mysqli_real_escape_string($from).', '.mysqli_real_escape_string($this->_setting('perpage.user_data')).';';
 			
 			$u1 = $this->mysqlArray('SELECT ud.id d_id, ud.name d_name, ud.group d_group,
 											udg.name d_group_name, ud.type d_type,
 											ud.info d_info, ud.vis_reg d_vis_reg,
-											ud.vis_login d_vis_login, ud.vis_edit d_vis_edit FROM '.$GLOBALS['db']['db_prefix'].'userdata ud 
-											LEFT JOIN '.$GLOBALS['db']['db_prefix'].'userdata_datagroup udg ON ud.group = udg.id ORDER BY ud.group '.$limit.'');
+											ud.vis_login d_vis_login, ud.vis_edit d_vis_edit FROM '.ServiceProvider::get()->db->prefix.'userdata ud 
+											LEFT JOIN '.ServiceProvider::get()->db->prefix.'userdata_datagroup udg ON ud.group = udg.id ORDER BY ud.group '.$limit.'');
 			if($u1 != array()){
 				foreach($u1 as $u) {
 					$tmp = new UserData($u['d_id'], $u['d_name'], new UserDataGroup($u['d_group'], $u['d_group_name']), $u['d_type'], $u['d_info'], $u['d_vis_reg'], $u['d_vis_login'], $u['d_vis_edit']);
-					$u2 = $this->mysqlArray('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'userdata_usergroup WHERE ud_id="'.mysql_real_escape_string($u['d_id']).'"');
+					$u2 = $this->mysqlArray('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_usergroup WHERE ud_id="'.mysqli_real_escape_string($u['d_id']).'"');
 					if($u2 != array()){
 						foreach($u2 as $u3){
 							$tmp->addUserGroup($u3['ug_id']);
@@ -299,7 +303,7 @@
 		 * returnes count of all userdata
 		 */
 		public function getAllUserDataCount(){
-			$u = $this->mysqlRow('SELECT COUNT(*) count FROM '.$GLOBALS['db']['db_prefix'].'userdata');
+			$u = $this->mysqlRow('SELECT COUNT(*) count FROM '.ServiceProvider::get()->db->prefix.'userdata');
 			if($u) return $u['count'];
 			else return -1;
 		}
@@ -319,9 +323,9 @@
 					$u1 = $this->mysqlArray('SELECT ud.id d_id, ud.name d_name, ud.group d_group,
 											udg.name d_group_name, ud.type d_type,
 											ud.info d_info, ud.vis_reg d_vis_reg,
-											ud.vis_login d_vis_login, ud.vis_edit d_vis_edit FROM '.$GLOBALS['db']['db_prefix'].'userdata ud 
-											LEFT JOIN '.$GLOBALS['db']['db_prefix'].'userdata_datagroup udg ON ud.group = udg.id 
-											RIGHT JOIN '.$GLOBALS['db']['db_prefix'].'userdata_usergroup udug ON ud.id = udug.ud_id WHERE udug.ug_id="'.mysql_real_escape_string($group->getId()).'"');
+											ud.vis_login d_vis_login, ud.vis_edit d_vis_edit FROM '.ServiceProvider::get()->db->prefix.'userdata ud 
+											LEFT JOIN '.ServiceProvider::get()->db->prefix.'userdata_datagroup udg ON ud.group = udg.id 
+											RIGHT JOIN '.ServiceProvider::get()->db->prefix.'userdata_usergroup udug ON ud.id = udug.ud_id WHERE udug.ug_id="'.mysqli_real_escape_string($group->getId()).'"');
 					if($u1 != array()){
 						foreach($u1 as $u) {
 							if(!isset($this->userDataForGroup[$group->getId()])) $this->userDataForGroup[$group->getId()] = array(); 
@@ -352,14 +356,14 @@
     			   		if($this->sp->ref('TextFunctions')->getPasswordStrength($pwd) >= $this->_setting('pwd.min_strength')){
     			   			if($email != '' && $this->sp->ref('TextFunctions')->isEmail($email)){
     			   				$activate_code = ($status == User::STATUS_HAS_TO_ACTIVATE) ? md5(time().$this->sp->ref('TextFunctions')->generatePassword(20, 10, 0, 0)): ''; 
-		    			   		$id = $this->mysqlInsert('INSERT INTO '.$GLOBALS['db']['db_prefix'].'user 
+		    			   		$id = $this->mysqlInsert('INSERT INTO '.ServiceProvider::get()->db->prefix.'user 
 		    									(`nick`, `hash`, `group`, `email`, `status`, `created`, `last_login`, `activate`) VALUES 
-		    									(\''.mysql_real_escape_string($nick).'\', 
+		    									(\''.mysqli_real_escape_string($nick).'\', 
 		    										\''.$this->sp->ref('User')->hashPassword($pwd, $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7)).'\', 
-		    										\''.mysql_real_escape_string($group).'\', 
-		    										\''.mysql_real_escape_string($email).'\',
-		    										\''.mysql_real_escape_string($status).'\',
-		    										\''.mysql_real_escape_string(time()) .'\',
+		    										\''.mysqli_real_escape_string($group).'\', 
+		    										\''.mysqli_real_escape_string($email).'\',
+		    										\''.mysqli_real_escape_string($status).'\',
+		    										\''.mysqli_real_escape_string(time()) .'\',
 		    										\'-1\',
 		    										\''.$activate_code.'\');');
 		    			   		if($id !== false) {	
@@ -368,11 +372,11 @@
 		    			   				$obj = $this->getUserDataById($key);
 		    			   				// security check to not insert data for other groups
 		    			   				if($obj->usedByGroup($group)){
-		    			   					$x = ($this->mysqlInsert('INSERT INTO '.$GLOBALS['db']['db_prefix'].'userdata_user 
+		    			   					$x = ($this->mysqlInsert('INSERT INTO '.ServiceProvider::get()->db->prefix.'userdata_user 
 		    			   										(`u_id`, `ud_id`, `value`, `last_change`) VALUES
-		    			   										(\''.mysql_real_escape_string($id).'\',
-		    			   										\''.mysql_real_escape_string($key).'\',
-		    			   										\''.mysql_real_escape_string($value).'\', NOW());') == 0);
+		    			   										(\''.mysqli_real_escape_string($id).'\',
+		    			   										\''.mysqli_real_escape_string($key).'\',
+		    			   										\''.mysqli_real_escape_string($value).'\', NOW());') == 0);
 		    			   					$ok = $ok && $x;
 		    			   				}
 		    			   			}
@@ -399,8 +403,8 @@
 		    							return $id;
 		    			   			} else {
 		    			   				// delete every entered data
-		    			   				$this->mysqlDelete('DELETE FROM '.$GLOBALS['db']['db_prefix'].'userdata_user WHERE u_id = "'.mysql_real_escape_string($id).'"');
-		    			   				$this->mysqlDelete('DELETE FROM '.$GLOBALS['db']['db_prefix'].'user WHERE u_id = "'.mysql_real_escape_string($id).'"');
+		    			   				$this->mysqlDelete('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata_user WHERE u_id = "'.mysqli_real_escape_string($id).'"');
+		    			   				$this->mysqlDelete('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE u_id = "'.mysqli_real_escape_string($id).'"');
 		    			   				$this->_msg($this->_('New user could not be created__', 'core'), Messages::ERROR);
 		    							return false;
 		    			   			}
@@ -467,9 +471,9 @@
     	public function activateRegistration($code){
     		if($code!= '' && strlen($code) == 32){
     		echo 'asdf';
-    			$g = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user WHERE activate="'.mysql_real_escape_string($code).'"');
+    			$g = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($code).'"');
 				if($g !== false){
-					$q = $this->mysqlUpdate('UPDATE '.$GLOBALS['db']['db_prefix'].'user SET activate="", status="'.User::STATUS_ACTIVE.'" WHERE activate="'.mysql_real_escape_string($code).'"');
+					$q = $this->mysqlUpdate('UPDATE '.ServiceProvider::get()->db->prefix.'user SET activate="", status="'.User::STATUS_ACTIVE.'" WHERE activate="'.mysqli_real_escape_string($code).'"');
 					if($q !== false){
 						$this->_msg($this->_('_Activation success', 'core'), Messages::INFO);
 	        			return true;
@@ -489,9 +493,9 @@
     	
     	public function rejectActivation($code){
     		if($code!= '' && strlen($code) == 32){
-    			$g = $this->mysqlRow('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'user WHERE activate="'.mysql_real_escape_string($code).'"');
+    			$g = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($code).'"');
 				if($g !== false){
-					if($this->mysqlDelete('DELETE FROM '.$GLOBALS['db']['db_prefix'].'user WHERE activate="'.mysql_real_escape_string($code).'"')) {
+					if($this->mysqlDelete('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($code).'"')) {
 						$this->_msg($this->_('_Rejection success', 'core'), Messages::INFO);
 	        			return true;
 					} else {
@@ -511,7 +515,7 @@
     	public function setLastLogin(){
     		if($this->sp->ref('User')->isLoggedIn()){
     			$u = $this->sp->ref('User')->getLoggedInUser();
-    			return $this->mysqlUpdate('UPDATE '.$GLOBALS['db']['db_prefix'].'user SET `last_login` = \''.mysql_real_escape_string(time()).'\' WHERE `id`=\''.mysql_real_escape_string($u->getId()).'\';');
+    			return $this->mysqlUpdate('UPDATE '.ServiceProvider::get()->db->prefix.'user SET `last_login` = \''.mysqli_real_escape_string(time()).'\' WHERE `id`=\''.mysqli_real_escape_string($u->getId()).'\';');
     		} else return false;
     	}
     	
@@ -521,7 +525,7 @@
     	 */
     	public function deleteUser($id){
     		if($this->checkRight('administer_user')){
-    			return $this->mysqlDelete('DELETE FROM '.$GLOBALS['db']['db_prefix'].'user WHERE id=\''.mysql_real_escape_string($id).'\';');
+    			return $this->mysqlDelete('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($id).'\';');
     		} else {
     			$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
         		return false;
@@ -549,14 +553,14 @@
     			// nick just can be changed by authorized uer and if available
     			if($nick != '' && $this->checkRight('administer_user')) {
     				if($this->checkNickAvailability($nick)){
-    					$query[] = '`nick`="'.mysql_real_escape_string($nick).'"';
+    					$query[] = '`nick`="'.mysqli_real_escape_string($nick).'"';
     				} else $this->_msg($this->_('Nick not available'), Messages::ERROR);
     			} else $nick = '';
     			
     			// accept email just if it is an email
     			if($email != '') {
     				if($this->sp->ref('TextFunctions')->isEmail($email)){
-    					$query[] = '`email`="'.mysql_real_escape_string($email).'"';
+    					$query[] = '`email`="'.mysqli_real_escape_string($email).'"';
     				} else {
     					$this->_msg($this->_('Please enter a valid email'), Messages::ERROR);
     					$err = true;
@@ -574,19 +578,19 @@
        			}
        			
        			if($status != -1 && $this->checkRight('administer_user')){
-       				$query[] = '`status`="'.mysql_real_escape_string($status).'"';
+       				$query[] = '`status`="'.mysqli_real_escape_string($status).'"';
        				if($status != User::STATUS_HAS_TO_ACTIVATE) $query[] = ' `activate`=""';
        			}
        			
        			if($group != -1 && $this->checkRight('administer_user')){
-       				$query[] = '`group`="'.mysql_real_escape_string($group).'"';
+       				$query[] = '`group`="'.mysqli_real_escape_string($group).'"';
        			}
        			
        			//TODO: userData
        			//$this->debug(implode(', ', $query));
        			       			
        			if(!$err) {
-       				$q = $this->mysqlUpdate('UPDATE '.$GLOBALS['db']['db_prefix'].'user SET '.implode(', ', $query).' WHERE id="'.mysql_real_escape_string($id).'"');
+       				$q = $this->mysqlUpdate('UPDATE '.ServiceProvider::get()->db->prefix.'user SET '.implode(', ', $query).' WHERE id="'.mysqli_real_escape_string($id).'"');
        				if($q) {
        					//$this->_msg($this->_('Update successfull'), Messages::INFO);
        					if($id == $this->sp->ref('User')->getLoggedInUser()->getId()) $this->sp->ref('User')->updateActiveUsers();

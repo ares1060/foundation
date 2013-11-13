@@ -1,5 +1,9 @@
 <?php
-    class Filehandler extends AbstractService implements IService {
+    
+	namespace at\foundation\core\Filehandler;
+	use at\foundation\core;
+	
+	class Filehandler extends core\AbstractService implements core\IService {
         /**
          * protected $name;
          * protected $sp;

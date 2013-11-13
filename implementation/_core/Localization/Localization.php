@@ -1,8 +1,12 @@
 <?php
+	
+	namespace at\foundation\core\Localization;
+	use at\foundation\core;
+	
 	require_once('classes/LocalizationHelper.php');
 	require_once('classes/POTCreator.php');
 	
-    class Localization extends AbstractService implements IService{
+    class Localization extends core\AbstractService implements core\IService{
         protected $config_file;
         
         private $language;

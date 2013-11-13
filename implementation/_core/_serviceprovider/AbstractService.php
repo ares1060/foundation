@@ -1,9 +1,13 @@
 <?php
-/**
- * Class Service
- *
- */
-abstract class AbstractService extends CoreService{
+	
+	namespace at\foundation\core;
+	use at\foundation\core;
+	
+	/**
+	 * Class Service
+	 *
+	 */
+	abstract class AbstractService extends CoreService{
         /**
          * name of the service
          * @var string
@@ -41,7 +45,7 @@ abstract class AbstractService extends CoreService{
             	if(isset($this->sp->loc)) $this->sp->loc->loadLocalizationFile($setting, $name);
             	
             	// preload Localization File -> fil will be loaded after initialization
-            	else Localization::preloadLocalizationFolder($setting, $name);
+            	else core\Localization\Localization::preloadLocalizationFolder($setting, $name);
             }
         }
         

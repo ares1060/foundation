@@ -1,4 +1,8 @@
 <?php
+
+	namespace at\foundation\core\Settings;
+	use at\foundation\core;
+
 	/**
 	 * Class for handling setting groups
 	 * @author Matthias (scrapy1060@gmail.com)
@@ -55,7 +59,7 @@
 		 */
 		public function getValue($name) {
 			foreach($this->contents as $c){
-				if(get_class($c) == 'SettingValue' && $c->getName() == $name) {
+				if(get_class($c) == 'at\foundation\core\Settings\SettingValue' && $c->getName() == $name) {
 					return $c;
 					break;
 				}

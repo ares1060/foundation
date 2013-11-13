@@ -1,4 +1,8 @@
 <?php
+
+namespace at\foundation\core\Localization;
+use at\foundation\core;
+
 /**
  * 这是一个用于生成 GETTEXT 的 POT 文件的类 - This class can help you to create a POT file for GETTEXT
  * @author	Hpyer <coolhpy@163.com>

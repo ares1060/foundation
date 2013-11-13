@@ -1,5 +1,8 @@
 <?php
-    require_once($GLOBALS['config']['root'].'_core/Settings/Settings.php');
+    
+	namespace at\foundation\core;
+	
+	require_once($GLOBALS['config']['root'].'_core/Settings/Settings.php');
 	require_once($GLOBALS['config']['root'].'_core/Messages/Messages.php');
     require_once($GLOBALS['config']['root'].'_core/Database/Database.php');
     require_once($GLOBALS['config']['root'].'_core/User/User.php');
@@ -61,26 +64,26 @@
 		
         const VERSION = '0.03A R7';
         
-        public function __construct() {
+        private function __construct() {
         	
         	$GLOBALS['ServiceProvider'] = $this;
 			self::$instance = $this;
 			$this->services = array();
-			$this->settings = new Settings();
+			$this->settings = new Settings\Settings();
 			$this->services['settings'] =& $this->settings;
-			$this->loc = new Localization();
+			$this->loc = new Localization\Localization();
 			$this->services['localization'] =& $this->loc;
-            $this->db = new Database();
+            $this->db = new Database\Database();
 			$this->services['database'] =& $this->db;
-            $this->msg = new Messages();
+            $this->msg = new Messages\Messages();
 			$this->services['messages'] =& $this->msg;
-  			$this->fh = new FileHandler();
+  			$this->fh = new Filehandler\Filehandler();
             $this->services['filehandler'] =& $this->fh;
-            $this->user = new User();
+            $this->user = new User\User();
             $this->services['user'] =& $this->user;
-            $this->tpl = new Template();
+            $this->tpl = new Template\Template();
 			$this->services['template'] =& $this->tpl;
-            $this->rights = new Rights();
+            $this->rights = new Rights\Rights();
             $this->services['rights'] =& $this->rights;
             $this->templates = array();
     
@@ -149,6 +152,30 @@
 			if(self::$instance == null) new ServiceProvider();
 			return self::$instance;
 		}
+		
+		/**
+		 * @return ServiceProvider
+		 */
+		public static function get(){
+			return self::getInstance();
+		}
         
+		
+		/**
+		 * Magic function for getting various internal values
+		 */
+		public function __get($name){
+			switch($name){
+				
+			}
+			
+			$trace = debug_backtrace();
+			trigger_error(
+				'Undefined property via __get(): ' . $name .
+				' in ' . $trace[0]['file'] .
+				' on line ' . $trace[0]['line'],
+				E_USER_NOTICE);
+			return null;
+		}
     }
 ?>

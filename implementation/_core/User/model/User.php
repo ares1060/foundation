@@ -1,5 +1,8 @@
 <?php
-	class UserObject{
+	
+	namespace at\foundation\core\User\model;
+
+	class User {
         private $nick;
         private $email;
         private $group;
@@ -19,8 +22,8 @@
         }
        
         public function loadData($sp) {
-                if($this->userData == null) $this->userData = $sp->ref('User')->getUserDataByUserId($this->id);
-                return true;
+			if($this->userData == null) $this->userData = $sp->ref('User')->getUserDataByUserId($this->id);
+			return true;
         }
        
         //setter
@@ -34,5 +37,6 @@
         public function getUserData() { return $this->userData; }
         public function getGroupId() { return $this->getGroup()->getId(); }
         //public function getField($name) {if(isset($this->fields[$name])) return $this->fields[$name]; else return false;}
+		
     }
 ?>

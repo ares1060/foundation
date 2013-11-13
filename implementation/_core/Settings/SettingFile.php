@@ -61,6 +61,23 @@
 		}
 		
 		/**
+		 * fetches setting value if directly accessed 
+		 */
+		public function __get($name){
+			$v = $this->getValue($name); 
+
+			if($v != null) return $v->getValue();
+			
+			$trace = debug_backtrace();
+			trigger_error(
+				'Undefined property via __get(): ' . $name .
+				' in ' . $trace[0]['file'] .
+				' on line ' . $trace[0]['line'],
+				E_USER_NOTICE);
+			return null;
+		}
+		
+		/**
 		 * returnes value by group and name
 		 * if no group is set group will be searched
 		 * @param $name
@@ -74,7 +91,6 @@
 			} else {
 				// group will be searched
 				foreach($this->groups as $g){
-					
 					if($g->getValue($name) != null) return $g->getValue($name);
 				}
 				return null;

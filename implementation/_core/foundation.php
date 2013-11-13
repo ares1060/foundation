@@ -57,8 +57,8 @@
 	$sp = new ServiceProvider();
 
 	/* check session expiration */
-	$sp->ref('User')->checkSessionExpiration();
-	//print_r($_SESSION);
+	$sp->user->checkSessionExpiration();
+
 	/* check authorization */
 	if(isset($authorized) && is_array($authorized) && $authorized != array()) {
 		$gr = ($sp->ref('User')->isLoggedIn()) ? $sp->ref('User')->getLoggedInUser()->getGroup()->getId() : -1;

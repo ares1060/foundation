@@ -3,6 +3,7 @@
 	require_once($GLOBALS['config']['root'].'_core/Messages/Messages.php');
     require_once($GLOBALS['config']['root'].'_core/Database/Database.php');
     require_once($GLOBALS['config']['root'].'_core/User/User.php');
+    require_once($GLOBALS['config']['root'].'_core/FileHandler/FileHandler.php');
     require_once($GLOBALS['config']['root'].'_core/Template/Template.php');
     require_once($GLOBALS['config']['root'].'_core/Localization/Localization.php');
     require_once($GLOBALS['config']['root'].'_core/Rights/Rights.php');
@@ -13,6 +14,11 @@
          */
     	public $db;
     
+        /**
+         * @var FileHandler
+         */
+    	public $fh;
+	
 		/**
 		* @var Localization
 		*/
@@ -39,7 +45,7 @@
 		public $rights;
 		
 		/**
-		 * @var unknown_type
+		 * @var Settings
 		 */
 		public $settings;
 		
@@ -68,21 +74,20 @@
 			$this->services['database'] =& $this->db;
             $this->msg = new Messages();
 			$this->services['messages'] =& $this->msg;
-  			$this->user = new User();
+  			$this->fh = new FileHandler();
+            $this->services['filehandler'] =& $this->fh;
+            $this->user = new User();
             $this->services['user'] =& $this->user;
             $this->tpl = new Template();
 			$this->services['template'] =& $this->tpl;
             $this->rights = new Rights();
             $this->services['rights'] =& $this->rights;
             $this->templates = array();
-//             $this->msg->run(array('message'=>$this->data('Localization', array('str'=>'INIT_COMPLETED', 'service'=>'core')), 'type'=>Messages::RUNTIME));
-//             $this->msg->run(array('message'=>'history_prev = '.((isset($_SESSION['history'])) ? $_SESSION['history']['prev_page'] : ''), 'type'=>Messages::RUNTIME));
-//             $this->msg->run(array('message'=>'history_act = '.((isset($_SESSION['history'])) ? $_SESSION['history']['active_page'] : ''), 'type'=>Messages::RUNTIME));
-            
+    
             $this->loc->loadPreloadedFiles();
             
             // check if installation is valid 
-            if((!isset($GLOBALS['setup']) || !$GLOBALS['setup']) && $this->db->data(array('query'=>'SHOW TABLES like "'.$GLOBALS['db']['db_prefix'].'rights"', 'type'=>'row')) === false) {
+            if((!isset($GLOBALS['setup']) || !$GLOBALS['setup']) && $this->db->render(array('query'=>'SHOW TABLES like "'.$this->db->prefix.'rights"', 'type'=>'row')) === false) {
             	// goto setup
             	header('Location: '.$GLOBALS['abs_root'].'_admincenter/setup/');
             }       
@@ -120,40 +125,11 @@
 			}
 			return $class;
 		}
-		
-        /**
-         * $name ... name des Services
-         * $method ... (run, admin, view, data)
-         * $args ... $args
-         */
-        public function exe($name, $method, $args) {
-        	$class = $this->ref($name);
-			if(!is_null($class)){
-				if($method=='run') return $class->run($args);
-				if($method=='admin') return $class->admin($args);
-				if($method=='view') return $class->view($args);
-				if($method=='data') return $class->data($args);
-				if($method=='ref') return $class;
-			}
-			return '';
-        }
         
         // ----------------------------     Services wrapper
-        public function run($name, $args) {
+        public function render($name, $args) {
         	$ref = $this->ref($name);
-        	return ($ref != null) ? $ref->run($args) : '';
-       	}
-        public function admin($name, $args){
-        	$ref = $this->ref($name);
-        	return ($ref != null) ? $ref->admin($args) : '';
-       	}
-        public function view($name, $args){
-        	$ref = $this->ref($name);
-        	return ($ref != null) ? $ref->view($args) : '';
-       	}
-        public function data($name, $args){
-        	$ref = $this->ref($name);
-        	return ($ref != null) ? $ref->data($args) : '';
+        	return ($ref != null) ? $ref->render($args) : '';
        	}
 
         private function _($str, $service='core'){ return $this->data('Localization', array('str'=>$str, 'service'=>$service));}

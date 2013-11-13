@@ -19,13 +19,14 @@
 		private function connect() {
 			//init database
 			if(isset($this->mysqli)) $this->mysqli->close();
-			$this->mysqli = new mysqli($this->_setting('db.database_host'), $this->_setting('db.database_user'), $this->_setting('db.database_pwd'), $this->_setting('db.database_table'));
+
+			$this->mysqli = new mysqli($this->settings->host, $this->settings->user, $this->settings->password, $this->settings->table);
             if (mysqli_connect_errno()) {
 				//TODO use foundation messages
 				printf("Connect failed: %s\n", mysqli_connect_error());
 				exit();
 			}
-			$this->mysqli->character_set_name('utf8');
+			$this->mysqli->set_charset('utf8');
 		}
 		
         public function render($args){
@@ -188,7 +189,7 @@
          * @param array $data An associative array where the keys have the same name as the columns in the database table
          * @return boolean
          */
-        function lazyInsert($table, $data){
+        public function lazyInsert($table, $data){
         	$sql = 'SHOW COLUMNS FROM '.$table.';';//fetch all columns
         	$result = $this->mysqli->query($sql);
         	$colstring = '';
@@ -211,7 +212,7 @@
         * @param array $data An associative array where the keys have the same name as the columns in the database table.
         * @return boolean
         */
-        function lazyUpdate($table, $where, $data){
+        public function lazyUpdate($table, $where, $data){
         	$sql = 'SHOW COLUMNS FROM '.$this->mysqli->real_escape_string($table).';';//fetch all columns
         	$result = $this->mysqli->query($sql);
         	$set = '';
@@ -225,9 +226,26 @@
         	return mysql_query('UPDATE '.$table.' SET '.$set.' WHERE '.$where.';');//insert the data
         }
         
-        function reloadConfig() {
+        public function reloadConfig() {
         	$this->loadConfigIni($this->ini_file, false);
             $this->connect();
         }
+		
+		/**
+		 * Magic function for getting various internal values
+		 */
+		public function __get($name){
+			switch($name){
+				case 'prefix': return $this->settings->prefix; break;
+			}
+			
+			$trace = debug_backtrace();
+			trigger_error(
+				'Undefined property via __get(): ' . $name .
+				' in ' . $trace[0]['file'] .
+				' on line ' . $trace[0]['line'],
+				E_USER_NOTICE);
+			return null;
+		}
     }
 ?>

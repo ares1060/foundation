@@ -52,7 +52,7 @@ abstract class AbstractService extends CoreService{
          * @param string $file
          */
         protected function loadFile($file){ 
-        	return $this->sp->view('Filehandler', array('action'=>'load', 'file'=>$file));
+        	return $this->sp->render('Filehandler', array('action'=>'load', 'file'=>$file));
        	}       	
         
         /**

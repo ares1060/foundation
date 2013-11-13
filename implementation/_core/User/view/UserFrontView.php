@@ -1,5 +1,5 @@
 <?php
-	class UserFrontView extends TFCoreFunctions{
+	class UserFrontView extends CoreService{
 		protected $name;
 		
 		private $dataHelper;

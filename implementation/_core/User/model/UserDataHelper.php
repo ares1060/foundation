@@ -1,5 +1,5 @@
 <?php
-	class UserDataHelper extends TFCoreFunctions{
+	class UserDataHelper extends CoreService{
 		protected $name = 'User';
 		
 		private $users;

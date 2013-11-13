@@ -4,7 +4,7 @@
 	 * @author Matthias (scrapy1060@gmail.com)
 	 * @version 0.1 
 	 */
-	class SettingFile extends TFCoreFunctions{
+	class SettingFile extends CoreService{
 		private $service;
 		private $file;
 		private $file_hash;

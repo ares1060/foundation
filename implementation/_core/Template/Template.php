@@ -43,8 +43,8 @@
                                         'root'=>(isset($GLOBALS['connector_to_root'])) ? $GLOBALS['connector_to_root']: $GLOBALS['to_root'], // connector gets new root if needen because of template rendering from other folder
             							'abs_root'=>$GLOBALS['abs_root'],
 //             							'working_dir'=>$GLOBALS['working_dir'],
-                                        'tpl_root_folder'=>'_template/'.$this->_setting('tpl.base_template').'/'.$GLOBALS['Localization']['language'],
-                                        'tpl_folder'=>'_template/'.$this->template.'/'.$GLOBALS['Localization']['language'],
+                                        'tpl_root_folder'=>'_templates/'.$this->_setting('tpl.base_template'),
+                                        'tpl_folder'=>'_templates/'.$this->template,
             							'service_folder' => '_services',
                                         'user_id'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getId() : '',
                                         'user_group'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getGroup()->getName() : '',
@@ -151,24 +151,24 @@
         private function renderCss($array) {
             $return = '';
             foreach($array as $row) {
-            	$file = $GLOBALS['abs_root'].'_template/'.$this->template.'/'.$GLOBALS['Localization']['language'].'/css/'.$row;
-            	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_template/'.$this->_setting('tpl.base_template').'/'.$GLOBALS['Localization']['language'].'/css/'.$row;
+            	$file = $GLOBALS['abs_root'].'_templates/'.$this->template.'/css/'.$row;
+            	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_templates/'.$this->_setting('tpl.base_template').'/css/'.$row;
                 $return .= '<link rel="stylesheet" type="text/css" href="'.$file.'" />'."\n";
             }
             return $return;
         }
         
         public function getCssPath($css_file){
-        	$file = '_template/'.$this->template.'/'.$GLOBALS['Localization']['language'].'/css/'.$css_file;
-        	if(!$this->checkIfExtFileExists($GLOBALS['abs_root'].$file)) $file = '_template/'.$this->_setting('tpl.base_template').'/'.$GLOBALS['Localization']['language'].'/css/'.$css_file;
+        	$file = '_templates/'.$this->template.'/css/'.$css_file;
+        	if(!$this->checkIfExtFileExists($GLOBALS['abs_root'].$file)) $file = '_templates/'.$this->_setting('tpl.base_template').'/css/'.$css_file;
         	return $file;
         }
         
         private function renderJs($array) {
             $return = '';
             foreach($array as $row) {
-            	$file = $GLOBALS['abs_root'].'_template/'.$this->template.'/'.$GLOBALS['Localization']['language'].'/js/'.$row;
-            	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_template/'.$this->_setting('tpl.base_template').'/'.$GLOBALS['Localization']['language'].'/js/'.$row;
+            	$file = $GLOBALS['abs_root'].'_templates/'.$this->template.'/js/'.$row;
+            	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_templates/'.$this->_setting('tpl.base_template').'/js/'.$row;
                 $return .= '<script type="text/javascript" src="'.$file.'"></script>'."\n";
             }
             return $return;
@@ -232,8 +232,8 @@
 			if(isset($this->rawTemplateCache[$tID])){
 				$tpl = $this->rawTemplateCache[$tID];
 			} else {
-				$file = $GLOBALS['config']['root'].'_template/'.$this->template.'/'.$GLOBALS['Localization']['language'].'/'.$tID.'.html';
-				if(!is_file($file)) $file = $GLOBALS['config']['root'].'_template/'.$this->_setting('tpl.base_template').'/'.$GLOBALS['Localization']['language'].'/'.$tID.'.html';
+				$file = $GLOBALS['config']['root'].'_templates/'.$this->template.'/'.$tID.'.html';
+				if(!is_file($file)) $file = $GLOBALS['config']['root'].'_templates/'.$this->_setting('tpl.base_template').'/'.$tID.'.html';
 				//echo $file.'<br />';
 				//print_r($this->config);
 				if(is_file($file)){
@@ -598,7 +598,7 @@
         public function setTemplate($tpl_name){
         	if($this->isAllowedToChangeTemplate()){
         		$this->template = $tpl_name;
-        		$this->baseReplaces['tpl_folder'] = '_template/'.$this->template.'/'.$GLOBALS['Localization']['language'];
+        		$this->baseReplaces['tpl_folder'] = '_templates/'.$this->template;
         		$GLOBALS['tpl']['activeTemplate'] = $tpl_name;
         	}
         }

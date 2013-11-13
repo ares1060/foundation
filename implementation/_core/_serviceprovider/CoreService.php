@@ -7,7 +7,7 @@
 	 * 
 	 * @author matthias
 	 */
-	public abstract class CoreService {
+	abstract class CoreService {
         /**
          * @var ServiceProvider
          */

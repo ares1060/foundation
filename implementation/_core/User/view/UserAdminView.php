@@ -1,5 +1,5 @@
 <?php
-	class UserAdminView extends TFCoreFunctions{
+	class UserAdminView extends CoreService{
 		protected $name;
 		
 		private $dataHelper;

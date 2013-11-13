@@ -74,9 +74,16 @@
 		}
          
         
-         public function view($args) {
+         public function render($args){
+         	/*$this->debugVar($this->loggedInUser);
+         	$this->debugVar($_SESSION['User']);*/
+         	$chapter = (isset($args['chapter']) && $args['chapter'] != '') ? $args['chapter'] : '';
             $action = (isset($args['action'])) ? $args['action'] : '';
-          	switch($action){
+          	$page = (isset($args['page']) && $args['page'] > 0) ? $args['page'] : 1;
+        	$id = (isset($args['id']) && $args['id'] > 0) ? $args['id'] : -1;
+        	
+			
+			switch($action){
           		case 'login_form':
 					$target = isset($args['target']) ? $args['target'] : '';
 					return $this->viewFront->tplLogin($target);
@@ -91,22 +98,58 @@
           		case 'confirm_form':
           			return '--confirm--';
           			break;
+
+				case 'login':
+         			$nick = isset($args['nick']) ? $args['nick'] : '';
+         			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
+         			
+         			return $this->login($nick, $pwd);
+         			break;
+         		case 'logout':
+         			return $this->logout();
+         			break;
+         		case 'register':
+         			$nick = isset($args['nick']) ? $args['nick'] : '';
+         			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
+         			$pwd2 = isset($args['pwd2']) ? $args['pwd2'] : '';
+         			$email = isset($args['email']) ? $args['email'] : '';
+         			$group = isset($args['group']) ? $args['group'] : '';
+         			
+         			return $this->register($nick, $email, $group, $pwd, $pwd2);
+         			break;
+         		case 'newUser':
+         			$nick = isset($args['nick']) ? $args['nick'] : '';
+         			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
+         			$pwd2 = isset($args['pwd2']) ? $args['pwd2'] : '';
+         			$email = isset($args['email']) ? $args['email'] : '';
+         			$group = isset($args['group']) ? $args['group'] : '';
+         			$status = isset($args['status']) ? $args['status'] : '';
+         			
+    				if($this->checkRight('administer_user') && $this->checkRight('administer_group', $_POST['eu_group'])){
+    					
+    					$nId = $this->register($nick, $mail, $group, $pwd, $pwd2, $status);
+    					if($nId !== false){
+    						return $nId;
+    					} else return false;
+    				} else {
+    					$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
+    					return false;
+    				}
+         			break;
+         		case 'activateRegistration':
+         			$code = isset($args['code']) ? $args['code'] : '';
+         			return $this->dataHelper->activateRegistration($code);
+         			break;
+         		case 'rejectRegistration':
+         			$code = isset($args['code']) ? $args['code'] : '';
+         			return $this->dataHelper->rejectActivation($code);
+         			break;
+					
           		default:
           			return 'idk';
           			break;
           	}  
-         }
-         
-         public function admin($args){
-         	/*$this->debugVar($this->loggedInUser);
-         	$this->debugVar($_SESSION['User']);*/
-         	
-            $chapter = (isset($args['chapter']) && $args['chapter'] != '') ? $args['chapter'] : '';
-            $action = (isset($args['action']) && $args['action'] != '') ? $args['action'] : '';
-            
-            $page = (isset($args['page']) && $args['page'] > 0) ? $args['page'] : 1;
-        	$id = (isset($args['id']) && $args['id'] > 0) ? $args['id'] : -1;
-        	
+			
             switch($chapter){
             	case 'user':
             		return $this->viewAdmin->tplUser($page);
@@ -215,62 +258,9 @@
             		break;
             }
          }
-          
-         public function run($args){
-         	$action = isset($args['action']) ? $args['action'] : '';
-         	switch($action){
-         		case 'login':
-         			$nick = isset($args['nick']) ? $args['nick'] : '';
-         			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
-         			
-         			return $this->login($nick, $pwd);
-         			break;
-         		case 'logout':
-         			return $this->logout();
-         			break;
-         		case 'register':
-         			$nick = isset($args['nick']) ? $args['nick'] : '';
-         			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
-         			$pwd2 = isset($args['pwd2']) ? $args['pwd2'] : '';
-         			$email = isset($args['email']) ? $args['email'] : '';
-         			$group = isset($args['group']) ? $args['group'] : '';
-         			
-         			return $this->register($nick, $email, $group, $pwd, $pwd2);
-         			break;
-         		case 'newUser':
-         			$nick = isset($args['nick']) ? $args['nick'] : '';
-         			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
-         			$pwd2 = isset($args['pwd2']) ? $args['pwd2'] : '';
-         			$email = isset($args['email']) ? $args['email'] : '';
-         			$group = isset($args['group']) ? $args['group'] : '';
-         			$status = isset($args['status']) ? $args['status'] : '';
-         			
-    				if($this->checkRight('administer_user') && $this->checkRight('administer_group', $_POST['eu_group'])){
-    					
-    					$nId = $this->register($nick, $mail, $group, $pwd, $pwd2, $status);
-    					if($nId !== false){
-    						return $nId;
-    					} else return false;
-    				} else {
-    					$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
-    					return false;
-    				}
-         			break;
-         		case 'activateRegistration':
-         			$code = isset($args['code']) ? $args['code'] : '';
-         			return $this->dataHelper->activateRegistration($code);
-         			break;
-         		case 'rejectRegistration':
-         			$code = isset($args['code']) ? $args['code'] : '';
-         			return $this->dataHelper->rejectActivation($code);
-         			break;
-         	}
-         }
          
         public function getSettings() { return $this->settings; }
-         
-		public function data($args){}
-         
+
 		public function setup(){
 			$error = true;
 			include_once('setup/setup.php');

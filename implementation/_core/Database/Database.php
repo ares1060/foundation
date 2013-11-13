@@ -1,25 +1,32 @@
 <?php
     class Database extends AbstractService implements IService {
         private $temp;
-        private $link;
-        private $db;
+        private $mysqli;
         private $querycount;
         
         function __construct(){
             $this->name = 'Database';
-            $this->querycount = array('success'=>0, 'error'=>0);
+            $this->querycount = array('success' => 0, 'error' => 0);
             $this->ini_file = $GLOBALS['to_root'].'_core/Database/Database.ini';
             parent::__construct();
             $this->temp = array();
-          	//$this->loadConfig($GLOBALS['config']['root'].'_core/Database/Database.config.php');
-            //$this->sp->run('Localization', array('load'=>$GLOBALS['config']['root'].'/_localization/core.database.loc.php'));
-            $GLOBALS['db']['database_table'] = $this->_setting('db.database_table');
-            $GLOBALS['db']['db_prefix'] = $this->_setting('db.db_prefix');
-            $this->connect();
+            
+			$this->connect();
         }
         
         public function getSettings() { return $this->settings; }
         
+		private function connect() {
+			//init database
+			if(isset($this->mysqli)) $this->mysqli->close();
+			$this->mysqli = new mysqli($this->_setting('db.database_host'), $this->_setting('db.database_user'), $this->_setting('db.database_pwd'), $this->_setting('db.database_table'));
+            if (mysqli_connect_errno()) {
+				//TODO use foundation messages
+				printf("Connect failed: %s\n", mysqli_connect_error());
+				exit();
+			}
+			$this->mysqli->character_set_name('utf8');
+		}
 		
         public function render($args){
             /** query = $query
@@ -38,13 +45,14 @@
                 else {
                 	switch($type){
                 		case 'row':
-                			return $this->DbGetRow($query);
+                			return $this->fetchRow($query);
                 			break;
                 		case 'bool':
-                			return $this->DbGetBool($query, $r);
+                			return $this->FetchBool($query, $r);
                 			break;
-                		case 'array':
-                			return $this->DbGetArray($query);
+                		case 'array': 
+						case 'all':
+                			return $this->fetchAll($query);
                 			break;
                 		default:
                 			return '';
@@ -77,37 +85,39 @@
         }
         
         /**
-         * returnes row of data from the Database usind mysql
-         * @param unknown_type $query
+         * returns a single row of data from the Database using mysql
+         * @param string $query
          */
-        public function DbGetRow($query){
-       		$link = mysql_query($query);
-//        		$id = mysql_insert_id();
+        public function fetchRow($query){
+       		$result = $this->mysqli->query($query);
        		
-       		$link ? $this->querycount['success']++ : $this->querycount['error']++;
+       		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		
-       		$a = mysql_fetch_assoc($link);
-       		
-       		$this->cacheQuery($query, $a);
-       		
-       		return $a;
+       		if($result) {
+				$a = $result->fetch_assoc();
+				$this->cacheQuery($query, $a);
+				return $a;
+			} else {
+				return null;
+			}
         }
         
      	/**
-         * returnes if a query ran successfully (eg Insert, Update, Delete)
-         * @param unknown_type $query
+         * returns all rows of a query inside an array
+         * @param string $query
          */
-        public function DbGetArray($query){
-       		$link = mysql_query($query);
-//        		$id = mysql_insert_id();
+        public function fetchAll($query){
+       		$result = $this->mysqli->query($query);
        		
-       		$link ? $this->querycount['success']++ : $this->querycount['error']++;
+       		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		
-       		if($link){
-	       		$a = array();
-	            while($row = mysql_fetch_assoc($link)){
-	            	$a[] = $row;
-	            }
+       		if($result){
+				if (method_exists('mysqli_result', 'fetch_all')) {
+					$a = $result->fetch_all(MYSQLI_ASSOC);
+				} else {
+					for ($a = array(); $tmp = $result->fetch_assoc();) $a[] = $tmp;
+				}
+				
 	       		$this->cacheQuery($query, $a);
 	       		
 	            return $a;
@@ -115,49 +125,29 @@
         }
         
    	 	/**
-         * returnes the result array of a query
-         * @param unknown_type $query
+         * returnes a boolean if the query was successfull
+         * @param string $query
          */
-        public function DbGetBool($query, $return){
-       		$link = mysql_query($query);
-       		$id = mysql_insert_id($this->link);
+        public function fetchBool($query, $return){
+       		$result = $this->mysqli->real_query($query);
+       		$id = $this->mysqli->insert_id();
        		
-       		$link ? $this->querycount['success']++ : $this->querycount['error']++;
+       		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		
-       		$trace=debug_backtrace();
-			$caller=array_shift($trace);
+       		$this->cacheQuery($query, $result);
        		
-       		if(!$link) $this->_msg('Database Error: '.mysql_error().' (called by: '.$caller.')', Messages::DEBUG_ERROR);
-       		
-       		$this->cacheQuery($query, $link);
-       		
-       		return ($link) ? (($return) ? $id : true)  : false;
-        }
-        
-        public function setup(){
-        	return true;
-        }
-        
-        public function bool($query) {
-            return $this->data(array('query'=>$query, 'type'=>'bool'));
+       		return $result;
         }
 
         
         public function exists($query){
-            $a = $this->data(array('query'=>$query, 'type'=>'row'));
+            $a = $this->fetchRow($query);
             if(isset($a) && $a != ""){
                 $ak = array_keys($a);
                // print_r($ak);
                 if(isset($a[$ak[0]])) return true;
                 else return false;
             } else return false;
-        }
-        
-        private function connect(){
-        	//$this->link = mysql_connect($GLOBALS['db']['database_host'], $GLOBALS['db']['database_user'], $GLOBALS['db']['database_pwd']) or die (mysql_error());
-        	$this->link = mysql_connect($this->_setting('db.database_host'), $this->_setting('db.database_user'), $this->_setting('db.database_pwd')) or die (mysql_error());
-        	$this->db = mysql_select_db($this->_setting('db.database_table'));
-            mysql_set_charset('utf8');
         }
         
         public function getQueryCount(){
@@ -193,20 +183,20 @@
         }
         
         /**
-         * Function to laziy insert rows into a table.
+         * Function to lazily insert rows into a table.
          * @param string $table The name of the database table to insert into
          * @param array $data An associative array where the keys have the same name as the columns in the database table
          * @return boolean
          */
         function lazyInsert($table, $data){
         	$sql = 'SHOW COLUMNS FROM '.$table.';';//fetch all columns
-        	$query = mysql_query($sql);
+        	$result = $this->mysqli->query($sql);
         	$colstring = '';
         	$valuestring = '';
-        	while($column = mysql_fetch_array($query)){
+        	while($column = $result->fetch_assoc()){
         		//create the field- and value string
         		$colstring .= '`'.$column['Field'].'`,';
-        		if(isset($data[$column['Field']])) $valuestring .= '\''.mysql_real_escape_string($data[$column['Field']]).'\', ';
+        		if(isset($data[$column['Field']])) $valuestring .= '\''.$this->mysqli->real_escape_string($data[$column['Field']]).'\', ';
         		else $valuestring .= '\'\', ';
         	}
         	$values = substr($valuestring,0,-2);
@@ -222,13 +212,13 @@
         * @return boolean
         */
         function lazyUpdate($table, $where, $data){
-        	$sql = 'SHOW COLUMNS FROM '.$table.';';//fetch all columns
-        	$query = mysql_query($sql);
+        	$sql = 'SHOW COLUMNS FROM '.$this->mysqli->real_escape_string($table).';';//fetch all columns
+        	$result = $this->mysqli->query($sql);
         	$set = '';
-        	while($column = mysql_fetch_array($query)){
+        	while($column = $result->fetch_assoc()){
         		//create the field- and value string
         		if(isset($data[$column['Field']])){
-        			$set .= $column['Field'].'=\''.mysql_real_escape_string($data[$column['Field']]).'\', ';
+        			$set .= $column['Field'].'=\''.$this->mysqli->real_escape_string($data[$column['Field']]).'\', ';
         		}
         	}
         	$set = substr($set,0,-2);
@@ -237,7 +227,6 @@
         
         function reloadConfig() {
         	$this->loadConfigIni($this->ini_file, false);
-            require($GLOBALS['config']['root'].'_core/Database/Database.config.php');
             $this->connect();
         }
     }

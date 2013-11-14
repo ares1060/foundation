@@ -7,25 +7,50 @@
         private $nick;
         private $email;
         private $group;
-        private $id;
         private $status;
+        private $pwd;
+        private $id;
         
         private $userData;
-       // private $fields;
-		
-        public function __construct($nick, $id, $email, $group, $status) {
+				
+        public function __construct($nick, $email, $group, $pwd, $status, $id = '') {
             $this->nick = $nick;
             $this->email = $email;
             $this->id = $id;
             $this->group = $group;
             $this->status = $status;
+            $this->pwd = $pwd;
             $this->userData = null;
+            parent::__construct($this->sp->db->prefix.'user', array());
         }
-       
-        public function loadData($sp) {
-			if($this->userData == null) $this->userData = $sp->ref('User')->getUserDataByUserId($this->id);
-			return true;
-        }
+		
+		/**
+		 * Overriding the BaseModel save to do proper save
+		 */
+		public function save(){
+			if($this->id != ''){
+				//update user
+			} else {
+				//insert user
+				$activate_code = ($this->status == core\User::STATUS_HAS_TO_ACTIVATE) ? md5(time().$this->sp->ref('TextFunctions')->generatePassword(20, 10, 0, 0)): ''; 
+				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'user 
+								(`nick`, `hash`, `group`, `email`, `status`, `created`, `last_login`, `activate`) VALUES 
+								(\''.mysqli_real_escape_string($this->nick).'\', 
+									\''.$this->sp->user->hashPassword($this->pwd, $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7)).'\', 
+									\''.mysqli_real_escape_string($this->group).'\', 
+									\''.mysqli_real_escape_string($this->email).'\',
+									\''.mysqli_real_escape_string($this->status).'\',
+									\''.mysqli_real_escape_string(time()) .'\',
+									\'-1\',
+									\''.$activate_code.'\');');
+				if($succ) {
+					$this->id = mysqli_insert_id();
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
        
         //setter
        

@@ -1,6 +1,6 @@
 <?php
-	require_once $GLOBALS['config']['root'].'_core/Template/ViewDescriptor.php';
-	
+	namespace at\foundation\core\Template;
+
 	/**
 	 *	This class is a container for template parsing instructions and raplace values
 	 */

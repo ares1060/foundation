@@ -3,7 +3,10 @@
 	$to_root = '';
     require_once($to_root.'_core/foundation.php');
     
-    $main = new ViewDescriptor('main');
+	use at\foundation\core;
+	use at\foundation\core\Template;
+    
+    $main = new Template\ViewDescriptor('main');
     
     echo $main->render();
 ?>

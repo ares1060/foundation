@@ -62,6 +62,22 @@
 			return $a;
 		}
 		
+		/**
+		 *	Fetches all items from the given sql. Saving is supported but may yield unexpected results.
+		 *	@return array.<BaseModel> The array of resulting BaseModels
+		 */
+		public static function getItemsSql($table, $sql){
+			$vals = $this->sp->dp->fetchAll($sql);
+			$a = array();
+			
+			foreach($vals as &$val){
+				array_push($a, new BaseModel($table, $val));
+			}
+			unset($val);
+			
+			return $a;
+		}
+		
 		public function __get($name) {
 			if(isset($this->values[$name])) return $this->values[$name];
 			else return null;
@@ -73,12 +89,39 @@
 			}
 		}
 		
+		/**
+		 * Saves the current state of the model to the database by inserting or updating a record
+		 * @return boolean Returns true if successfully saved otherwise false.
+		 */
 		public function save() {
+			if(!$this->table || $this->table == '') return false;
 			if(isset($this->values['id']) && $this->values['id'] != ''){
 				$vals = $this->values; //copies array
 				unset($vals['id']);
-				$this->sp->db->lazyUpdate($this->table, 'id = \''.$this->values['id'].'\'', $vals);
-			} else  $this->sp->db->lazyInsert($this->table, $this->$values);
+				return $this->sp->db->lazyUpdate($this->table, 'id = \''.$this->values['id'].'\'', $vals);
+			} else {
+				$suc = $this->sp->db->lazyInsert($this->table, $this->$values);
+				if($suc > 0){
+					$this->values['id'] = $suc;
+					return true;
+				} else { 
+					return false;
+				}
+			}
+		}
+		
+		/**
+		 * Deletes the corresponding entry from the database
+		 * @return boolean Returns true if there is no corresponding entry left
+		 */
+		public function delete(){
+			if($this->table == '' || isset($this->values['id']) || $this->values['id'] == '') return true;
+			if($this->sp->db->fetchBool('DELETE FROM '.$this->table.' WHERE id = \''.$this->values['id'].'\';')){
+				unset($this->values['id']);
+				return true;
+			} else {
+				return false;
+			}
 		}
 	
 	}

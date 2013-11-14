@@ -190,9 +190,10 @@
          * Function to lazily insert rows into a table.
          * @param string $table The name of the database table to insert into
          * @param array $data An associative array where the keys have the same name as the columns in the database table
-         * @return boolean
+         * @return mixed If successfull the id is returned. Otherwise false
          */
         public function lazyInsert($table, $data){
+        	//TODO: cache columns
         	$sql = 'SHOW COLUMNS FROM '.$table.';';//fetch all columns
         	$result = $this->mysqli->query($sql);
         	$colstring = '';
@@ -205,7 +206,13 @@
         	}
         	$values = substr($valuestring,0,-2);
         	$cols = substr($colstring,0,-1);
-        	return mysql_query('INSERT INTO '.$table.' ('.$cols.') VALUES ('.$values.');');//insert the data
+        	$succ = $this->mysqli->real_query('INSERT INTO '.$table.' ('.$cols.') VALUES ('.$values.');');//insert the data
+        	
+        	if($succ){
+        		return $this->mysqli->insert_id;
+        	} else {
+        		return false;
+        	}
         }
         
         /**
@@ -216,6 +223,7 @@
         * @return boolean
         */
         public function lazyUpdate($table, $where, $data){
+        	//TODO: cache columns
         	$sql = 'SHOW COLUMNS FROM '.$this->mysqli->real_escape_string($table).';';//fetch all columns
         	$result = $this->mysqli->query($sql);
         	$set = '';

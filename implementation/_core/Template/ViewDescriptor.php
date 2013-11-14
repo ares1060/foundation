@@ -1,4 +1,6 @@
 <?php
+	namespace at\foundation\core\Template;
+
 	/**
 	 *	This class is a container for template parsing instructions and replace values
 	 */

@@ -1,20 +1,26 @@
 <?php
 	session_start();
 	
+	use at\foundation\core;
+	
+	//setup autoloader for core classes and core services
 	spl_autoload_register(function ($class) {
-		if(strpos($class, 'at\foundation\core') === 0){
-			$class = str_replace('at\foundation\core\\', $GLOBALS['config']['root'].'_core/_serviceprovider/', $class);
+		$a = array();
+		if(preg_match('/^at\\\\foundation\\\\core\\\\[^\\\\]+\\\\.*$/', $class, $a) > 0){
+			$class = str_replace('\\', '/', str_replace('at\foundation\core\\', $GLOBALS['config']['root'].'_core/', $class));
+			require_once $class . '.php';
+		} else if(strpos($class, 'at\foundation\core\\') === 0){
+			$class = str_replace('\\', '/', str_replace('at\foundation\core\\', $GLOBALS['config']['root'].'_core/_serviceprovider/', $class));
 			require_once $class . '.php';
 		}
 	});
-	
-	use at\foundation\core;
-	
-	//if(isset($_SESSION['User'])) error_log('USER');
-	
+		
 	if(empty($_SERVER['REQUEST_URI'])) {
 	    $_SERVER['REQUEST_URI'] = $_SERVER['SCRIPT_NAME'];
 	}
+	
+	
+//--------------- INIT GLOBALS ------------------//
 	
     $GLOBALS['stat']['start'] = microtime(true);
 	$GLOBALS['config']['default_language'] = 'de';
@@ -40,6 +46,8 @@
 	$GLOBALS['extra_css'] = array();
 	$GLOBALS['extra_js'] = array();
 	
+//--------------- SESSION ------------------//
+	
 	/* -- Save active and previous page in session -- */
 	if(!isset($connector) || !$connector){
 		if(!isset($_SESSION['history']['prev_page'])) $_SESSION['history']['prev_page'] = $to_root.'';
@@ -56,6 +64,7 @@
 		$_SESSION['history']['active_page'] = (substr($_SERVER['SCRIPT_FILENAME'], strlen($GLOBALS['config']['root']), strlen($_SERVER['SCRIPT_FILENAME'])-strlen($GLOBALS['config']['root']))).$get;
 	}
 	
+	//some imports to speed up things a bit -> no autoload needed for these
 	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/CoreService.php');
 	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/AbstractService.php');
 	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/IService.php');
@@ -63,6 +72,7 @@
 	require_once($GLOBALS['config']['root'].'_core/Template/ViewDescriptor.php');
 	require_once($GLOBALS['config']['root'].'_core/Template/SubViewDescriptor.php');
 		
+	//make sure a ServiceProvider instance is available
 	$sp = core\ServiceProvider::getInstance();
 
 	/* check session expiration */

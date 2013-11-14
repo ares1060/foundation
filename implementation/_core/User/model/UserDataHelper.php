@@ -2,6 +2,7 @@
 
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
+	use at\foundation\core\User\model;
 
 	class UserDataHelper extends core\CoreService{
 		protected $name = 'User';
@@ -95,25 +96,42 @@
 		}
 		
 		/**
+
 		 * gets User Info Object by User Data id and data value
+
 		 * @param unknown_type $data_id
+
 		 * @param unknown_type $value
+
 		 */
+
 		public function getUserByData($data_id, $value){
+
 			if($data_id > 0 && $value != ''){
 				$array = $this->mysqlArray('SELECT * FROM
+
 						'.ServiceProvider::get()->db->prefix.'userdata_user du
+
 						LEFT JOIN '.ServiceProvider::get()->db->prefix.'user u ON du.u_id = u.id
+
 						WHERE du.value=\''.mysqli_real_escape_string($value).'\' AND du.ud_id = \''.mysqli_real_escape_string($data_id).'\';');
 				 
+
 				if($array != array()) {
 					$u = $array[0];
+
 					$this->users[$u['id']] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
+
 		
+
 					return $this->getUser($array[0]['id']);
+
 				}
+
 				else return null;
+
 			} else return null;
+
 		}
 		/**
 		 * returnes User by EMail
@@ -202,30 +220,49 @@
 		
 		public function getUserDataByName($name) {
 			$q = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE name = "'.mysqli_real_escape_string($name).'"');
+
 			if($q != null){
+
 				$t = new UserData($q['id'], $q['name'], $this->getUserDataGroupById($q['group']), $q['type'], $q['type'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
+
 				$q = $this->mysqlArray('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_usergroup WHERE ud_id = "'.mysqli_real_escape_string($q['id']).'"');
+
 				foreach($q as $row){
+
 					$t->addUserGroup($row['ug_id']);
+
 				}
+
 				return $t;
+
 			}
 		}
 		
 		/**
+
 		 * returnes UserData object by given id
+
 		 * is used by UserInfo->loadData(ServiceProvider $sp)
+
 		 * @param $id
+
 		 */
+
 		public function getUserDataByUserId($id){
+
 			$user = $this->getUser($id);
 			
+
 // 			$data = $this->mysqlArray('SELECT *, udg.name as gName, ud.name as dName FROM `'.ServiceProvider::get()->db->prefix.'userdata` ud
+
 // 					LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdata_usergroup` udg ON ud.g_id = udg.g_id
+
 // 					LEFT JOIN 
 // 						(SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata_user` WHERE 
 // 								u_id="'.mysqli_real_escape_string($user->getId()).'") uud ON uud.d_id = ud.ud_id
+
 // 					LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdata_datagroup` ud_g ON ud.ud_id = ud_g.d_id
+
 // 					WHERE ud_g.g_id = "'.mysqli_real_escape_string($user->getGroupId()).'"');
 
 			$data = $this->mysqlArray('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata_user` ud_u
@@ -244,6 +281,7 @@
 				}
 			}
 			return $data_ar;
+
 		}
 		
 		public function setUserDataByUserIdAndDataName($id, $name, $value){
@@ -355,18 +393,10 @@
     			   	if($pwd == $pwd2){
     			   		if($this->sp->ref('TextFunctions')->getPasswordStrength($pwd) >= $this->_setting('pwd.min_strength')){
     			   			if($email != '' && $this->sp->ref('TextFunctions')->isEmail($email)){
-    			   				$activate_code = ($status == User::STATUS_HAS_TO_ACTIVATE) ? md5(time().$this->sp->ref('TextFunctions')->generatePassword(20, 10, 0, 0)): ''; 
-		    			   		$id = $this->mysqlInsert('INSERT INTO '.ServiceProvider::get()->db->prefix.'user 
-		    									(`nick`, `hash`, `group`, `email`, `status`, `created`, `last_login`, `activate`) VALUES 
-		    									(\''.mysqli_real_escape_string($nick).'\', 
-		    										\''.$this->sp->ref('User')->hashPassword($pwd, $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7)).'\', 
-		    										\''.mysqli_real_escape_string($group).'\', 
-		    										\''.mysqli_real_escape_string($email).'\',
-		    										\''.mysqli_real_escape_string($status).'\',
-		    										\''.mysqli_real_escape_string(time()) .'\',
-		    										\'-1\',
-		    										\''.$activate_code.'\');');
-		    			   		if($id !== false) {	
+    			   				
+    			   				$user = new model\User($nick, $email, $group, $pwd, $status);
+    			   				
+		    			   		if($user->save()) {	
 		    			   			$ok = true;	 
 		    			   			foreach($data as $key=>$value) {
 		    			   				$obj = $this->getUserDataById($key);
@@ -374,15 +404,13 @@
 		    			   				if($obj->usedByGroup($group)){
 		    			   					$x = ($this->mysqlInsert('INSERT INTO '.ServiceProvider::get()->db->prefix.'userdata_user 
 		    			   										(`u_id`, `ud_id`, `value`, `last_change`) VALUES
-		    			   										(\''.mysqli_real_escape_string($id).'\',
+		    			   										(\''.mysqli_real_escape_string($user->getId()).'\',
 		    			   										\''.mysqli_real_escape_string($key).'\',
 		    			   										\''.mysqli_real_escape_string($value).'\', NOW());') == 0);
 		    			   					$ok = $ok && $x;
 		    			   				}
 		    			   			}
-		    			   			// create user album
-		    			   			$this->sp->ref('Gallery')->createFolder($this->_setting('user.main_gallery'), 'user_'.$id, Gallery::STATUS_SYSTEM, true); // silent=true
-		    			   			
+
 		    			   			if($ok) {
 			    			   			if($status == User::STATUS_HAS_TO_ACTIVATE){
 			    			   				$mail = new ViewDescriptor($this->_setting('tpl.activation_mail'));

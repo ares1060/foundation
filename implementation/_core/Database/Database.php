@@ -52,7 +52,7 @@
                 			return $this->fetchRow($query);
                 			break;
                 		case 'bool':
-                			return $this->FetchBool($query, $r);
+                			return $this->fetchBool($query, $r);
                 			break;
                 		case 'array': 
 						case 'all':
@@ -134,7 +134,7 @@
          */
         public function fetchBool($query){
        		$result = $this->mysqli->real_query($query);
-       		//$id = $this->mysqli->insert_id();
+       		//$id = $this->mysqli->insert_id;
        		
        		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		

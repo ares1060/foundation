@@ -1,6 +1,13 @@
 <?php
 	session_start();
 	
+	spl_autoload_register(function ($class) {
+		if(strpos($class, 'at\foundation\core') === 0){
+			$class = str_replace('at\foundation\core\\', $GLOBALS['config']['root'].'_core/_serviceprovider/', $class);
+			require_once $class . '.php';
+		}
+	});
+	
 	use at\foundation\core;
 	
 	//if(isset($_SESSION['User'])) error_log('USER');

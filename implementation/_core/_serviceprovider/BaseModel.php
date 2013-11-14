@@ -5,22 +5,22 @@
 	/**
 	 *	This is a Helper class for quickly enabling objectoriented model based access to a database.
 	 */
-	public class BaseModel {
+	class BaseModel {
 
 		/**
 		 * @var array
 		 */
-		protected $values
+		protected $values;
 		
 		/**
 		 * @var string
 		 */
-		protected $table
+		protected $table;
 	
 		/**
 		 * @var ServiceProvider
 		 */
-		protected $sp
+		protected $sp;
 	
 		public function __construct($table, $values) {
 			$this->values = $values;
@@ -35,7 +35,7 @@
 		 *	@return BaseModel The BaseModel containing the data or null
 		 */
 		public static function getItem($table, $id){
-			$val = $this->sp->dp->fetchRow('SELECT * FROM \''.mysqli_real_escape_string($table).'\' WHERE id=\''.mysqli_real_escape_string($id).'\' LIMIT 0,1;')
+			$val = $this->sp->dp->fetchRow('SELECT * FROM \''.mysqli_real_escape_string($table).'\' WHERE id=\''.mysqli_real_escape_string($id).'\' LIMIT 0,1;');
 			if($val != null) {
 				return new BaseModel($table, $val);
 			} else return null;
@@ -50,12 +50,12 @@
 		 */
 		public static function getItems($table, $from = 0, $rows = -1){
 			if($from >= 0 && $rows > 0) $limit = ' LIMIT '.mysqli_real_escape_string($from).','.mysqli_real_escape_string($rows);
-			else $limit = '':
-			$vals = $this->sp->dp->fetchAll('SELECT * FROM \''.mysqli_real_escape_string($table).'\''.$limit.';')
+			else $limit = '';
+			$vals = $this->sp->dp->fetchAll('SELECT * FROM \''.mysqli_real_escape_string($table).'\''.$limit.';');
 			$a = array();
 			
 			foreach($vals as &$val){
-				array_push($a, new BaseModel($table, $val))
+				array_push($a, new BaseModel($table, $val));
 			}
 			unset($val);
 			

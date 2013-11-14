@@ -1,8 +1,9 @@
 <?php
 	
 	namespace at\foundation\core\User\model;
+	use at\foundation\core;
 
-	class User {
+	class User extends core\BaseModel {
         private $nick;
         private $email;
         private $group;

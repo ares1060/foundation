@@ -54,6 +54,7 @@
                                         'user_group'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getGroup()->getName() : '',
             							'user_nick'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getNick() : '',
             							'user_email'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getEMail() : '');
+
             
             foreach($_GET as $key=>$get){
                 if(!is_array($get)) $this->baseReplaces['GET:'.$key] = $get;
@@ -504,8 +505,8 @@
 							}
 							unset($arg);
 							//get the service result 
-							if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'core\ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
-							else $result = $this->sp->view(substr($parts[0], 0, $pos), $args);
+							if($this->_setting('render.cache_level') == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
+							else $result = $this->sp->render(substr($parts[0], 0, $pos), $args);
 							$chunk = $result.$parts[1];
 						}
 					} else {
@@ -528,8 +529,8 @@
 							if(substr($jsonObj, -1) != '}') $jsonObj = $jsonObj.'}';
 							
 							//get the service result
-							if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'core\ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
-							else $result = $this->sp->view(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
+							if($this->_setting('render.cache_level') == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
+							else $result = $this->sp->render(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
 							$chunk = $result.$parts[1];
 						}
 					} else {
@@ -554,8 +555,8 @@
 								if(substr($jsonObj, -1) != '}') $jsonObj = $jsonObj.'}';
 								
 								//get the service result
-								if($this->_setting('render.cache_level') == 1) $result = '\'.$GLOBALS[\'core\ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
-								else $result = $this->sp->view(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
+								if($this->_setting('render.cache_level') == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
+								else $result = $this->sp->render(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
 								$chunk = $result.$parts[1];
 							} else {
 								// normal params
@@ -571,8 +572,8 @@
 								}
 								unset($arg);
 								//get the service result 
-								if($this->_setting('.rendercache_level') == 1) $result = '\'.$GLOBALS[\'core\ServiceProvider\']->view(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
-								else $result = $this->sp->view(substr($parts[0], 0, $pos), $args);
+								if($this->_setting('.rendercache_level') == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
+								else $result = $this->sp->render(substr($parts[0], 0, $pos), $args);
 								$chunk = $result.$parts[1];
 							}
 						}

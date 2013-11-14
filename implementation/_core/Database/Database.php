@@ -132,9 +132,9 @@
          * returnes a boolean if the query was successfull
          * @param string $query
          */
-        public function fetchBool($query, $return){
+        public function fetchBool($query){
        		$result = $this->mysqli->real_query($query);
-       		$id = $this->mysqli->insert_id();
+       		//$id = $this->mysqli->insert_id();
        		
        		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		
@@ -159,7 +159,7 @@
         }
         
         /**
-         * checks if QUery is cached
+         * checks if query is cached
          * @param $query
          */
      	private function queryInCache($query){

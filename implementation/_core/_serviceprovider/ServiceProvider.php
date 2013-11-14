@@ -4,8 +4,8 @@
 	
 	require_once($GLOBALS['config']['root'].'_core/Settings/Settings.php');
 	require_once($GLOBALS['config']['root'].'_core/Messages/Messages.php');
-    require_once($GLOBALS['config']['root'].'_core/Database/Database.php');
-    require_once($GLOBALS['config']['root'].'_core/User/User.php');
+	require_once($GLOBALS['config']['root'].'_core/Database/Database.php');
+	require_once($GLOBALS['config']['root'].'_core/User/User.php');
     require_once($GLOBALS['config']['root'].'_core/FileHandler/FileHandler.php');
     require_once($GLOBALS['config']['root'].'_core/Template/Template.php');
     require_once($GLOBALS['config']['root'].'_core/Localization/Localization.php');
@@ -90,7 +90,7 @@
             $this->loc->loadPreloadedFiles();
             
             // check if installation is valid 
-            if((!isset($GLOBALS['setup']) || !$GLOBALS['setup']) && $this->db->render(array('query'=>'SHOW TABLES like "'.$this->db->prefix.'rights"', 'type'=>'row')) === false) {
+            if((!isset($GLOBALS['setup']) || !$GLOBALS['setup']) && $this->db->fetchBool('SHOW TABLES like "'.$this->db->prefix.'rights"') === false) {
             	// goto setup
             	header('Location: '.$GLOBALS['abs_root'].'_admincenter/setup/');
             }       

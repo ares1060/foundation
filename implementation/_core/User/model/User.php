@@ -54,7 +54,7 @@
        
         //setter
 		public function setPassword($pwd){
-			$this->pwd = $this->sp->user->hashPassword($pwd, $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7))
+			$this->pwd = $this->sp->user->hashPassword($pwd, $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7));
 		}
        
        

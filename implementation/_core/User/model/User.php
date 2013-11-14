@@ -36,7 +36,7 @@
 				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'user 
 								(`nick`, `hash`, `group`, `email`, `status`, `created`, `last_login`, `activate`) VALUES 
 								(\''.mysqli_real_escape_string($this->nick).'\', 
-									\''.$this->sp->user->hashPassword($this->pwd, $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7)).'\', 
+									\''.mysqli_real_escape_string($this->pwd).'\', 
 									\''.mysqli_real_escape_string($this->group).'\', 
 									\''.mysqli_real_escape_string($this->email).'\',
 									\''.mysqli_real_escape_string($this->status).'\',
@@ -53,6 +53,10 @@
 		}
        
         //setter
+		public function setPassword($pwd){
+			$this->pwd = $this->sp->user->hashPassword($pwd, $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7))
+		}
+       
        
         // getter
         public function getNick(){ return $this->nick; }

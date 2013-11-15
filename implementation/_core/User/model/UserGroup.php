@@ -9,8 +9,9 @@
 		private static $groups = array();
 		
 		function __construct($name = ''){
-			$this->id = $id;
+			$this->id = '';
 			$this->name = $name = '';
+			parent::__construct(ServiceProvider::get()->db->prefix.'userdata', array());
 		}
 
 	/* STATIC HELPER */
@@ -86,7 +87,7 @@
 					WHERE id="'.mysqli_real_escape_string($this->id).'"');
 			} else {
 				//insert usergroup
-				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'user 
+				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'usergroup 
 								(`name`) VALUES 
 								(\''.mysqli_real_escape_string($this->name).'\');');
 				if($succ) {
@@ -108,8 +109,8 @@
 		}
 		
 		// setter
-		private function setId() { $this->id = $id; return this; }
-		public function setName($name) { $this->name = $name; return this; }
+		private function setId() { $this->id = $id; return $this; }
+		public function setName($name) { $this->name = $name; return $this; }
 		
 		// getter
 		public function getId() { return $this->id; }

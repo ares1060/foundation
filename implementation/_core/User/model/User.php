@@ -25,7 +25,7 @@
             $this->pwd = '';
             $this->userData = null;
 			$this->group = null;
-            parent::__construct($this->sp->db->prefix.'user', array());
+            parent::__construct($ServiceProvider::get()->db->prefix.'user', array());
         }
 		
 		
@@ -193,6 +193,8 @@
 			return $ok;
 		}
 		
+	/* INSTANCE FUNCTIONS */
+		
 		/**
 		 * Overriding the BaseModel save to do proper save
 		 */
@@ -233,7 +235,7 @@
 		 */
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
-			if($ok) UserData::deleteDataForUser($id);
+			if($ok) ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata_user WHERE u_id=\''.mysqli_real_escape_string($uid).'\';');
 			//TODO remove all links where possible
 			return $ok;
 		}
@@ -241,7 +243,7 @@
         //setter
 		public function setPassword($pwd){
 			$this->pwd = $this->sp->user->hashPassword($pwd, $this->sp->txtfun->generatePassword(51, 13, 7, 7));
-			return this;
+			return $this;
 		}
 		
 		/**
@@ -251,14 +253,14 @@
     		return $this->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET `last_login` = \''.mysqli_real_escape_string(time()).'\' WHERE `id`=\''.mysqli_real_escape_string($this->id).'\';');
     	}
 	   
-		public function setNick($nick){ $this->nick = $nick; return this; }
-        public function setEmail($email){ $this->email = $email; return this; }
-        public function setGroup($gid) { $this->groupId = $gid; $this->group=null; return this; }
-        public function setGroupId($gid) { $this->groupId = $gid; $this->group=null; return this; }
-        public function setStatus($status) { $this->status = $status; return this; }
+		public function setNick($nick){ $this->nick = $nick; return $this; }
+        public function setEmail($email){ $this->email = $email; return $this; }
+        public function setGroup($gid) { $this->groupId = $gid; $this->group=null; return $this; }
+        public function setGroupId($gid) { $this->groupId = $gid; $this->group=null; return $this; }
+        public function setStatus($status) { $this->status = $status; return $this; }
        
-		private function setId($id) { $this->id = $id; return this; }
-		private function setHash($pwd) { $this->pwd = $pwd; return this; }
+		private function setId($id) { $this->id = $id; return $this; }
+		private function setHash($pwd) { $this->pwd = $pwd; return $this; }
 		
 		// getter
 		public function getNick(){ return $this->nick; }

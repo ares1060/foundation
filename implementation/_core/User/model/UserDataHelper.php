@@ -23,13 +23,6 @@
 
 		
 		
-		/* ========== USERDATA GROUP ========= */
-		public function getUserDataGroupById($id){
-		$q = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup WHERE id = "'.mysqli_real_escape_string($id).'"');
-			if($q != null){
-				return new UserDataGroup($q['id'], $q['name']);
-			}
-		}
 		/* ========== USERDATA ========= */
 		public function getUserDataById($id){
 			$q = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE id = "'.mysqli_real_escape_string($id).'"');

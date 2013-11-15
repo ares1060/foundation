@@ -13,18 +13,185 @@
         
         private $userData;
         private $group;
-				
-        public function __construct($nick, $email, $group, $pwd, $status, $id = '') {
+			
+		private static $users = array();
+			
+        public function __construct($nick = '', $email = '', $group= '', $status) {
             $this->nick = $nick;
             $this->email = $email;
-            $this->id = $id;
+            $this->id = '';
             $this->groupId = $group;
             $this->status = $status;
-            $this->pwd = $pwd;
+            $this->pwd = '';
             $this->userData = null;
 			$this->group = null;
             parent::__construct($this->sp->db->prefix.'user', array());
         }
+		
+		
+	/* STATIC HELPER */
+		
+		/**
+		 * returns nick availability
+		 * @param string $nick
+		 */
+		public static function checkNickAvailability($nick){
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
+			if($u != array()) return false;
+			else return true;
+		}
+		
+		/**
+		 * returns Users 
+		 * @param int $page
+		 * @param int $perPage
+		 */
+		public static function getUsers($page=-1, $perPage=-1) {
+			$return = array();
+        	
+			$all = self::getAllUserCount(-1, -1);
+        	
+			$from = ($page-1)*(ServiceProvider::get()->user->settings->perpage_user);
+			if($from > $all) $from = 0;
+			
+			$limit = ($page == -1) ? '' : 'LIMIT '.mysqli_real_escape_string($from).', '.mysqli_real_escape_string($this->_setting('perpage.user')).';';
+			
+			$u1 = ServiceProvider::get()->db->fetchAll('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user '.$limit);
+			if($u1 != array()){
+				foreach($u1 as $u) {
+					$return[] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
+						->setId($u['id'])
+						->setHash($u['hash']); 
+				}
+			}
+			return $return;
+		}
+		
+		/**
+		 * returns User by Id
+		 * @param int $id
+		 */
+		public static function getUser($id){
+			if(!isset(self::$users[$id])) {
+				$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE id="'.mysqli_real_escape_string($id).'"');
+				if($u != array()){
+					self::$users[$id] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
+						->setId($u['id'])
+						->setHash($u['hash']); 
+				} else {
+					return null;
+				}
+			}
+			return self::$users[$id];
+		}
+		
+		/**
+		 * returns User by Id
+		 * @see getUser
+		 * @param int $id
+		 */
+		public static function getUserById($id){
+			return self::getUser($id);
+		}
+		
+		/**
+		 * returns count of all users
+		 */
+		public static function getAllUserCount(){
+			$u = ServiceProvider::get()->db->fetchRow('SELECT COUNT(*) count FROM '.ServiceProvider::get()->db->prefix.'user');
+			if($u) return $u['count'];
+			else return -1;
+		}
+		
+		/**
+		 * returns User by Nick
+		 * @param string $nick
+		 */
+		public static function getUserByNick($nick){
+			foreach(self::$users as $u){
+				if($u->getNick() == $nick) return $u;
+			}
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
+			if($u != array()){
+				self::$users[$u['id']] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
+					->setId($u['id'])
+					->setHash($u['hash']); 
+				return self::$users[$u['id']];
+			}
+			return null;
+		}
+		
+		/**
+		 * gets User Info Object by User Data id and data value
+		 * @param int $data_id
+		 * @param string $value
+		 */
+		public static function getUserByData($data_id, $value){
+			if($data_id > 0 && $value != ''){
+				$array = ServiceProvider::get()->db->fetchAll('SELECT * FROM
+						'.ServiceProvider::get()->db->prefix.'userdata_user du
+						LEFT JOIN '.ServiceProvider::get()->db->prefix.'user u ON du.u_id = u.id
+						WHERE du.value=\''.mysqli_real_escape_string($value).'\' AND du.ud_id = \''.mysqli_real_escape_string($data_id).'\';');
+				 
+				if($array != array()) {
+					$u = $array[0];
+					self::$users[$u['id']] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
+						->setId($u['id'])
+						->setHash($u['hash']); 
+
+					return self::getUser($array[0]['id']);
+				}else return null;
+			} else return null;
+		}
+		
+		/**
+		 * returns User by EMail
+		 * @param unknown_type $mail
+		 */
+		public static function getUserByMail($mail){
+			foreach(self::$users as $u){
+				if($u->getEMail() == $mail) return $u;
+			}
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
+			if($u != array()){
+				self::$users[$u['id']] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
+					->setId($u['id'])
+					->setHash($u['hash']); 
+				return self::$users[$u['id']];
+			}
+			return null;
+		}
+		
+		/**
+		 * returns users Hash for Login routine
+		 * @param string $mail
+		 */
+		public static function getUserHashByMail($mail){
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
+	       	if($u != '' && $u != array() && isset($u['hash'])){
+	       		return $u['hash'];
+	       	} else return '';
+		}
+		
+		/**
+		 * returns users Hash for Login routine
+		 * @param string $nick
+		 */
+		public static function getUserHashByNick($nick){
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
+	       	if($u != '' && $u != array() && isset($u['hash'])){
+	       		return $u['hash'];
+	       	} else return '';
+		}
+		
+		/**
+		 *	Deletes the user with the given id from the database
+		 */
+		public static function deleteById($id){
+			$ok = ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($id).'\';');
+			//TODO delete all userdata
+			return $ok;
+		}
 		
 		/**
 		 * Overriding the BaseModel save to do proper save
@@ -32,6 +199,13 @@
 		public function save(){
 			if($this->id != ''){
 				//update user
+				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET
+						nick = \''.$this->nick.'\',
+						hash = \''.$this->pwd.'\',
+						group = \''.$this->groupId.'\',
+						email = \''.$this->email.'\',
+						status = \''.$this->status.'\'
+					WHERE id="'.mysqli_real_escape_string($this->id).'"');
 			} else {
 				//insert user
 				$activate_code = ($this->status == core\User::STATUS_HAS_TO_ACTIVATE) ? md5(time().$this->sp->ref('TextFunctions')->generatePassword(20, 10, 0, 0)): ''; 
@@ -39,7 +213,7 @@
 								(`nick`, `hash`, `group`, `email`, `status`, `created`, `last_login`, `activate`) VALUES 
 								(\''.mysqli_real_escape_string($this->nick).'\', 
 									\''.mysqli_real_escape_string($this->pwd).'\', 
-									\''.mysqli_real_escape_string($this->group).'\', 
+									\''.mysqli_real_escape_string($this->groupId).'\', 
 									\''.mysqli_real_escape_string($this->email).'\',
 									\''.mysqli_real_escape_string($this->status).'\',
 									\''.mysqli_real_escape_string(time()) .'\',
@@ -53,17 +227,29 @@
 				}
 			}
 		}
-       
+
         //setter
 		public function setPassword($pwd){
-			$this->pwd = $this->sp->user->hashPassword($pwd, $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7));
+			$this->pwd = $this->sp->user->hashPassword($pwd, $this->sp->txtfun->generatePassword(51, 13, 7, 7));
+			return this;
 		}
+		
+		/**
+		 *	Saves the current time as lastLogin time to the database
+		 */
+    	public function setLastLogin(){
+    		return $this->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET `last_login` = \''.mysqli_real_escape_string(time()).'\' WHERE `id`=\''.mysqli_real_escape_string($this->id).'\';');
+    	}
+	   
+		public function setNick($nick){ $this->nick = $nick; return this; }
+        public function setEmail($email){ $this->email = $email; return this; }
+        public function setGroup($gid) { $this->groupId = $gid; $this->group=null; return this; }
+        public function setGroupId($gid) { $this->groupId = $gid; $this->group=null; return this; }
+        public function setStatus($status) { $this->status = $status; return this; }
        
-		public function setNick($nick){ $this->nick = $nick; }
-        public function setEmail($email){ $this->email = $email; }
-        public function setGroupId($gid) { $this->groupId = $gid; }
-        public function setStatus($status) { $this->status = $status; }
-       
+		private function setId($id) { $this->id = $id; return this; }
+		private function setHash($pwd) { $this->pwd = $pwd; return this; }
+		
 		// getter
 		public function getNick(){ return $this->nick; }
 		public function getEmail(){ return $this->email; }

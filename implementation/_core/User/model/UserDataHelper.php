@@ -20,155 +20,7 @@
 		}	
 		
 		/** ---  Getter --- */
-		/**
-		 * returnes nick availability
-		 * @param unknown_type $nick
-		 */
-		public function checkNickAvailability($nick){
-			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
-			if($u != array()) return false;
-			else return true;
-		}
-		/* ========== USERS ========= */
-		/**
-		 * returnes Users 
-		 * @param unknown_type $page
-		 * @param unknown_type $perPage
-		 */
-		public function getUsers($page=-1, $perPage=-1) {
-			$return = array();
-        	
-			$all = $this->getAllUserCount(-1, -1);
-        	
-			$from = ($page-1)*($this->_setting('perpage.user'));
-			if($from > $all) $from = 0;
-			
-			$limit = ($page == -1) ? '' : 'LIMIT '.mysqli_real_escape_string($from).', '.mysqli_real_escape_string($this->_setting('perpage.user')).';';
-			
-			$u1 = $this->mysqlArray('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user '.$limit);
-			if($u1 != array()){
-				foreach($u1 as $u) 
-					$return[] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
-			}
-			return $return;
-		}
-		
-		public function getUserById($id){
-			return $this->getUser($id);
-		}
-		
-		/**
-		 * returnes count of all users
-		 */
-		public function getAllUserCount(){
-			$u = $this->mysqlRow('SELECT COUNT(*) count FROM '.ServiceProvider::get()->db->prefix.'user');
-			if($u) return $u['count'];
-			else return -1;
-		}
-		/**
-		 * returnes User by Id
-		 * @param unknown_type $id
-		 */
-		public function getUser($id){
-			if(!isset($this->users[$id])) {
-				$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE id="'.mysqli_real_escape_string($id).'"');
-				if($u != array()){
-					$this->users[$id] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
-				}
-			}
-			return $this->users[$id];
-		}
-		
-		/**
-		 * returnes User by Nick
-		 * @param unknown_type $nick
-		 */
-		public function getUserByNick($nick){
-			foreach($this->users as $u){
-				if($u->getNick() == $nick) return $nick;
-			}
-			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
-			if($u != array()){
-				$this->users[$u['id']] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
-				return $this->users[$u['id']];
-			}
-			return null;
-		}
-		
-		/**
 
-		 * gets User Info Object by User Data id and data value
-
-		 * @param unknown_type $data_id
-
-		 * @param unknown_type $value
-
-		 */
-
-		public function getUserByData($data_id, $value){
-
-			if($data_id > 0 && $value != ''){
-				$array = $this->mysqlArray('SELECT * FROM
-
-						'.ServiceProvider::get()->db->prefix.'userdata_user du
-
-						LEFT JOIN '.ServiceProvider::get()->db->prefix.'user u ON du.u_id = u.id
-
-						WHERE du.value=\''.mysqli_real_escape_string($value).'\' AND du.ud_id = \''.mysqli_real_escape_string($data_id).'\';');
-				 
-
-				if($array != array()) {
-					$u = $array[0];
-
-					$this->users[$u['id']] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
-
-		
-
-					return $this->getUser($array[0]['id']);
-
-				}
-
-				else return null;
-
-			} else return null;
-
-		}
-		/**
-		 * returnes User by EMail
-		 * @param unknown_type $mail
-		 */
-		public function getUserByEMail($mail){
-			foreach($this->users as $u){
-				if($u->getEMail() == $nick) return $nick;
-			}
-			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
-			if($u != array()){
-				$this->users[$u['id']] = new UserObject($u['nick'], $u['id'], $u['email'], $this->getUserGroup($u['group']), $u['status']);
-				return $this->users[$u['id']];
-			}
-			return null;
-		}
-		/**
-		 * returnes users Hash for Login routine
-		 * @param unknown_type $mail
-		 */
-		public function getUserHashByEMail($mail){
-			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
-	       	if($u != '' && $u != array() && isset($u['hash'])){
-	       		return $u['hash'];
-	       	} else return '';
-		}
-		
-		/**
-		 * returnes users Hash for Login routine
-		 * @param unknown_type $nick
-		 */
-		public function getUserHashByNick($nick){
-			$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
-	       	if($u != '' && $u != array() && isset($u['hash'])){
-	       		return $u['hash'];
-	       	} else return '';
-		}
 		
 		/* ========== GROUPS ========= */
 		/**
@@ -394,8 +246,9 @@
     			   		if($this->sp->ref('TextFunctions')->getPasswordStrength($pwd) >= $this->_setting('pwd.min_strength')){
     			   			if($email != '' && $this->sp->ref('TextFunctions')->isEmail($email)){
     			   				
-    			   				$user = new model\User($nick, $email, $group, $pwd, $status);
-    			   				
+    			   				$user = new model\User($nick, $email, $group, $status);
+    			   				$user->setPassword($pwd);
+								
 		    			   		if($user->save()) {	
 		    			   			$ok = true;	 
 		    			   			foreach($data as $key=>$value) {
@@ -540,10 +393,13 @@
     		}
     	}
     	
+		/**
+		 *	Calls setLastLogin on the currently logged in User
+		 *	@see: models\User::setLastLogin
+		 */
     	public function setLastLogin(){
-    		if($this->sp->ref('User')->isLoggedIn()){
-    			$u = $this->sp->ref('User')->getLoggedInUser();
-    			return $this->mysqlUpdate('UPDATE '.ServiceProvider::get()->db->prefix.'user SET `last_login` = \''.mysqli_real_escape_string(time()).'\' WHERE `id`=\''.mysqli_real_escape_string($u->getId()).'\';');
+    		if($this->sp->user->isLoggedIn()){
+    			return $this->sp->user->getLoggedInUser()->setLastLogin();
     		} else return false;
     	}
     	
@@ -553,7 +409,7 @@
     	 */
     	public function deleteUser($id){
     		if($this->checkRight('administer_user')){
-    			return $this->mysqlDelete('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($id).'\';');
+    			return model\User::deleteById($id);
     		} else {
     			$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
         		return false;
@@ -571,24 +427,26 @@
     	 * @param $userData
     	 */
     	public function editUser($id=-1, $nick='', $pwd='', $email='', $status=-1, $group=-1, $userData=array()){
-    		if($id == -1) $id = $this->sp->ref('User')->getLoggedInUser()->getId();
-
-    		if($id == $this->sp->ref('User')->getLoggedInUser()->getId() || $this->checkRight('administer_user', $id)){
+    		if($id == -1) $id = $this->sp->user->getLoggedInUser()->getId();
+			
+    		if($id == $this->sp->user->getLoggedInUser()->getId() || $this->checkRight('administer_user', $id)){
     			
     			$query = array();
     			$err = false;
     			
+				$user = model\User::getUser($id);
+				
     			// nick just can be changed by authorized uer and if available
     			if($nick != '' && $this->checkRight('administer_user')) {
     				if($this->checkNickAvailability($nick)){
-    					$query[] = '`nick`="'.mysqli_real_escape_string($nick).'"';
+    					$user->setNick($nick);
     				} else $this->_msg($this->_('Nick not available'), Messages::ERROR);
     			} else $nick = '';
     			
     			// accept email just if it is an email
     			if($email != '') {
-    				if($this->sp->ref('TextFunctions')->isEmail($email)){
-    					$query[] = '`email`="'.mysqli_real_escape_string($email).'"';
+    				if($this->sp->txtfun->isEmail($email)){
+    					$user->setEmail($email);
     				} else {
     					$this->_msg($this->_('Please enter a valid email'), Messages::ERROR);
     					$err = true;
@@ -596,9 +454,8 @@
     			}
     			// create new password hash
     			if($pwd != '') {
-    				if($this->sp->ref('TextFunctions')->getPasswordStrength($pwd) >= $this->_setting('pwd.min_strength')){
-    					$salt = $this->sp->ref('TextFunctions')->generatePassword(51, 13, 7, 7);
-    					$query[] = '`hash`="'.$this->sp->ref('User')->hashPassword($pwd, $salt).'"';
+    				if($this->sp->txtfun->getPasswordStrength($pwd) >= $this->_setting('pwd.min_strength')){
+    					$user->setPassword($pwd);
     				} else {
     					$this->_msg($this->_('New Password is too weak'), Messages::ERROR);
     					$err = true;
@@ -606,25 +463,21 @@
        			}
        			
        			if($status != -1 && $this->checkRight('administer_user')){
-       				$query[] = '`status`="'.mysqli_real_escape_string($status).'"';
-       				if($status != User::STATUS_HAS_TO_ACTIVATE) $query[] = ' `activate`=""';
+       				$user->setStatus($status);
+       				if($status != User::STATUS_HAS_TO_ACTIVATE) $user->setStatus('');
        			}
        			
        			if($group != -1 && $this->checkRight('administer_user')){
-       				$query[] = '`group`="'.mysqli_real_escape_string($group).'"';
+       				$user->setGroupId($group);
        			}
        			
        			//TODO: userData
-       			//$this->debug(implode(', ', $query));
        			       			
        			if(!$err) {
-       				$q = $this->mysqlUpdate('UPDATE '.ServiceProvider::get()->db->prefix.'user SET '.implode(', ', $query).' WHERE id="'.mysqli_real_escape_string($id).'"');
-       				if($q) {
-       					//$this->_msg($this->_('Update successfull'), Messages::INFO);
-       					if($id == $this->sp->ref('User')->getLoggedInUser()->getId()) $this->sp->ref('User')->updateActiveUsers();
+       				if($user->save()) {
+       					if($id == $this->sp->user->getLoggedInUser()->getId()) $this->sp->user->updateActiveUsers();
        					return true;
        				} else {
-       				//	$this->_msg($this->_('Update unsuccessfull'), Messages::INFO);
        					return false;
        				}
        			} else return false;

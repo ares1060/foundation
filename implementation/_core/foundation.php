@@ -32,6 +32,7 @@
 	array_pop($a);
 	$folder = implode('/', $a).'/';
 	$GLOBALS['abs_root'] = 'http://'.$_SERVER['HTTP_HOST'].$folder.$GLOBALS['to_root'];
+	$GLOBALS['http_root'] = 'http://'.$_SERVER['HTTP_HOST'].$folder.$GLOBALS['to_root'];
 	$GLOBALS['working_dir'] = 'spidernet/';
 	$GLOBALS['testDatabase'] = true; // if true the services databases will be deleted before install
 	
@@ -74,7 +75,7 @@
 		
 	//make sure a ServiceProvider instance is available
 	$sp = core\ServiceProvider::getInstance();
-
+	
 	/* check session expiration */
 	$sp->user->checkSessionExpiration();
 

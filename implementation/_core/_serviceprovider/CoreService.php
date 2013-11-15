@@ -15,7 +15,11 @@
          * @var ServiceProvider
          */
         protected $sp;
-        protected $settings;
+		
+        /**
+         * @var Settings
+         */
+        public $settings;
         
         function __construct(){
         	$this->sp =& $GLOBALS['ServiceProvider'];

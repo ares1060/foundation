@@ -1,6 +1,7 @@
 <?php
     
 	namespace at\foundation\core;
+	use at\foundation\core;
 	
 	require_once($GLOBALS['config']['root'].'_core/Settings/Settings.php');
 	require_once($GLOBALS['config']['root'].'_core/Messages/Messages.php');
@@ -48,6 +49,11 @@
 		public $rights;
 		
 		/**
+		 * @var TextFunctions
+		 */
+		public $txtfun;
+		
+		/**
 		 * @var Settings
 		 */
 		public $settings;
@@ -73,8 +79,10 @@
 			$this->services['settings'] =& $this->settings;
 			$this->loc = new Localization\Localization();
 			$this->services['localization'] =& $this->loc;
-            $this->db = new Database\Database();
+			$this->db = new Database\Database();
 			$this->services['database'] =& $this->db;
+            $this->txtfun = new TextFunctions\TextFunctions();
+            $this->services['textfunctions'] =& $this->txtfun;
             $this->msg = new Messages\Messages();
 			$this->services['messages'] =& $this->msg;
   			$this->fh = new Filehandler\Filehandler();

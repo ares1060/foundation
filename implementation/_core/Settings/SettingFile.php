@@ -228,6 +228,15 @@
 					        $key = trim( $key );
 					        $value = trim( $value );
 					        
+							$vm = array();
+							$vmc = preg_match_all('/%([^%]+)%/', $value, $vm);
+
+							if($vmc > 0){
+								foreach($vm[1] as $m){
+									$value = str_replace('%'.$m.'%', $GLOBALS[$m], $value);
+								}
+							}
+							
 					        // create new Settings Object and add to group
 					        $tmp_value = new SettingValue($key, $value, $active_type, $active_info);
 					        $tmp_value->addOptions($active_options);

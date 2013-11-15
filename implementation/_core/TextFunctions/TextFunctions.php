@@ -2,9 +2,9 @@
 
 	namespace at\foundation\core\TextFunctions;
 	use at\foundation\core;
-
-	require_once 'classes/TextFunctionsMailChecker.php';
-	require_once 'classes/TextFunctionsPasswordStrength.php';
+	
+	require_once 'MailChecker.php';
+	require_once 'PasswordStrength.php';
 	
 	/**
      * Description

@@ -9,7 +9,7 @@ use at\foundation\core;
  * @author scrapy_ii@gmail.com - edited for theFoundation
  * @contributers adnan@barakatdesigns.net, gabe@fijiwebdesign.com 
  */
-class TextFunctionsMailChecker {
+class MailChecker {
 	
 	 /** 
 	  * Maximum time to read from socket 

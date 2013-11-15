@@ -12,7 +12,7 @@ use at\foundation\core;
 * Website        : http://dev.xrvel.com or http://xrvel.com
 */
 
-class TextFunctionsPasswordStrength {
+class PasswordStrength {
     private $password = '';
     private $passwordFlag = array();
     private $passwordInfo = array();

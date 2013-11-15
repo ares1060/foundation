@@ -54,7 +54,7 @@
 			$from = ($page-1)*(ServiceProvider::get()->user->settings->perpage_user);
 			if($from > $all) $from = 0;
 			
-			$limit = ($page == -1) ? '' : 'LIMIT '.mysqli_real_escape_string($from).', '.mysqli_real_escape_string($this->_setting('perpage.user')).';';
+			$limit = ($page == -1) ? '' : 'LIMIT '.mysqli_real_escape_string($from).', '.mysqli_real_escape_string(ServiceProvider::get()->user->settings->perpage_user).';';
 			
 			$u1 = ServiceProvider::get()->db->fetchAll('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user '.$limit);
 			if($u1 != array()){
@@ -189,7 +189,7 @@
 		 */
 		public static function deleteById($id){
 			$ok = ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($id).'\';');
-			//TODO delete all userdata
+			UserData::deleteDataForUser($id);
 			return $ok;
 		}
 		
@@ -200,11 +200,11 @@
 			if($this->id != ''){
 				//update user
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET
-						nick = \''.$this->nick.'\',
-						hash = \''.$this->pwd.'\',
-						group = \''.$this->groupId.'\',
-						email = \''.$this->email.'\',
-						status = \''.$this->status.'\'
+						nick = \''.mysqli_real_escape_string($this->nick).'\',
+						hash = \''.mysqli_real_escape_string($this->pwd).'\',
+						group = \''.mysqli_real_escape_string($this->groupId).'\',
+						email = \''.mysqli_real_escape_string($this->email).'\',
+						status = \''.mysqli_real_escape_string($this->status).'\'
 					WHERE id="'.mysqli_real_escape_string($this->id).'"');
 			} else {
 				//insert user
@@ -226,6 +226,16 @@
 					return false;
 				}
 			}
+		}
+		
+		/**
+		 *	Deletes the user from the database
+		 */
+		public function delete(){
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
+			if($ok) UserData::deleteDataForUser($id);
+			//TODO remove all links where possible
+			return $ok;
 		}
 
         //setter

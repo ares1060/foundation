@@ -22,33 +22,7 @@
 		/** ---  Getter --- */
 
 		
-		/* ========== GROUPS ========= */
-		/**
-		 * returnes userGroup by Id
-		 * @param unknown_type $id
-		 */
-		public function getUserGroup($id) {
-			if(!isset($this->groups[$id])){
-				$u = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'usergroup WHERE id="'.mysqli_real_escape_string($id).'"');
-				if($u != array()){
-					$this->groups[$id] = new UserGroup($u['id'], $u['name']);
-				}
-			}
-			return $this->groups[$id];
-		}
-		/**
-		 * returnes array of all Usergroups
-		 */
-		public function getGroups() {
-			$this->groups = array();
-			$g = $this->mysqlArray('SELECT * FROM '.ServiceProvider::get()->db->prefix.'usergroup');
-			if($g != array()){
-				foreach($g as $group) {
-					$this->groups[] = new UserGroup($group['id'], $group['name']);
-				}
-			}
-			return $this->groups;
-		}
+		
 		/* ========== USERDATA GROUP ========= */
 		public function getUserDataGroupById($id){
 		$q = $this->mysqlRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup WHERE id = "'.mysqli_real_escape_string($id).'"');

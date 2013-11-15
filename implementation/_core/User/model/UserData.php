@@ -1,22 +1,24 @@
 <?php
 	namespace at\foundation\core\User\model;
+	use at\foundation\core;
 	
-	class UserData {
+	class UserData extends core\BaseModel {
 		private $id;
 		private $name;
-		private $group;
+		private $groupId;
 		private $type;
 		private $info;
 		private $visibility;
 		private $userGroups;
 	   
-		function __construct($id, $name, UserDataGroup $group, $type, $info, $visibility_register, $visibility_login, $visibility_edit){
+		function __construct($name='', $group='', $type='', $info='', $visibility_register='', $visibility_login='', $visibility_edit=''){
 			$this->id = $id;
 			$this->name = $name;
-			$this->group = $group;
+			$this->groupId = $group;
 			$this->type = $type;
 			$this->info = $info;
 			$this->visibility = array('register'=>$visibility_register, 'login'=>$visibility_login, 'edit'=>$visibility_edit);
+			parent::__construct($this->sp->db->prefix.'userdata', array());
 		}
 		
 		public function addUserGroup($id) { if(!isset($this->userGroups[$id])) $this->userGroups[$id] = $id; }

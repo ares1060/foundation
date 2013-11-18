@@ -25,8 +25,33 @@
 		
 	/* STATIC HELPER */
 	
+		/**
+		 * Fetches the UserDataField with the given id
+		 * @return UserDataField
+		 */
+		public static function getUserDataFieldById($id){
+			$q = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE id = "'.mysqli_real_escape_string($id).'"');
+			if($q != null){
+				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
+				$t->setId($q['id']);
+				return $t;
+			} else return null;
+		}
 		
-	
+		/**
+		 * Fetches the UserDataField with the given name
+		 * @return UserDataField
+		 */
+		public static function getUserDataFieldByName($name) {
+			$q = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE name = "'.mysqli_real_escape_string($name).'"');
+			if($q != null){
+				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
+				$t->setId($q['id']);
+				return $t;
+			} else return null;
+		}
+		
+		
 	/* INSTANCE FUNCTIONS */
 		
 		/**
@@ -34,14 +59,13 @@
 		 */
 		public function save(){
 			if($this->id != ''){
-				//update user
-				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'userdata SET
+				//update
+				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'userdatafield SET
 						
 					WHERE id="'.mysqli_real_escape_string($this->id).'"');
 			} else {
-				//insert user
-				$activate_code = ($this->status == core\User::STATUS_HAS_TO_ACTIVATE) ? md5(time().$this->sp->ref('TextFunctions')->generatePassword(20, 10, 0, 0)): ''; 
-				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'userdata 
+				//insert
+				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'userdatafield 
 								() VALUES 
 								();');
 				if($succ) {
@@ -57,7 +81,7 @@
 		 *	Deletes the user from the database
 		 */
 		public function delete(){
-			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
 			//TODO remove all links where possible
 			return $ok;
 		}

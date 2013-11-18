@@ -2,7 +2,7 @@
 	
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
-
+	
 	class User extends core\BaseModel {
         private $nick;
         private $email;

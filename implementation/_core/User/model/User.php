@@ -59,9 +59,9 @@
 			$u1 = ServiceProvider::get()->db->fetchAll('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user '.$limit);
 			if($u1 != array()){
 				foreach($u1 as $u) {
-					$return[] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
-						->setId($u['id'])
-						->setHash($u['hash']); 
+					$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+					$ui->setId($u['id'])->setHash($u['hash']); 
+					$return[] = $ui;
 				}
 			}
 			return $return;
@@ -75,9 +75,9 @@
 			if(!isset(self::$users[$id])) {
 				$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE id="'.mysqli_real_escape_string($id).'"');
 				if($u != array()){
-					self::$users[$id] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
-						->setId($u['id'])
-						->setHash($u['hash']); 
+					$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+					$ui->setId($u['id'])->setHash($u['hash']); 
+					self::$users[$id] = $ui;
 				} else {
 					return null;
 				}
@@ -113,9 +113,9 @@
 			}
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
 			if($u != array()){
-				self::$users[$u['id']] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
-					->setId($u['id'])
-					->setHash($u['hash']); 
+				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+				$ui->setId($u['id'])->setHash($u['hash']); 
+				self::$users[$u['id']] = $ui;
 				return self::$users[$u['id']];
 			}
 			return null;
@@ -135,9 +135,9 @@
 				 
 				if($array != array()) {
 					$u = $array[0];
-					self::$users[$u['id']] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
-						->setId($u['id'])
-						->setHash($u['hash']); 
+					$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+					$ui->setId($u['id'])->setHash($u['hash']); 
+					self::$users[$u['id']] = $ui;
 
 					return self::getUser($array[0]['id']);
 				}else return null;
@@ -154,9 +154,9 @@
 			}
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
 			if($u != array()){
-				self::$users[$u['id']] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
-					->setId($u['id'])
-					->setHash($u['hash']); 
+				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+				$ui->setId($u['id'])->setHash($u['hash']); 
+				self::$users[$u['id']] = $ui;
 				return self::$users[$u['id']];
 			}
 			return null;
@@ -169,9 +169,9 @@
 		public static function getUserByActivationCode($activationCode){
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($activationCode).'"');
 			if($u != array()){
-				self::$users[$u['id']] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
-					->setId($u['id'])
-					->setHash($u['hash']); 
+				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+				$ui->setId($u['id'])->setHash($u['hash']); 
+				self::$users[$u['id']] = $ui;
 				return self::$users[$u['id']];
 			}
 			return null;

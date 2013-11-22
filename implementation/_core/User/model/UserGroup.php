@@ -24,8 +24,9 @@
 			if(!isset(self::$groups[$id])) {
 				$g = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'usergroup WHERE id="'.mysqli_real_escape_string($id).'"');
 				if($g != array()){
-					self::$groups[$id] = (new UserGroup($g['name']))
-						->setId($g['id']);
+					$ug = new UserGroup($g['name']);
+					$ug->setId($g['id']);
+					self::$groups[$id] = $ug;
 				} else {
 					return null;
 				}
@@ -60,8 +61,9 @@
 			$gs = ServiceProvider::get()->db->fetchAll('SELECT * FROM '.ServiceProvider::get()->db->prefix.'usergroup '.$limit);
 			if($gs != array()){
 				foreach($gs as $g) {
-					$return[] = (new UserGroup($g['name']))
-						->setId($g['id']);
+					$ug = new UserGroup($g['name']);
+					$ug->setId($g['id']);
+					$return[] = $ug;
 				}
 			}
 			return $return;

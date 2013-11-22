@@ -1,5 +1,9 @@
 <?php
 	
+	/**
+	 * @package at\foundation\core\User\model\User
+	 */
+
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
 	
@@ -34,6 +38,7 @@
 		/**
 		 * returns nick availability
 		 * @param string $nick
+		 * @return boolean True if nick is available
 		 */
 		public static function checkNickAvailability($nick){
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
@@ -45,6 +50,7 @@
 		 * returns Users 
 		 * @param int $page
 		 * @param int $perPage
+		 * @return User[] An array with the fetched Users
 		 */
 		public static function getUsers($page=-1, $perPage=-1) {
 			$return = array();
@@ -70,6 +76,7 @@
 		/**
 		 * returns User by Id
 		 * @param int $id
+		 * @return User
 		 */
 		public static function getUser($id){
 			if(!isset(self::$users[$id])) {
@@ -89,6 +96,7 @@
 		 * returns User by Id
 		 * @see getUser
 		 * @param int $id
+		 * @return User
 		 */
 		public static function getUserById($id){
 			return self::getUser($id);
@@ -96,6 +104,7 @@
 		
 		/**
 		 * returns count of all users
+		 * @return int
 		 */
 		public static function getAllUserCount(){
 			$u = ServiceProvider::get()->db->fetchRow('SELECT COUNT(*) count FROM '.ServiceProvider::get()->db->prefix.'user');
@@ -106,6 +115,7 @@
 		/**
 		 * returns User by Nick
 		 * @param string $nick
+		 * @return User
 		 */
 		public static function getUserByNick($nick){
 			foreach(self::$users as $u){
@@ -125,6 +135,7 @@
 		 * gets User Info Object by User Data id and data value
 		 * @param int $data_id
 		 * @param string $value
+		 * @return User
 		 */
 		public static function getUserByData($data_id, $value){
 			if($data_id > 0 && $value != ''){
@@ -146,7 +157,8 @@
 		
 		/**
 		 * returns User by EMail
-		 * @param unknown_type $mail
+		 * @param string $mail
+		 * @return User
 		 */
 		public static function getUserByMail($mail){
 			foreach(self::$users as $u){
@@ -165,6 +177,7 @@
 		/**
 		 * returns User by given activation code
 		 * @param string $activationCode
+		 * @return User
 		 */
 		public static function getUserByActivationCode($activationCode){
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($activationCode).'"');
@@ -180,6 +193,7 @@
 		/**
 		 * returns users Hash for Login routine
 		 * @param string $mail
+		 * @return string
 		 */
 		public static function getUserHashByMail($mail){
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
@@ -191,6 +205,7 @@
 		/**
 		 * returns users Hash for Login routine
 		 * @param string $nick
+		 * @return string
 		 */
 		public static function getUserHashByNick($nick){
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');

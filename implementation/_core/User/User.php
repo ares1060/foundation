@@ -352,6 +352,8 @@
          * Logs in User by nick and pwd
          * @param $nick
          * @param $pwd
+         * 
+         * @return boolean True if successfully logged in
          */
         public function login($nick, $pwd){
         	if($this->rightPwd($nick, $pwd)){        			
@@ -700,7 +702,8 @@
         }
          
          /**
-          * returnes logged in User
+          * returns logged in User
+          * @return at\foundation\core\User\model\User
           */
          public function getLoggedInUser() {
          	if($this->loggedInUser == null){
@@ -708,6 +711,7 @@
          	}
          	return $this->loggedInUser;
          }
+         
          /**
           * updates data for viewing and loggedin User
           */

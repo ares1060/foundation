@@ -1,5 +1,9 @@
 <?php
     
+	/**
+	 * @package at\foundation\core\ServiceProvider
+	 */
+
 	namespace at\foundation\core;
 	use at\foundation\core;
 	
@@ -14,52 +18,52 @@
     
     class ServiceProvider {
         /**
-         * @var Database
+         * @var at\foundation\core\Database\Database
          */
     	public $db;
     
         /**
-         * @var FileHandler
+         * @var at\foundation\core\FileHandler\FileHandler
          */
     	public $fh;
 	
 		/**
-		* @var Localization
+		* @var at\foundation\core\Localization\Localization
 		*/
         public $loc;
         
 		/**
-		 * @var Messages
+		 * @var at\foundation\core\Messages\Messages
 		 */
 		public $msg;
 		
 		/**
-		 * @var User
+		 * @var at\foundation\core\User\User
 		 */
 		public $user;
 		
 		/**
-		 * @var Template
+		 * @var at\foundation\core\Template\Template
 		 */
 		public $tpl;
 
 		/**
-		* @var Rights
+		* @var at\foundation\core\Rights\Rights
 		*/
 		public $rights;
 		
 		/**
-		 * @var TextFunctions
+		 * @var at\foundation\core\TextFunctions\TextFunctions
 		 */
 		public $txtfun;
 		
 		/**
-		 * @var Mail
+		 * @var at\foundation\core\Mail\Mail
 		 */
 		public $mail;
 		
 		/**
-		 * @var Settings
+		 * @var at\foundation\core\Settings\Settings
 		 */
 		public $settings;
 		

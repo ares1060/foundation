@@ -1,15 +1,15 @@
 <?php
+
+	/**
+	* @package at\foundation\core\User\model\UserData
+	*/
+
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
+
 	use at\foundation\core\User\model\UserDataItem;
 	use at\foundation\core\User\model\UserDataField;
-	
-/**
- * New model:
- * userdata: id, user_id, field_id, value, last_change
- * userdatafield: id, name, info, type, group, vis_register, vis_login, vis_edit
- * userdatagroup: id, name
- */
+
 	
 	class UserData extends core\BaseModel {
 		private $id;
@@ -45,6 +45,7 @@
 		/**
 		 * returns the UserData for the given User
 		 * @param $id
+		 * @return UserData
 		 */
 		public static function getDataForUser($id){
 			return new UserData($id);
@@ -52,6 +53,7 @@
 	
 		/**
 		 *	Deletes all UserData entries for the given user id
+		 * @return boolean
 		 */
 		public static function deleteDataForUser($id) {
 			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE user_id=\''.mysqli_real_escape_string($id).'\';');
@@ -63,7 +65,7 @@
 		 * Returns the UserDataItem for the given name
 		 * @param string $name The name of the corresponding UserDataField
 		 * @param bool $create If true an empty UserDataItem is created if it doesn't already exist.
-		 * @return UserDataItem The resulting user data item
+		 * @return at\foundation\core\User\model\UserDataItem The resulting user data item
 		 */
 		public function get($name, $create=false){
 			if(isset($this->data[$name])) return $udi;
@@ -82,7 +84,7 @@
 		 * @param string $name The name of the corresponding UserDataField
 		 * @param object $default The default value of the field which is returned if it doesn't exist
 		 * @param bool $create If true an UserDataItem containing the value given in $default is created if it doesn't already exist.
-		 * @return UserDataItem The resulting user data item
+		 * @return at\foundation\core\User\model\UserDataItem The resulting user data item
 		 */
 		public function opt($name, $default='', $create=false){
 			if(isset($this->data[$name])) return $udi;

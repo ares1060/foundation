@@ -7,7 +7,7 @@
 	use at\foundation\core\Template;
     
     $main = new Template\ViewDescriptor('main');
-    
+        
     echo $main->render();
 	
 	echo '<br>runtime: '.(microtime(true)-$GLOBALS['stat']['start']);

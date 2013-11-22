@@ -1,4 +1,9 @@
 <?php
+	
+	/**
+	 * @package at\foundation\core\User\model\UserDataField
+	 */
+
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
 	

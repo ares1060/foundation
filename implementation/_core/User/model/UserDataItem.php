@@ -1,4 +1,9 @@
 <?php
+
+	/**
+	 * @package at\foundation\core\User\model\UserDataItem
+	 */
+
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
 	
@@ -23,6 +28,11 @@
 		
 	/* STATIC HELPER */
 	
+		/**
+		 * @param int $id
+		 * @param string $name
+		 * @return UserDataItem[]
+		 */
 		public static function getUserDataItemByUserAndName($id, $name){
 			$row = ServiceProvider::get()->db->fetchRow('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata` AS ud 
 															LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdatafield` AS udf 
@@ -39,6 +49,7 @@
 	
 		/**
 		 *	Deletes all UserData entries for the given user id
+		 * @return boolean
 		 */
 		public static function deleteDataForUser($uid) {
 			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE user_id=\''.mysqli_real_escape_string($uid).'\';');

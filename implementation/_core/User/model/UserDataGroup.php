@@ -1,4 +1,9 @@
 <?php
+
+	/**
+	 * @package at\foundation\core\User\model\UserDataGroup
+	 */
+
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
 	
@@ -47,6 +52,7 @@
 		 * Returns a list of all UserGroups 
 		 * @param int $page
 		 * @param int $perPage
+		 * @return UserDataGroup[]
 		 */
 		public static function getGroups($page=-1, $perPage=-1) {
 			$return = array();
@@ -71,6 +77,7 @@
 		
 		/**
 		 * returns count of all user data groups
+		 * @return int
 		 */
 		public static function getGroupCount(){
 			$g = ServiceProvider::get()->db->fetchRow('SELECT COUNT(*) count FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup');

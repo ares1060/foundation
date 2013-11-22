@@ -1,4 +1,9 @@
 <?php
+	
+	/**
+	 * @package at\foundation\core\User\model\UserGroup
+	 */
+
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
 	
@@ -47,6 +52,7 @@
 		 * Returns a list of all UserGroups 
 		 * @param int $page
 		 * @param int $perPage
+		 * @return UserGroup[]
 		 */
 		public static function getGroups($page=-1, $perPage=-1) {
 			$return = array();
@@ -71,6 +77,7 @@
 		
 		/**
 		 * returns count of all user groups
+		 * @return int
 		 */
 		public static function getGroupCount(){
 			$g = ServiceProvider::get()->db->fetchRow('SELECT COUNT(*) count FROM '.ServiceProvider::get()->db->prefix.'usergroups');
@@ -80,6 +87,7 @@
 		
 		/**
 		 * Overriding the BaseModel save to do proper save
+		 * @return boolean
 		 */
 		public function save(){
 			if($this->id != ''){
@@ -103,6 +111,7 @@
 		
 		/**
 		 *	Deletes the usergroup from the database
+		 * @return boolean
 		 */
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'usergroup WHERE id=\''.mysqli_real_escape_string($this->id).'\';');

@@ -41,7 +41,7 @@
 		$root .= '../';
 	}
     
-	$GLOBALS['config']['login'] = $GLOBALS['abs_root'].'_admincenter/login/';
+	$GLOBALS['config']['login'] = $GLOBALS['abs_root'].'admin/login/';
 	$GLOBALS['tpl']['root'] = '';
     
 	$GLOBALS['extra_css'] = array();
@@ -76,13 +76,18 @@
 	//make sure a ServiceProvider instance is available
 	$sp = core\ServiceProvider::getInstance();
 	
+	/* check for login */
+	if(isset($_REQUEST['pw']) && $_REQUEST['pw'] != '' && isset($_REQUEST['login']) && $_REQUEST['login'] != ''){
+		$sp->user->login($_REQUEST['login'], $_REQUEST['pw']);
+	}
+	
 	/* check session expiration */
 	$sp->user->checkSessionExpiration();
 
+	
 	/* check authorization */
 	if(isset($authorized) && is_array($authorized) && $authorized != array()) {
-		$gr = ($sp->ref('User')->isLoggedIn()) ? $sp->ref('User')->getLoggedInUser()->getGroup()->getId() : -1;
-		error_log('sdf');
+		$gr = ($sp->user->isLoggedIn()) ? $sp->user->getLoggedInUser()->getGroup()->getId() : -1;
 		if(!in_array(strtolower(User::getUserGroupNameFromId($gr)), $authorized) && !in_array($gr, $authorized)) {header('Location: '.$GLOBALS['config']['login']); exit(0);}
 	}
 ?>

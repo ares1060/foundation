@@ -87,31 +87,31 @@
         	
 			
 			switch($action){
-          		case 'login_form':
+          		case 'view.login_form':
 					$target = isset($args['target']) ? $args['target'] : '';
 					return $this->viewFront->tplLogin($target);
 					break;
-          		case 'user_menu':
+          		case 'view.user_menu':
           			return $this->viewFront->tplUserMenu();
           			break;
-          		case 'register_form':
+          		case 'view.register_form':
           			$group = (isset($args['group'])) ? $args['group'] : '';
           			return $this->viewFront->tplRegister($group);
           			break;
-          		case 'confirm_form':
+          		case 'view.confirm_form':
           			return '--confirm--';
           			break;
 
-				case 'login':
+				case 'do.login':
          			$nick = isset($args['nick']) ? $args['nick'] : '';
          			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
          			
          			return $this->login($nick, $pwd);
          			break;
-         		case 'logout':
+         		case 'do.logout':
          			return $this->logout();
          			break;
-         		case 'register':
+         		case 'do.register':
          			$nick = isset($args['nick']) ? $args['nick'] : '';
          			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
          			$pwd2 = isset($args['pwd2']) ? $args['pwd2'] : '';
@@ -120,7 +120,7 @@
          			
          			return $this->register($nick, $email, $group, $pwd, $pwd2);
          			break;
-         		case 'newUser':
+         		case 'do.newUser':
          			$nick = isset($args['nick']) ? $args['nick'] : '';
          			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
          			$pwd2 = isset($args['pwd2']) ? $args['pwd2'] : '';
@@ -154,13 +154,13 @@
           	}  
 			
             switch($chapter){
-            	case 'user':
+            	case 'view.user':
             		return $this->viewAdmin->tplUser($page);
             		break;
-            	case 'edit_user':
+            	case 'view.edit_user':
             		return $this->viewAdmin->tplUserEdit($id);
                		break;
-            	case 'new_user':
+            	case 'view.new_user':
             		return $this->viewAdmin->tplUserNew($id);
             		break;
             	case 'usergroup':

@@ -61,13 +61,26 @@
 			if($this->id != ''){
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'userdatafield SET
-						
+						name = \''.mysqli_real_escape_string($this->name).'\',
+						info = \''.mysqli_real_escape_string($this->info).'\',
+						type = \''.mysqli_real_escape_string($this->type).'\',
+						group = \''.mysqli_real_escape_string($this->groupId).'\',
+						vis_register = \''.mysqli_real_escape_string($this->visibility['register']).'\',
+						vis_login = \''.mysqli_real_escape_string($this->visibility['login']).'\',
+						vis_edit = \''.mysqli_real_escape_string($this->visibility['edit']).'\'
 					WHERE id="'.mysqli_real_escape_string($this->id).'"');
 			} else {
 				//insert
 				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'userdatafield 
-								() VALUES 
-								();');
+								(`name`, `info`, `type`, `group`, `vis_register`, `vis_login`, `vis_edit`) VALUES 
+								(\''.mysqli_real_escape_string($this->name).'\', 
+									\''.mysqli_real_escape_string($this->info).'\', 
+									\''.mysqli_real_escape_string($this->type).'\', 
+									\''.mysqli_real_escape_string($this->groupId).'\', 
+									\''.mysqli_real_escape_string($this->visibility['register']).'\', 
+									\''.mysqli_real_escape_string($this->visibility['login']).'\',
+									\''.mysqli_real_escape_string($this->visibility['edit']).'\'
+								);');
 				if($succ) {
 					$this->id = mysqli_insert_id();
 					return true;

@@ -163,6 +163,21 @@
 		}
 		
 		/**
+		 * returns User by given activation code
+		 * @param string $activationCode
+		 */
+		public static function getUserByActivationCode($activationCode){
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($activationCode).'"');
+			if($u != array()){
+				self::$users[$u['id']] = (new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']))
+					->setId($u['id'])
+					->setHash($u['hash']); 
+				return self::$users[$u['id']];
+			}
+			return null;
+		}
+		
+		/**
 		 * returns users Hash for Login routine
 		 * @param string $mail
 		 */
@@ -182,6 +197,25 @@
 	       	if($u != '' && $u != array() && isset($u['hash'])){
 	       		return $u['hash'];
 	       	} else return '';
+		}
+		
+		/**
+		 *	Activates the user with the given activation code.
+		 *	@param string $activationCode The activation code to activate
+		 *	@return bool True if activated successfully
+		 */
+		public static function activateUser($activationCode) {
+			$g = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($activationCode).'"');
+			if($g !== false){
+				$q = ServiceProvider::get()->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET activate="", status="'.at\foundation\core\User::STATUS_ACTIVE.'" WHERE activate="'.mysqli_real_escape_string($activationCode).'"');
+				if($q !== false){
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
 		}
 		
 		/**
@@ -231,11 +265,12 @@
 		}
 		
 		/**
-		 *	Deletes the user from the database
+		 *	Deletes the user from the database and all linked userdata
 		 */
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
-			if($ok) ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata_user WHERE u_id=\''.mysqli_real_escape_string($uid).'\';');
+			if($ok) UserData::deleteDataForUser($this->id);
+			
 			//TODO remove all links where possible
 			return $ok;
 		}
@@ -258,7 +293,7 @@
         public function setGroup($gid) { $this->groupId = $gid; $this->group=null; return $this; }
         public function setGroupId($gid) { $this->groupId = $gid; $this->group=null; return $this; }
         public function setStatus($status) { $this->status = $status; return $this; }
-       
+	   
 		private function setId($id) { $this->id = $id; return $this; }
 		private function setHash($pwd) { $this->pwd = $pwd; return $this; }
 		
@@ -276,6 +311,7 @@
 			return $this->userData; 
 		}
 		public function getGroupId() { return $this->groupId; }
+		public function isActive() { return ($this->status == at\foundation\core\User::STATUS_ACTIVE); }
 		
     }
 ?>

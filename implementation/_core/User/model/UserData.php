@@ -7,7 +7,7 @@
 /**
  * New model:
  * userdata: id, user_id, field_id, value, last_change
- * userdatafield: id, name, info, type, group, vis_login, vis_register, vis_edit
+ * userdatafield: id, name, info, type, group, vis_register, vis_login, vis_edit
  * userdatagroup: id, name
  */
 	
@@ -30,8 +30,8 @@
 			$this->keys = array();
 			if($qry != array()) {
 				foreach($qry as $d){
-					$di = new UserDataItem($d['user_id'], $d['field_id'], $d['value']);
-					$di->__setId($d['id']);
+					$d = new UserDataItem($d['user_id'], $d['field_id'], $d['value']);
+					$d->__setId($d['id']);
 					$data[$d['name']] = $di;
 					$this->keys[] = $d['name'];
 				}

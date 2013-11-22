@@ -2,13 +2,11 @@
 
 	namespace at\foundation\core\User;
 	use at\foundation\core;	
-	use at\foundation\core\User\model\UserDataHelper;
 	use at\foundation\core\User\view\UserAdminView;
 	use at\foundation\core\User\view\UserFrontView;
 
 	require_once('model/User.php');
 	require_once('model/UserGroup.php');
-	require_once('model/UserDataHelper.php');
 	require_once('model/UserData.php');
 	require_once('model/UserDataGroup.php');
 	
@@ -17,7 +15,6 @@
 	
     class User extends core\AbstractService implements core\IService  {
         // MVC Objects
-        private $dataHelper;
         private $viewAdmin;
         private $viewFront;
         
@@ -46,14 +43,13 @@
         const VISIBILITY_VISIBLE = 1;
         const VISIBILITY_FORCED = 2;
         
-         function __construct(){
+        function __construct(){
         	$this->name = 'User';
         	$this->ini_file = $GLOBALS['to_root'].'_core/User/User.ini';
             parent::__construct();
-            $this->dataHelper = new UserDataHelper($this->settings);
             
-            $this->viewAdmin = new UserAdminView($this->settings, $this->dataHelper);
-            $this->viewFront = new UserFrontView($this->settings,  $this->dataHelper);
+            $this->viewAdmin = new UserAdminView($this->settings, $this);
+            $this->viewFront = new UserFrontView($this->settings,  $this);
            	           	
             //$this->debugVar($_SESSION['User'] == null);
             //$this->debugVar($_SESSION['User']['loggedInUser'] == null);
@@ -72,9 +68,9 @@
             	
             } else $this->loggedInUser = null;
             
-         }
+        }
          
-         private function fixObject (&$object) {
+        private function fixObject (&$object) {
   			if (!is_object ($object) && gettype ($object) == 'object')
     			return ($object = unserialize (serialize ($object)));
   			return $object;
@@ -145,11 +141,11 @@
          			break;
          		case 'activateRegistration':
          			$code = isset($args['code']) ? $args['code'] : '';
-         			return $this->dataHelper->activateRegistration($code);
+         			return $this->activateRegistration($code);
          			break;
          		case 'rejectRegistration':
          			$code = isset($args['code']) ? $args['code'] : '';
-         			return $this->dataHelper->rejectActivation($code);
+         			return $this->rejectActivation($code);
          			break;
 					
           		default:
@@ -201,7 +197,7 @@
                				break;
             			case 'set_viewing_user':
             				if($this->checkRight('can_change_viewing_user') && $id != -1){
-            					$this->viewingUser = $this->dataHelper->getUser($id);
+            					$this->viewingUser = models\User::getUser($id);
             					$_SESSION['User']['viewingUser'] = $this->viewingUser;
             					return true;
             				} else {
@@ -212,10 +208,10 @@
             			case 'edit_user_change_pwd':
             				$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
             				$pwd1 = (isset($args['pwd1'])) ? $args['pwd1'] : '';
-            				$u = $this->dataHelper->getUser($id);
+            				$u = models\User::getUser($id);
             				if($u != null && ($this->checkRight('administer_group', $u->getGroup()->getId()) || $this->checkRight('edit_user', $u->getId()))){
             					if($pwd == $pwd1){
-            						if($this->dataHelper->editUser($u->getId(), '', $pwd)) {
+            						if($this->editUser($u->getId(), '', $pwd)) {
             							$this->_msg($this->_('Password changed successfull'), Messages::INFO);
             							return true;
             						} else {
@@ -233,7 +229,7 @@
             				break;
             			case 'profile_edit_email':
             				$email = (isset($args['email'])) ? $args['email'] : '';
-            				return $this->dataHelper->editUser(-1, '', '', $email);
+            				return $this->editUser(-1, '', '', $email);
             				break;
             			case 'profile_change_pwd':
             				$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
@@ -242,7 +238,7 @@
             				
             				if($pwd == $pwd1){
             					if($this->rightPwd($this->loggedInUser->getNick(), $pwd_old)){
-            						if($this->dataHelper->editUser(-1, '', $pwd)) {
+            						if($this->editUser(-1, '', $pwd)) {
             							$this->_msg($this->_('Password changed successfull'), Messages::INFO);
             							return true;
             						} else {
@@ -282,7 +278,7 @@
 		    	switch($_POST['action']){
 		    		case 'editUser':
 		    			if(isset($_POST['eu_id']) && isset($_POST['eu_mail']) && isset($_POST['eu_status']) && isset($_POST['eu_group'])){
-		    				$user = $this->dataHelper->getUser($_POST['eu_id']);
+		    				$user = models\User::getUser($_POST['eu_id']);
 		    				
 		    				if($this->checkRight('edit_user', $user->getId()) || $this->checkRight('administer_group', $user->getGroup()->getId())){
 		    					//potential security risk -> check if authorized to set new group
@@ -292,9 +288,9 @@
 		    					if((($_POST['eu_pwd_new'] != '' || $_POST['eu_pwd_new2'] != '') && $_POST['eu_pwd_new'] == $_POST['eu_pwd_new2']) ||
 		    							($_POST['eu_pwd_new'] == '' && $_POST['eu_pwd_new2'] == '')) {
 		    						
-		    						$pwd =  $_POST['eu_pwd_new'] == $_POST['eu_pwd_new2'] ? $_POST['eu_pwd_new'] : '';
+		    						$pwd = $_POST['eu_pwd_new'] == $_POST['eu_pwd_new2'] ? $_POST['eu_pwd_new'] : '';
 		    						
-		    						if($this->dataHelper->editUser($_POST['eu_id'], '', $pwd, $_POST['eu_mail'], $_POST['eu_status'], $group, array())){
+		    						if($this->editUser($_POST['eu_id'], '', $pwd, $_POST['eu_mail'], $_POST['eu_status'], $group, array())){
 		    							$this->_msg($this->_('_User Update success', 'core'), Messages::INFO);
 		    						
 		    							header('Location: '.$_SERVER["HTTP_REFERER"].$_POST['back_link']);
@@ -336,7 +332,7 @@
          * @param unknown_type $pwd
          */
         private function rightPwd($nick, $pwd){
-        	$hash = ($this->_setting('no_nick_needed')) ? $this->dataHelper->getUserHashByEMail($nick) : $this->dataHelper->getUserHashByNick($nick);
+        	$hash = ($this->settings->no_nick_needed) ? models\User::getUserHashByEMail($nick) : models\User::getUserHashByNick($nick);
         	if($hash != ''){
         		
         		$salt = substr($hash, strpos($hash, '#')+1);
@@ -359,7 +355,7 @@
          */
         public function login($nick, $pwd){
         	if($this->rightPwd($nick, $pwd)){        			
-        		$u = ($this->_setting('no_nick_needed')) ? $this->dataHelper->getUserByEMail($nick) : $this->dataHelper->getUserByNick($nick);
+        		$u = ($this->settings->no_nick_needed) ? models\User::getUserByEMail($nick) : models\User::getUserByNick($nick);
         		switch($u->getStatus()){
         			case self::STATUS_ACTIVE:
         				$this->setLoggedInUser($u);
@@ -378,7 +374,7 @@
 		        			$_SESSION['User']['defaultPwd'] = 'true';
 		        		}
 		        		
-		        		$this->dataHelper->setLastLogin();
+		        		$this->setLastLogin();
 		        		
 		        		$this->_msg($this->_('_login success', 'core'), Messages::INFO);
 		        		return true;
@@ -407,7 +403,7 @@
         }
          
         /**
-         * logges out current User
+         * logs out current User
          */
 		public function logout() {
          	$this->loggedInUser = null;
@@ -419,17 +415,252 @@
         	return true;
          }
          
+    	
+		/**
+		 * registers user
+		 * @param string $nick
+		 * @param string $pwd
+		 * @param string $email
+		 * @param int $group
+		 * @param int $status
+		 */
     	public function register($nick, $email, $group, $pwd, $pwd2, $status=User::STATUS_HAS_TO_ACTIVATE, $data=array()){
-        	return $this->dataHelper->register($nick, $email, $group, $pwd, $pwd2, $status, $data);
-        }
-        
+		    if($status == -1) $status = User::STATUS_HAS_TO_ACTIVATE;			   			
+    		if($this->checkNickAvailability($nick) || ($nick == '' && $this->settings->no_nick_needed)){
+    			if(strpos($this->settings->register_groups, ':'.$group.':') !== false || $this->checkRight('administer_group', $group) &&
+    			   ($status==User::STATUS_HAS_TO_ACTIVATE || $this->checkRight('administer_user'))){
+    			   	if($pwd == $pwd2){
+    			   		if($this->sp->txtfun->getPasswordStrength($pwd) >= $this->settings->pwd_min_strength){
+    			   			if($email != '' && $this->sp->txtfun->isEmail($email)){
+    			   				
+    			   				$user = new model\User($nick, $email, $group, $status);
+    			   				$user->setPassword($pwd);
+								
+		    			   		if($user->save()) {	
+		    			   			$ok = true;	 
+		    			   			foreach($data as $key=>$value) {
+		    			   				$obj = $this->getUserDataById($key);
+		    			   				// security check to not insert data for other groups
+		    			   				if($obj->usedByGroup($group)){
+		    			   					$x = ($this->mysqlInsert('INSERT INTO '.ServiceProvider::get()->db->prefix.'userdata_user 
+		    			   										(`u_id`, `ud_id`, `value`, `last_change`) VALUES
+		    			   										(\''.mysqli_real_escape_string($user->getId()).'\',
+		    			   										\''.mysqli_real_escape_string($key).'\',
+		    			   										\''.mysqli_real_escape_string($value).'\', NOW());') == 0);
+		    			   					$ok = $ok && $x;
+		    			   				}
+		    			   			}
+
+		    			   			if($ok) {
+			    			   			if($status == User::STATUS_HAS_TO_ACTIVATE){
+			    			   				$mail = new ViewDescriptor($this->settings->tpl_activation_mail);
+			    			   				
+			    			   				$mail->addValue('nick', $nick);
+			    			   				$mail->addValue('id', $id);
+			    			   				$mail->addValue('email', $email);
+			    			   				$mail->addValue('group', $group);
+			    			   				$mail->addValue('pwd', $pwd);
+			    			   				$mail->addValue('code', $activate_code);
+			    			   				
+			    			   				if($this->sp->ref('Mail')->send($email, $this->_('_Registered EMail'), $mail->render())){
+			    			   					$this->_msg($this->_('New user created successfully', 'core'), Messages::INFO);
+			    			   				} else {
+			    			   					$this->_msg($this->_('Activation mail vould not be sent', 'core'), Messages::ERROR);
+			    			   				}
+			    			   			} else $this->_msg($this->_('New user created successfully', 'core'), Messages::INFO);
+		    							return $id;
+		    			   			} else {
+		    			   				// delete every entered data
+		    			   				$u->delete();
+		    			   				$this->_msg($this->_('New user could not be created__', 'core'), Messages::ERROR);
+		    							return false;
+		    			   			}
+		    					} else {
+		    						$this->_msg($this->_('New user could not be created', 'core'), Messages::ERROR);
+		    						return false;
+		    					}
+    			   			} else {
+    			   				$this->_msg($this->_('Please enter a valid email'), Messages::ERROR);
+    							return false;
+    			   			}
+    			   		} else {
+    			   			$this->_msg($this->_('New Password is too weak', 'core'), Messages::ERROR);
+    						return false;
+    			   		}
+    			   	} else {
+    			   		$this->_msg($this->_('Different Passwords', 'core'), Messages::ERROR);
+    					return false;
+    			   	}
+    			} else {
+    				$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
+        			return false;
+    			}
+    		} else { 
+    			$this->_msg($this->_('_Nick not available', 'core'), Messages::ERROR);
+        		return false;
+    		}
+    	}
+    	
         /**
          * checks POST data and returnes true if all Data is valid
          * @param unknown_type $group
          */
-        public function checkRegisterData($group){
-        	return $this->dataHelper->checkRegisterData($group);
-        }
+    	public function checkRegisterData($group){
+    		if(isset($_POST['ru_mail'])){
+	    		$group = $this->getUserGroup($group);
+//	    		$this->debugVar($_POST);
+//	    		print_r($_POST);
+	    		// first check if basic data is available
+	    		if(isset($_POST['ru_mail']) && isset($_POST['ru_pwd_new']) && isset($_POST['ru_pwd_new2']) && $group != null) {
+	    			// nick availability will be checked later
+	    			
+	    			// check extra user data
+	    			$userData = $this->getUserDataForGroup($group);
+	    			
+	    			$ok = true;
+	    			
+	    			foreach($userData as $d){
+// 	    				if($d->isForcedAtRegister()) print_r($d->getName());
+	    				$ok = $ok && (($d->isForcedAtRegister() && isset($_POST['ru_ud'][$d->getId()]) && $_POST['ru_ud'][$d->getId()] != '') || !$d->isForcedAtRegister());
+	    			}
+	    			
+	    			if(!$ok){
+	    				$this->_msg($this->_('_Enter all data', 'core'), Messages::ERROR);
+		        		return false;
+	    			} else return true;
+	    		} else {
+	    			$this->_msg($this->_('_Enter all data', 'core'), Messages::ERROR);
+		        	return false;
+	    		}
+    		}
+    	}
+    	
+    	public function activateRegistration($code){
+    		if($code!= '' && strlen($code) == 32){
+    			if(model\User::activateUser($code)){
+					$this->_msg($this->_('_Activation success', 'core'), Messages::INFO);
+				} else {
+					$this->_msg($this->_('_Activation error', 'core'), Messages::ERROR);
+				}
+    		} else {
+    			$this->_msg($this->_('_Activation error', 'core'), Messages::ERROR);
+        		return false;
+    		}
+    	}
+    	
+    	public function rejectActivation($code){
+    		if($code!= '' && strlen($code) == 32){
+    			$g = model\User::getUserByActivationCode($code);
+				if($g !== null){
+					if($g->delete()) {
+						$this->_msg($this->_('_Rejection success', 'core'), Messages::INFO);
+	        			return true;
+					} else {
+						$this->_msg($this->_('_Rejection error', 'core'), Messages::ERROR);
+	        			return false;
+					}
+				} else {
+					$this->_msg($this->_('_Rejection error', 'core'), Messages::ERROR);
+        			return false;
+				}
+    		} else {
+    			$this->_msg($this->_('_Rejection error', 'core'), Messages::ERROR);
+        		return false;
+    		}
+    	}
+    	
+		/**
+		 *	Calls setLastLogin on the currently logged in User
+		 *	@see: models\User::setLastLogin
+		 */
+    	public function setLastLogin(){
+    		if($this->sp->user->isLoggedIn()){
+    			return $this->sp->user->getLoggedInUser()->setLastLogin();
+    		} else return false;
+    	}
+    	
+    	/**
+    	 * deletes User by Id
+    	 * @param $id
+    	 */
+    	public function deleteUser($id){
+    		if($this->checkRight('administer_user')){
+    			return model\User::deleteById($id);
+    		} else {
+    			$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
+        		return false;
+    		}
+    	}
+    	
+    	/**
+    	 * edits User by given id
+    	 * @param $id
+    	 * @param $nick
+    	 * @param $pwd
+    	 * @param $email
+    	 * @param $status
+    	 * @param $group
+    	 * @param $userData
+    	 */
+    	public function editUser($id=-1, $nick='', $pwd='', $email='', $status=-1, $group=-1, $userData=array()){
+    		if($id == -1) $id = $this->sp->user->getLoggedInUser()->getId();
+			
+    		if($id == $this->sp->user->getLoggedInUser()->getId() || $this->checkRight('administer_user', $id)){
+    			
+    			$query = array();
+    			$err = false;
+    			
+				$user = model\User::getUser($id);
+				
+    			// nick just can be changed by authorized uer and if available
+    			if($nick != '' && $this->checkRight('administer_user')) {
+    				if($this->checkNickAvailability($nick)){
+    					$user->setNick($nick);
+    				} else $this->_msg($this->_('Nick not available'), Messages::ERROR);
+    			} else $nick = '';
+    			
+    			// accept email just if it is an email
+    			if($email != '') {
+    				if($this->sp->txtfun->isEmail($email)){
+    					$user->setEmail($email);
+    				} else {
+    					$this->_msg($this->_('Please enter a valid email'), Messages::ERROR);
+    					$err = true;
+    				}
+    			}
+    			// create new password hash
+    			if($pwd != '') {
+    				if($this->sp->txtfun->getPasswordStrength($pwd) >= $this->settings->pwd_min_strength){
+    					$user->setPassword($pwd);
+    				} else {
+    					$this->_msg($this->_('New Password is too weak'), Messages::ERROR);
+    					$err = true;
+    				}
+       			}
+       			
+       			if($status != -1 && $this->checkRight('administer_user')){
+       				$user->setStatus($status);
+       				if($status != User::STATUS_HAS_TO_ACTIVATE) $user->setStatus('');
+       			}
+       			
+       			if($group != -1 && $this->checkRight('administer_user')){
+       				$user->setGroupId($group);
+       			}
+       			
+       			//TODO: userData
+       			       			
+       			if(!$err) {
+       				if($user->save()) {
+       					if($id == $this->sp->user->getLoggedInUser()->getId()) $this->sp->user->updateActiveUsers();
+       					return true;
+       				} else {
+       					return false;
+       				}
+       			} else return false;
+      		} else return false;
+    	}
+		
+		
          
         /**
          * returnes Viewing User if allowed
@@ -455,15 +686,18 @@
           * @param $u_id
           */
          public function setViewingUserById($u_id){
-         	$this->setViewingUser($this->dataHelper->getUser($u_id));
+         	$this->setViewingUser(models\User::getUser($u_id));
          }
          
-         private function setLoggedInUser(model\User $user) {
+		/**
+		 *	@param model\User $user
+		 */
+        private function setLoggedInUser($user) {
          	if($user != null){
          		$this->loggedInUser = $user;
          		$_SESSION['User']['loggedInUser'] = $user;
          	} 
-         }
+        }
          
          /**
           * returnes logged in User
@@ -478,8 +712,8 @@
           * updates data for viewing and loggedin User
           */
          public function updateActiveUsers() {
-         	$this->setLoggedInUser($this->dataHelper->getUser($this->loggedInUser->getId()));
-         	$this->setViewingUser($this->dataHelper->getUser($this->viewingUser->getId()));
+         	$this->setLoggedInUser(model\User::getUser($this->loggedInUser->getId()));
+         	$this->setViewingUser(model\User::getUser($this->viewingUser->getId()));
          }
          
          public function isLoggedIn() {
@@ -498,12 +732,12 @@
 				if(!isset($_SESSION['User']['created_time'])) $_SESSION['User']['created_time'] = -1;
 				
 				// regenerate session id after specified time	
-	        	if($this->_setting('session.regenerate_after') > -1 && time() - $_SESSION['User']['created_time'] > $this->_setting('session.regenerate_after')){
+	        	if($this->settings->session_regenerate_after > -1 && time() - $_SESSION['User']['created_time'] > $this->settings->session_regenerate_after){
 	        		session_regenerate_id(true);    // change session ID for the current session an invalidate old session ID
 	    			$_SESSION['User']['created_time'] = time();  // update creation time
 	        	}
 	        	        	
-	        	if($this->loggedInUser != null && isset($_SESSION['User']['last_activity']) && isset($_SESSION['User']['last_activity']) && (time() - $_SESSION['User']['last_activity']) > $this->_setting('session.idle_time')){
+	        	if($this->loggedInUser != null && isset($_SESSION['User']['last_activity']) && isset($_SESSION['User']['last_activity']) && (time() - $_SESSION['User']['last_activity']) > $this->settings->session_idle_time){
 	
 	        		$this->logout();
 	        		$this->_msg($this->_('_session_expired'), Messages::ERROR);
@@ -520,49 +754,8 @@
          * @param $salt
          */
         public function hashPassword($pwd, $salt){
-        	return $this->sp->ref('TextFunctions')->hashString($pwd, $salt, 'whirlpool');
+        	return $this->sp->txtfun->hashString($pwd, $salt, 'whirlpool');
         }
-        
-        /**
-         * returnes array of all users
-         */
-        public function getUsers() {
-        	return $this->dataHelper->getUsers(-1);
-        }
-        
-        public function getUserById($id){
-        	return $this->dataHelper->getUserById($id);
-        }
-        
-        /**
-         * returnes User by UserdataId and calue
-         * @param unknown_type $data_id
-         * @param unknown_type $value
-         */
-        public function getUserByData($data_id, $value){
-        	return $this->dataHelper->getUserByData($data_id, $value);
-        }
-        
-        /**
-         * returnes UserData object by given id
-         * is used by UserInfo->loadData(ServiceProvider $sp)
-         * @param $id
-         */
-        public function getUserDataByUserId($id){
-        	return $this->dataHelper->getUserDataByUserId($id);
-        }
-        
-        public function setUserDataByUserIdAndDataName($dataName, $value, $id=-1){
-        	if($id == -1) $id = $this->getLoggedInUser()->getId();
-        	if($id == $this->getLoggedInUser()->getId() || $this->checkRight('edit_user_data', $id)) { // 1 == root
-        		if($this->dataHelper->setUserDataByUserIdAndDataName($id, $dataName, $value)) {
-        			$this->_msg($this->_('_EDIT SUCCESSFULL'), Messages::INFO);
-        			return true;
-        		} else {
-        			$this->_msg($this->_('_EDIT ERROR'), Messages::ERROR);
-        			return true;
-        		}
-        	}
-        }
+
     }
  ?>

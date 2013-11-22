@@ -54,6 +54,11 @@
 		public $txtfun;
 		
 		/**
+		 * @var Mail
+		 */
+		public $mail;
+		
+		/**
 		 * @var Settings
 		 */
 		public $settings;
@@ -93,6 +98,8 @@
 			$this->services['template'] =& $this->tpl;
             $this->rights = new Rights\Rights();
             $this->services['rights'] =& $this->rights;
+            $this->mail = new Mail\Mail();
+            $this->services['mail'] =& $this->mail;
             $this->templates = array();
     
             $this->loc->loadPreloadedFiles();

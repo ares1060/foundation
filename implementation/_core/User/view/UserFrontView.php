@@ -20,7 +20,7 @@
 		 * @param $target
 		 */
 		public function tplLogin($target='') {
-			$render = new ViewDescriptor($this->_setting('tpl.login_form'));
+			$render = new ViewDescriptor($this->settings->tpl_login_form);
 			$render->addValue('target', $target);
 			return $render->render();
 		}
@@ -29,7 +29,7 @@
 		 * @param unknown_type $group
 		 */
 		public function tplRegister($group){
-			$render = new ViewDescriptor($this->_setting('tpl.register_form-'.$group));
+			$render = new ViewDescriptor($this->settings->get('tpl_register_form-'.$group));
 			$render->addValue('group', $group);
 		
 			$data = $this->dataHelper->getUserDataForGroup($group);
@@ -89,10 +89,10 @@
 		}
 		/* ======   User Menu ======= */
 		public function tplUserMenu() {
-			if($this->sp->ref('User')->isLoggedIn()){
-				$view = new ViewDescriptor($this->_setting('tpl.usermenu_loggedin'));
+			if($this->sp->user->isLoggedIn()){
+				$view = new ViewDescriptor($this->settings->tpl_usermenu_loggedin);
 			
-				$u = $this->sp->ref('User')->getLoggedInUser();
+				$u = $this->sp->user->getLoggedInUser();
 
 				if($u != null){
 					$view->addValue('id', $u->getId());
@@ -103,7 +103,7 @@
 					return $view->render();
 				} else return 'error';
 			} else {
-				$view = new ViewDescriptor($this->_setting('tpl.usermenu_loggedout'));
+				$view = new ViewDescriptor($this->settings->tpl_usermenu_loggedout);
 			
 				return $view->render();
 			}

@@ -10,6 +10,7 @@
         }
         
         public function render($args){ 
+			if(isset($args['message'])) return $args['message'];
 			return $this->settings->message;
         }
 		

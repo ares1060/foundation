@@ -1,6 +1,6 @@
 <?php
 
-namespace at\foundation\core\Messages;
+namespace at\foundation\core\Mail;
 use at\foundation\core;
 
 class Mail extends core\AbstractService implements core\IService  {
@@ -11,22 +11,8 @@ class Mail extends core\AbstractService implements core\IService  {
         parent::__construct();
 	}
 
-	public function view($args) {
+	public function render($args) {
 		return '';
-	}
-	public function admin($args){
-		return '';
-	}
-	public function run($args){
-		return false;
-	}
-
-	public function data($args){
-		return '';
-	}
-
-	public function setup(){
-
 	}
 
 	/**

@@ -5,7 +5,8 @@
 	use at\foundation\core\Messages\Messages;
 	
 	class Template extends core\AbstractService implements core\IService {
-        private $templates;
+        private $template;
+		private $templates;
         private $baseReplaces;
         
 		private $rawTemplateCache;
@@ -40,14 +41,14 @@
             /*if(!file_exists($GLOBALS['config']['root'].'/'.$this->config['cache_folder'])){
             	mkdir($GLOBALS['config']['root'].'/'.$this->config['cache_folder']);
             }*/
-			$this->template = ($this->_setting('tpl.template') == null) ? $this->_setting('tpl.base_template') : $this->_setting('tpl.template');
+			$this->template = ($this->settings->tpl_template == null) ? $this->settings->tpl_base_template : $this->settings->tpl_template;
 			
             $this->baseReplaces = array('version'=>'PerPedes V '.core\ServiceProvider::VERSION, 
                                         'version_short'=>core\ServiceProvider::VERSION,
                                         'root'=>(isset($GLOBALS['connector_to_root'])) ? $GLOBALS['connector_to_root']: $GLOBALS['to_root'], // connector gets new root if needen because of template rendering from other folder
             							'abs_root'=>$GLOBALS['abs_root'],
 //             							'working_dir'=>$GLOBALS['working_dir'],
-                                        'tpl_root_folder'=>'_templates/'.$this->_setting('tpl.base_template'),
+                                        'tpl_root_folder'=>'_templates/'.$this->settings->tpl_base_template,
                                         'tpl_folder'=>'_templates/'.$this->template,
             							'service_folder' => '_services',
                                         'user_id'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getId() : '',
@@ -108,13 +109,13 @@
 			
 			
 			//do the parsing
-			if(!isset($this->fb)) $this->fh = $this->sp->ref('Filehandler');;
+			if(!isset($this->fh)) $this->fh = $this->sp->fh;
 
-			if($this->_setting('render.cache_level') == 1){
+			if($this->settings->render_cache_level == 1){
 				if(!isset($this->phpTemplateCache[$tID])) {
 					$cacheName = str_replace('/', '_', $tID);
 					$cacheName = explode('.', $cacheName);
-					$cacheName = $this->fh->getPath($this->_setting('render.cache_folder').'/'.$cacheName[0].'.php');
+					$cacheName = $this->fh->getPath($this->settings->render_cache_folder.'/'.$cacheName[0].'.php');
 					if(!file_exists($cacheName)){
 						$tpl = $this->getRawTemplate($tID);
 						$ca = fopen($cacheName, 'w');
@@ -157,7 +158,7 @@
             $return = '';
             foreach($array as $row) {
             	$file = $GLOBALS['abs_root'].'_templates/'.$this->template.'/css/'.$row;
-            	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_templates/'.$this->_setting('tpl.base_template').'/css/'.$row;
+            	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_templates/'.$this->settings->tpl_base_template.'/css/'.$row;
                 $return .= '<link rel="stylesheet" type="text/css" href="'.$file.'" />'."\n";
             }
             return $return;
@@ -165,7 +166,7 @@
         
         public function getCssPath($css_file){
         	$file = '_templates/'.$this->template.'/css/'.$css_file;
-        	if(!$this->checkIfExtFileExists($GLOBALS['abs_root'].$file)) $file = '_templates/'.$this->_setting('tpl.base_template').'/css/'.$css_file;
+        	if(!$this->checkIfExtFileExists($GLOBALS['abs_root'].$file)) $file = '_templates/'.$this->settings->tpl_base_template.'/css/'.$css_file;
         	return $file;
         }
         
@@ -173,7 +174,7 @@
             $return = '';
             foreach($array as $row) {
             	$file = $GLOBALS['abs_root'].'_templates/'.$this->template.'/js/'.$row;
-            	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_templates/'.$this->_setting('tpl.base_template').'/js/'.$row;
+            	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_templates/'.$this->settings->tpl_base_template.'/js/'.$row;
                 $return .= '<script type="text/javascript" src="'.$file.'"></script>'."\n";
             }
             return $return;
@@ -196,11 +197,11 @@
             $this->baseReplaces['working_dir'] = $GLOBALS['working_dir']; // add as late as possible because connector will set it very late
 			$values = array_merge($values, $this->baseReplaces);
 		
-			if($this->_setting('render.cache_level') == 1){
+			if($this->settings->render_cache_level == 1){
 				if(!isset($this->phpDynamicCache[$tID][$dID])){
 					$cacheName = str_replace('/', '_', $tID.'/'.$dID);
 					$cacheName = explode('.', $cacheName);
-					$cacheName = $this->fh->getPath($this->_setting('render.cache_folder').'/'.$cacheName[0].'.php');
+					$cacheName = $this->fh->getPath($this->settings->render_cache_folder.'/'.$cacheName[0].'.php');
 					if(!file_exists($cacheName)){
 						$ca = $this->fh->openFile($cacheName, 'w');
 						$dyn = $this->getRawDynamic($tID, $dID);
@@ -234,17 +235,17 @@
 		 */
 		private function getRawTemplate($tID){
 			$tpl = '';
-			if(isset($this->rawTemplateCache[$tID])){
-				$tpl = $this->rawTemplateCache[$tID];
+			if(isset($this->rawTemplateCache[$this->template.'::'.$tID])){
+				$tpl = $this->rawTemplateCache[$this->template.'::'.$tID];
 			} else {
 				$file = $GLOBALS['config']['root'].'_templates/'.$this->template.'/'.$tID.'.html';
-				if(!is_file($file)) $file = $GLOBALS['config']['root'].'_templates/'.$this->_setting('tpl.base_template').'/'.$tID.'.html';
+				if(!is_file($file)) $file = $GLOBALS['config']['root'].'_templates/'.$this->setting->tpl_base_template.'/'.$tID.'.html';
 				//echo $file.'<br />';
 				//print_r($this->config);
 				if(is_file($file)){
 					$tpl = $this->loadFile($file);
 					$tpl = $this->generateFullyQualifiedNames($tpl, '');
-					$this->rawTemplateCache[$tID] = $tpl;
+					$this->rawTemplateCache[$this->template.'::'.$tID] = $tpl;
 				} else {
 					$this->_msg(str_replace(array('{file}'), array($file),$this->_('FILE_NOT_FOUND', 'core')), Messages::DEBUG_ERROR);
 					return str_replace(array('{file}'), array($file),$this->_('FILE_NOT_FOUND', 'core'));
@@ -262,8 +263,8 @@
 		 *	@return string
 		 */
 		private function getRawDynamic($tID, $dID){
-			if(isset($this->rawDynamicCache[$tID][$dID])){
-				$dyn = $this->rawDynamicCache[$tID][$dID];
+			if(isset($this->rawDynamicCache[$this->template.'::'.$tID][$dID])){
+				$dyn = $this->rawDynamicCache[$this->template.'::'.$tID][$dID];
 			} else {
 				//get the template
 				$tpl = $this->getRawTemplate($tID);
@@ -284,11 +285,11 @@
 					$dyn = substr($tpl, $posStart, $posEnd-$posStart);
 					
 					//cache unparsed dynamic
-					if(!isset($this->rawDynamicCache[$tID])) $this->rawDynamicCache[$tID] = array();
-					$this->rawDynamicCache[$tID][$dID] = $dyn;
+					if(!isset($this->rawDynamicCache[$this->template.'::'.$tID])) $this->rawDynamicCache[$this->template.'::'.$tID] = array();
+					$this->rawDynamicCache[$this->template.'::'.$tID][$dID] = $dyn;
 					
 				} else {
-					$this->_msg(str_replace(array('{dynamic}', '{template}'), array($dID, $tID), $this->_('DYNAMIC_NOT_FOUND', 'core')), Messages::DEBUG_ERROR);
+					$this->_msg(str_replace(array('{dynamic}', '{template}'), array($dID, $this->template.'::'.$tID), $this->_('DYNAMIC_NOT_FOUND', 'core')), Messages::DEBUG_ERROR);
 					return '';
 				}
 			}
@@ -307,7 +308,7 @@
 		 */
 		private function replaceDynamics($tpl, $blocks, $tID=''){
 			//find and replace dynamic blocks
-			if($this->_setting('render.cache_level') == 1){
+			if($this->settings->render_cache_level == 1){
 				$posStart = strpos($tpl, '<pp:dynamic ');
 				while ($posStart !== false) {
 					$startEnd = strpos($tpl, '>', $posStart + 15);
@@ -442,7 +443,7 @@
 					$name = explode(':', $parts[0], 2);
 					//check if really single value
 					if(preg_match('/[^a-zA-Z0-9_]+/', $name[1]) < 1){
-						if($this->_setting('render.cache_level') == 1){
+						if($this->settings->render_cache_level == 1){
 							if($name[0] == 'pp') $chunk = '\'.@$values[\''.@$name[1].'\'].\''.@$parts[1];
 							else if($name[0] == 'loc' || $name[0] == 'lpp') $chunk = '\'.@core\ServiceProvider::getInstance()->loc->translate('.$name[1].', '.$domain.')[\''.@$name[1].'\'].\''.@$parts[1];
 							else if($name[0] == 'get' || $name[0] == 'GET') $chunk = '\'.@$_GET[\''.@$name[1].'\'].\''.@$parts[1];
@@ -485,7 +486,7 @@
 			$firstPos = strpos($tpl,'{pp:');
 			$tplChunks = explode('{pp:', $tpl);
 
-			if($this->_setting('render.service_tag_mode') == 0){
+			if($this->settings->render_service_tag_mode == 0){
 				//classic servica tag mode
 				//split all the chunks again
 				foreach($tplChunks as &$chunk){
@@ -505,7 +506,7 @@
 							}
 							unset($arg);
 							//get the service result 
-							if($this->_setting('render.cache_level') == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
+							if($this->settings->render_cache_level == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
 							else $result = $this->sp->render(substr($parts[0], 0, $pos), $args);
 							$chunk = $result.$parts[1];
 						}
@@ -514,7 +515,7 @@
 					}
 				}
 				unset($chunk);
-			} elseif($this->_setting('render.service_tag_mode') == 1){
+			} elseif($this->settings->render_service_tag_mode == 1){
 				//json service tag mode
 				//split all the chunks again
 				foreach($tplChunks as &$chunk){
@@ -523,13 +524,12 @@
 						if(count($parts) == 2){
 							$pos = strpos($parts[0], '(');
 							//get the arguments
-							print_r(substr($parts[0],$pos+1));
 							$jsonObj = substr($parts[0],$pos+1);
 							if(substr($jsonObj, 0, 1) != '{') $jsonObj = '{'.$jsonObj;
 							if(substr($jsonObj, -1) != '}') $jsonObj = $jsonObj.'}';
 							
 							//get the service result
-							if($this->_setting('render.cache_level') == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
+							if($this->settings->render_cache_level == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
 							else $result = $this->sp->render(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
 							$chunk = $result.$parts[1];
 						}
@@ -538,7 +538,7 @@
 					}
 				}
 				unset($chunk);
-			} elseif($this->_setting('render.service_tag_mode') == 2){
+			} elseif($this->settings->render_service_tag_mode == 2){
 				//classic service tag mode
 				//split all the chunks again
 				foreach($tplChunks as &$chunk){
@@ -555,7 +555,7 @@
 								if(substr($jsonObj, -1) != '}') $jsonObj = $jsonObj.'}';
 								
 								//get the service result
-								if($this->_setting('render.cache_level') == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
+								if($this->settings->render_cache_level == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
 								else $result = $this->sp->render(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
 								$chunk = $result.$parts[1];
 							} else {
@@ -572,7 +572,7 @@
 								}
 								unset($arg);
 								//get the service result 
-								if($this->_setting('.rendercache_level') == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
+								if($this->settings->render_cache_level == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
 								else $result = $this->sp->render(substr($parts[0], 0, $pos), $args);
 								$chunk = $result.$parts[1];
 							}
@@ -613,7 +613,7 @@
          * Returnes if you can change the Template
          */
         public function isAllowedToChangeTemplate() {
-        	return ($this->_setting('tpl.ajax_template_change') == 2 || ($this->_setting('tpl.ajax_template_change') && isset($_SESSION['User'])));	
+        	return ($this->settings->tpl_ajax_template_change == 2 || ($this->settings->tpl_ajax_template_change && isset($_SESSION['User'])));	
         }
     }
 ?>

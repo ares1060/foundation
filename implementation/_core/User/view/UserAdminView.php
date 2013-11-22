@@ -52,8 +52,8 @@
 		
 		/* ======   Template Profile ======= */
 		public function tplProfile() {
-			if($this->sp->ref('User')->isLoggedIn()){
-				$view = new ViewDescriptor($this->_setting('usercenter.profile'));
+			if($this->sp->user->isLoggedIn()){
+				$view = new ViewDescriptor($this->settings->usercenter_profile);
 				return $view->render();
 			} else {
 				$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
@@ -62,10 +62,10 @@
 		}
 		
 		public function tplProfileData() {
-			if($this->sp->ref('User')->isLoggedIn()){
-				$view = new ViewDescriptor($this->_setting('usercenter.profile_data'));
+			if($this->sp->user->isLoggedIn()){
+				$view = new ViewDescriptor($this->settings->usercenter_profile_data);
 			
-				$u = $this->sp->ref('User')->getLoggedInUser();
+				$u = $this->sp->user->getLoggedInUser();
 
 				if($u != null){
 					$view->addValue('nick', $u->getNick());
@@ -80,8 +80,8 @@
 		}
 	
 		public function tplProfileNotifications() {
-			if($this->sp->ref('User')->isLoggedIn()){
-				$view = new ViewDescriptor($this->_setting('usercenter.profile_notification'));
+			if($this->sp->user->isLoggedIn()){
+				$view = new ViewDescriptor($this->settings->usercenter_profile_notification);
 				return $view->render();
 			} else {
 				$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
@@ -90,8 +90,8 @@
 		}
 	
 		public function tplProfilePrivacy() {
-			if($this->sp->ref('User')->isLoggedIn()){
-				$view = new ViewDescriptor($this->_setting('usercenter.profile_privacy'));
+			if($this->sp->user->isLoggedIn()){
+				$view = new ViewDescriptor($this->settings->usercenter_profile_privacy);
 				return $view->render();
 			} else {
 				$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
@@ -100,8 +100,8 @@
 		}
 		/* ======   Usercenter ======= */
 		public function tplUsercenter() {
-			if($this->sp->ref('User')->isLoggedIn() && $this->checkRight('usercenter')){
-				$view = new ViewDescriptor($this->_setting('usercenter.main'));
+			if($this->sp->user->isLoggedIn() && $this->checkRight('usercenter')){
+				$view = new ViewDescriptor($this->settings->usercenter_main);
 				return $view->render();
 			} else {
 				$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
@@ -110,13 +110,13 @@
 		}
 		/* ======   User ======= */
 		public function tplUser($page=1) {
-			if($this->sp->ref('User')->isLoggedIn() && $this->checkRight('usercenter')){
+			if($this->sp->user->isLoggedIn() && $this->checkRight('usercenter')){
 				if($page < -1) $page = 0;
         		
-				$view = new ViewDescriptor($this->_setting('usercenter.user'));
+				$view = new ViewDescriptor($this->settings->usercenter_user);
 				
         		$view->addValue('pagina_active', $page);
-        		$view->addValue('pagina_count', ceil($this->dataHelper->getAllUserCount(-1, -1)/$this->_setting('perpage.user')));
+        		$view->addValue('pagina_count', ceil($this->dataHelper->getAllUserCount(-1, -1)/$this->settings->perpage_user));
         			
         		$user = $this->dataHelper->getUsers($page);
 				
@@ -150,8 +150,8 @@
 		}
 		public function tplUserEdit($id) {
 			$user = $this->dataHelper->getUser($id);
-			if($this->sp->ref('User')->isLoggedIn() && $this->checkRight('usercenter') &&  ($this->checkRight('edit_user', $user->getId()) || $this->checkRight('administer_group', $user->getGroup()->getId()))){
-				$view = new ViewDescriptor($this->_setting('usercenter.edit_user'));
+			if($this->sp->user->isLoggedIn() && $this->checkRight('usercenter') &&  ($this->checkRight('edit_user', $user->getId()) || $this->checkRight('administer_group', $user->getGroup()->getId()))){
+				$view = new ViewDescriptor($this->settings->usercenter_edit_user);
 				
 				$view->addValue('id', $user->getId());
         		$view->addValue('nick', $user->getNick());
@@ -172,8 +172,8 @@
 			}
 		}
 		public function tplUserNew() {
-			if($this->sp->ref('User')->isLoggedIn() && $this->checkRight('usercenter') &&  ($this->checkRight('administer_user'))){
-				$view = new ViewDescriptor($this->_setting('usercenter.new_user'));
+			if($this->sp->user->isLoggedIn() && $this->checkRight('usercenter') &&  ($this->checkRight('administer_user'))){
+				$view = new ViewDescriptor($this->settings->usercenter_new_user);
 				
         		$view->addValue('group', $this->tplGetGroupDropdown(-1));
         		$view->addValue('status', $this->tplGetStatusDropdown(-1));
@@ -188,13 +188,13 @@
 		}
 		/* ======   Userdata ======= */
 		public function tplUserData($page=1){
-			if($this->sp->ref('User')->isLoggedIn() && $this->checkRight('usercenter')){
+			if($this->sp->user->isLoggedIn() && $this->checkRight('usercenter')){
 				if($page < -1) $page = 0;
         		
-				$view = new ViewDescriptor($this->_setting('usercenter.userdata'));
+				$view = new ViewDescriptor($this->settings->usercenter_userdata);
 				
         		$view->addValue('pagina_active', $page);
-        		$view->addValue('pagina_count', ceil($this->dataHelper->getAllUserDataCount(-1, -1)/$this->_setting('perpage.user_data')));
+        		$view->addValue('pagina_count', ceil($this->dataHelper->getAllUserDataCount(-1, -1)/$this->settings->perpage_user_data));
         			
         		$user = $this->dataHelper->getUserData($page);
         		$usergroups = $this->dataHelper->getGroups();

@@ -108,7 +108,7 @@
          * @return boolean True if successfully saved
          */
         public function addRight($service, $name){
-        	$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'rights (`id`, `name`, `service`) VALUES (\'\', \''.mysql_real_escape_string($name).'\', \''.mysql_real_escape_string($service).'\');';
+        	$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'rights (`id`, `name`, `service`) VALUES (\'\', \''.$this->sp->db->escape($name).'\', \''.$this->sp->db->escape($service).'\');';
         	return $this->sp->db->fetchBool($sql);
         }
         
@@ -119,7 +119,7 @@
          * @param boolean True if successfully removed
          */
 		public function removeRight($service, $name){
-        	$sql = 'DELETE FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($name).'\' AND service = \''.mysql_real_escape_string($service).'\';';
+        	$sql = 'DELETE FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($name).'\' AND service = \''.$this->sp->db->escape($service).'\';';
         	return $this->sp->db->fetchBool($sql);
         }
         
@@ -131,14 +131,14 @@
          * @param $param An optional parameter string
          */
 		public function authorizeUser($service, $rightName, $userID, $param = ''){
-        	$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-        	$row = $this->sp->db->fetchRow(mysql_query($sql));
+        	$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($rightName).'\' AND service = \''.$this->sp->db->escape($service).'\';';
+        	$row = $this->sp->db->fetchRow($sql);
         	if(is_array($row)){
         	    //check if an entry for this user already exists
-        		if($this->sp->db->fetchExists('SELECT COUNT(*) as count FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';')){
-        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_user SET auth = \'1\' WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';';
+        		if($this->sp->db->fetchExists('SELECT COUNT(*) as count FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE user_id = \''.$this->sp->db->escape($userID).'\' AND right_id = \''.$this->sp->db->escape($row['id']).'\' AND param = \''.$this->sp->db->escape($param).'\';')){
+        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_user SET auth = \'1\' WHERE user_id = \''.$this->sp->db->escape($userID).'\' AND right_id = \''.$this->sp->db->escape($row['id']).'\' AND param = \''.$this->sp->db->escape($param).'\';';
         		} else {
-        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_user (`user_id`, `right_id`, `param`, `auth`) VALUES (\''.mysql_real_escape_string($userID).'\', \''.mysql_real_escape_string($row['id']).'\', \''.mysql_real_escape_string($param).'\', \'1\');';
+        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_user (`user_id`, `right_id`, `param`, `auth`) VALUES (\''.$this->sp->db->escape($userID).'\', \''.$this->sp->db->escape($row['id']).'\', \''.$this->sp->db->escape($param).'\', \'1\');';
         		}
         		//$this->debugVar($sql);
         		return $this->sp->db->fetchBool($sql);
@@ -153,14 +153,14 @@
          * @param $param An optional parameter string
          */
 		public function authorizeGroup($service, $rightName, $groupID, $param = ''){
-		    $sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-        	$row = $this->sp->db->fetchRow(mysql_query($sql));
+		    $sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($rightName).'\' AND service = \''.$this->sp->db->escape($service).'\';';
+        	$row = $this->sp->db->fetchRow($sql);
         	if(is_array($row) && $row != array()){
         		//check if an entry for this group already exists
-        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';')){
-        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_group SET auth = \'1\' WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';';
+        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE group_id = \''.$this->sp->db->escape($groupID).'\' AND right_id = \''.$this->sp->db->escape($row['id']).'\' AND param = \''.$this->sp->db->escape($param).'\';')){
+        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_group SET auth = \'1\' WHERE group_id = \''.$this->sp->db->escape($groupID).'\' AND right_id = \''.$this->sp->db->escape($row['id']).'\' AND param = \''.$this->sp->db->escape($param).'\';';
         		} else {
-        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row['id']).'\', \''.mysql_real_escape_string($param).'\', \'1\');';
+        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.$this->sp->db->escape($groupID).'\', \''.$this->sp->db->escape($row['id']).'\', \''.$this->sp->db->escape($param).'\', \'1\');';
         		}
         		$this->sp->db->fetchBool($sql);
         	}
@@ -174,14 +174,14 @@
          * @param $param An optional parameter string
          */
 		public function unauthorizeUser($service, $rightName, $userID, $param = ''){
-			$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
+			$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($rightName).'\' AND service = \''.$this->sp->db->escape($service).'\';';
         	$row = $this->sp->db->fetchRow($sql);
         	if(is_array($row)){
         	    //check if an entry for this user already exists
-        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';')){
-        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_user SET auth = \'0\' WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';';
+        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE user_id = \''.$this->sp->db->escape($userID).'\' AND right_id = \''.$this->sp->db->escape($row['id']).'\' AND param = \''.$this->sp->db->escape($param).'\';')){
+        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_user SET auth = \'0\' WHERE user_id = \''.$this->sp->db->escape($userID).'\' AND right_id = \''.$this->sp->db->escape($row['id']).'\' AND param = \''.$this->sp->db->escape($param).'\';';
         		} else {
-        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row['id']).'\', \''.mysql_real_escape_string($param).'\', \'0\');';
+        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.$this->sp->db->escape($groupID).'\', \''.$this->sp->db->escape($row['id']).'\', \''.$this->sp->db->escape($param).'\', \'0\');';
         		}
         		$this->sp->db->fetchBool($sql);
         	}
@@ -195,16 +195,16 @@
 		 * @param $param An optional parameter string
          */
 		public function unauthorizeGroup($service, $rightName, $groupID, $param = ''){
-			$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
+			$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($rightName).'\' AND service = \''.$this->sp->db->escape($service).'\';';
         	$row = $this->sp->db->fetchRow($sql);
         	if(is_array($row)){
         		//check if an entry for this group already exists
-        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';')){
-        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_group SET auth = \'0\' WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';';
+        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE group_id = \''.$this->sp->db->escape($groupID).'\' AND right_id = \''.$this->sp->db->escape($row['id']).'\' AND param = \''.$this->sp->db->escape($param).'\';')){
+        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_group SET auth = \'0\' WHERE group_id = \''.$this->sp->db->escape($groupID).'\' AND right_id = \''.$this->sp->db->escape($row['id']).'\' AND param = \''.$this->sp->db->escape($param).'\';';
         		} else {
-        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row['id']).'\', \''.mysql_real_escape_string($param).'\', \'0\');';
+        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.$this->sp->db->escape($groupID).'\', \''.$this->sp->db->escape($row['id']).'\', \''.$this->sp->db->escape($param).'\', \'0\');';
         		}
-        		mysql_query($sql);
+        		$this->sp->db->fetchBool($sql);
         	}
         }
         
@@ -218,38 +218,40 @@
 		public function clearUserAuthorization($service, $rightName, $userID, $param = ''){
 			$rightFilter = '';
 			if($service != NULL && $rightName != NULL){
-				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-				$row = mysql_fetch_row(mysql_query($sql));
-				$rightFilter = ' AND right_id =  \''.mysql_real_escape_string($row[0]).'\'';
+				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($rightName).'\' AND service = \''.$this->sp->db->escape($service).'\';';
+				$row = $this->sp->db->fetchRow($sql);
+				$rightFilter = ' AND right_id =  \''.$this->sp->db->escape($row['id']).'\'';
 			} else if($service != NULL && $rightName == NULL){
-				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE service = \''.mysql_real_escape_string($service).'\';';
-				while($row = mysql_fetch_row(mysql_query($sql))){
-					$rightFilter .= 'OR right_id =  \''.mysql_real_escape_string($row[0]).'\'';
+				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE service = \''.$this->sp->db->escape($service).'\';';
+				$rows = $this->sp->db->fetchRow($sql);
+				foreach($rows as $row){
+					$rightFilter .= 'OR right_id =  \''.$this->sp->db->escape($row['id']).'\'';
 				}
 				$rightFilter = ' AND ('.substr($rightFilter, 2).')';
 			} else if($service == NULL && $rightName != NULL){
-				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\';';
-				while($row = mysql_fetch_row(mysql_query($sql))){
-					$rightFilter .= 'OR right_id =  \''.mysql_real_escape_string($row[0]).'\'';
+				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($rightName).'\';';
+				$rows = $this->sp->db->fetchRow($sql);
+				foreach($rows as $row){
+					$rightFilter .= 'OR right_id =  \''.$this->sp->db->escape($row['id']).'\'';
 				}
 				$rightFilter = ' AND ('.substr($rightFilter, 2).')';
 			}
 			
 			if($userID != NULL){
-				$userID = ' user_id = \''.mysql_real_escape_string($userID).'\' ';
+				$userID = ' user_id = \''.$this->sp->db->escape($userID).'\' ';
 			} else {
 				$userID = '';
 			}
 			
 			if($param != NULL){
-				$param = ' param = \''.mysql_real_escape_string($param).'\' ';
+				$param = ' param = \''.$this->sp->db->escape($param).'\' ';
 			} else {
 				$param = '';
 			}
 			
         	if($rightFilter != '' || $userID != '' || $param != ''){
 				$sql = 'DELETE FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE '.$userID.$param.$rightFilter.';';
-        		mysql_query($sql);
+        		$this->sp->db->fetchBool($sql);
         	}
         }
         
@@ -263,38 +265,40 @@
 		public function clearGroupAuthorization($service, $rightName, $groupID, $param = ''){
 					$rightFilter = '';
 			if($service != NULL && $rightName != NULL){
-				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-				$row = mysql_fetch_row(mysql_query($sql));
-				$rightFilter = ' AND right_id =  \''.mysql_real_escape_string($row[0]).'\'';
+				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($rightName).'\' AND service = \''.$this->sp->db->escape($service).'\';';
+				$row = $this->sp->db->fetchRow($sql);
+				$rightFilter = ' AND right_id =  \''.$this->sp->db->escape($row['id']).'\'';
 			} else if($service != NULL && $rightName == NULL){
-				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE service = \''.mysql_real_escape_string($service).'\';';
-				while($row = mysql_fetch_row(mysql_query($sql))){
-					$rightFilter .= 'OR right_id =  \''.mysql_real_escape_string($row[0]).'\'';
+				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE service = \''.$this->sp->db->escape($service).'\';';
+				$rows = $this->sp->db->fetchRow($sql);
+				foreach($rows as $row){
+					$rightFilter .= 'OR right_id =  \''.$this->sp->db->escape($row['id']).'\'';
 				}
 				$rightFilter = ' AND ('.substr($rightFilter, 2).')';
 			} else if($service == NULL && $rightName != NULL){
-				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\';';
-				while($row = mysql_fetch_row(mysql_query($sql))){
-					$rightFilter .= 'OR right_id =  \''.mysql_real_escape_string($row[0]).'\'';
+				$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.$this->sp->db->escape($rightName).'\';';
+				$rows = $this->sp->db->fetchRow($sql);
+				foreach($rows as $row){
+					$rightFilter .= 'OR right_id =  \''.$this->sp->db->escape($row['id']).'\'';
 				}
 				$rightFilter = ' AND ('.substr($rightFilter, 2).')';
 			}
 			
 			if($groupID != NULL){
-				$groupID = ' group_id = \''.mysql_real_escape_string($userID).'\' ';
+				$groupID = ' group_id = \''.$this->sp->db->escape($userID).'\' ';
 			} else {
 				$groupID = '';
 			}
 			
 			if($param != NULL){
-				$param = ' param = \''.mysql_real_escape_string($param).'\' ';
+				$param = ' param = \''.$this->sp->db->escape($param).'\' ';
 			} else {
 				$param = '';
 			}
 			
         	if($rightFilter != '' || $userID != '' || $param != ''){
 				$sql = 'DELETE FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE '.$groupID.$param.$rightFilter.';';
-        		mysql_query($sql);
+        		$this->sp->db->fetchBool($sql);
         	}
         }
         
@@ -346,29 +350,27 @@
 				SELECT r.name, rg.auth, rg.param FROM '.$GLOBALS['db']['db_prefix'].'rights AS r 
 				RIGHT OUTER JOIN '.$GLOBALS['db']['db_prefix'].'right_group AS rg ON r.id = rg.right_id
 				LEFT OUTER JOIN '.$GLOBALS['db']['db_prefix'].'user AS u ON rg.group_id = u.group
-				WHERE u.id = \''.mysql_real_escape_string($userID).'\' AND r.service = \''.mysql_real_escape_string($service).'\'
+				WHERE u.id = \''.$this->sp->db->escape($userID).'\' AND r.service = \''.$this->sp->db->escape($service).'\'
 				
 				UNION
 				
 				SELECT r.name, ru.auth, ru.param FROM '.$GLOBALS['db']['db_prefix'].'rights AS r 
 				RIGHT OUTER JOIN '.$GLOBALS['db']['db_prefix'].'right_user AS ru ON r.id = ru.right_id
-				WHERE ru.user_id = \''.mysql_real_escape_string($userID).'\' AND r.service = \''.mysql_real_escape_string($service).'\';
+				WHERE ru.user_id = \''.$this->sp->db->escape($userID).'\' AND r.service = \''.$this->sp->db->escape($service).'\';
 				
 			';
         	
-        	$result = mysql_query($sql);
+        	$result = $this->sp->db->fetchAll($sql);
         	$rights = array();
         	
-        	if($result !== false){
-	        	while($item = mysql_fetch_assoc($result)){
-	        		
-	        		if(!isset($rights[$item['name']])){
-	        			$rights[$item['name']] = array();
-	        		} 
-	        		
-	        		//since the user specific rights are the latter rows in the query result the user specific rights will overwrite group rights if those already exist.
-	        		$rights[$item['name']][$item['param']] = ($item['auth'] == 1);
-	        	}
+        	foreach($result as $item){
+        		
+        		if(!isset($rights[$item['name']])){
+        			$rights[$item['name']] = array();
+        		} 
+        		
+        		//since the user specific rights are the latter rows in the query result the user specific rights will overwrite group rights if those already exist.
+        		$rights[$item['name']][$item['param']] = ($item['auth'] == 1);
         	}
         	
         	$this->rightCache[$userID][$service] = $rights;

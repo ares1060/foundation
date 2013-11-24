@@ -35,7 +35,7 @@
 		 *	@return BaseModel The BaseModel containing the data or null
 		 */
 		public static function getItem($table, $id){
-			$val = $this->sp->dp->fetchRow('SELECT * FROM \''.ServiceProvider::get()->db->escape($table).'\' WHERE id=\''.ServiceProvider::get()->db->escape($id).'\' LIMIT 0,1;');
+			$val = ServiceProvider::get()->db->fetchRow('SELECT * FROM `'.ServiceProvider::get()->db->escape($table).'` WHERE id=\''.ServiceProvider::get()->db->escape($id).'\' LIMIT 0,1;');
 			if($val != null) {
 				return new BaseModel($table, $val);
 			} else return null;
@@ -51,7 +51,7 @@
 		public static function getItems($table, $from = 0, $rows = -1){
 			if($from >= 0 && $rows > 0) $limit = ' LIMIT '.ServiceProvider::get()->db->escape($from).','.ServiceProvider::get()->db->escape($rows);
 			else $limit = '';
-			$vals = $this->sp->dp->fetchAll('SELECT * FROM \''.ServiceProvider::get()->db->escape($table).'\''.$limit.';');
+			$vals = ServiceProvider::get()->db->fetchAll('SELECT * FROM `'.ServiceProvider::get()->db->escape($table).'`'.$limit.';');
 			$a = array();
 			
 			foreach($vals as &$val){
@@ -67,7 +67,7 @@
 		 *	@return array.<BaseModel> The array of resulting BaseModels
 		 */
 		public static function getItemsSql($table, $sql){
-			$vals = $this->sp->dp->fetchAll($sql);
+			$vals = ServiceProvider::get()->db->fetchAll($sql);
 			$a = array();
 			
 			foreach($vals as &$val){
@@ -116,7 +116,7 @@
 		 */
 		public function delete(){
 			if($this->table == '' || isset($this->values['id']) || $this->values['id'] == '') return true;
-			if($this->sp->db->fetchBool('DELETE FROM '.$this->table.' WHERE id = \''.$this->values['id'].'\';')){
+			if($this->sp->db->fetchBool('DELETE FROM `'.$this->table.'` WHERE id = \''.$this->values['id'].'\';')){
 				unset($this->values['id']);
 				return true;
 			} else {

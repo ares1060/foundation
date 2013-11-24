@@ -15,7 +15,13 @@
     
     echo '<br>Welcome: '.$sp->user->getLoggedInUser()->getNick();
     
-    echo $sp->db->getLastError();
+	$bm = core\BaseModel::getItem('pp_user', '19');
+	$bm->email = 'ehehehe@lol.com';
+	$bm->save();
+	$bm->email = 'yadada@lol.com';
+	$bm->save();
+	
+	echo $sp->db->getLastError();
     
 	echo '<br>runtime: '.(microtime(true)-$GLOBALS['stat']['start']);
 ?>

@@ -150,19 +150,7 @@
         * @param string $query
         */
         public function fetchExists($query){
-        	$result = $this->mysqli->real_query($query);
-        	if($res = $this->mysqli->use_result()) {
-        		$rows = $res->num_rows;
-        		$res->free();
-        	}
-        	 
-        	//$id = $this->mysqli->insert_id;
-        	 
-        	$result ? $this->querycount['success']++ : $this->querycount['error']++;
-        	 
-        	$this->cacheQuery($query, $result);
-        	 
-        	return $result && $rows > 0;
+        	return $this->exists($query);
         }
         
         /**
@@ -239,7 +227,7 @@
          */
         public function lazyInsert($table, $data){
         	//TODO: cache columns
-        	$sql = 'SHOW COLUMNS FROM '.$table.';';//fetch all columns
+        	$sql = 'SHOW COLUMNS FROM `'.$table.'`;';//fetch all columns
         	$result = $this->mysqli->query($sql, MYSQLI_USE_RESULT);
         	$colstring = '';
         	$valuestring = '';
@@ -270,13 +258,13 @@
         */
         public function lazyUpdate($table, $where, $data){
         	//TODO: cache columns
-        	$sql = 'SHOW COLUMNS FROM '.$this->mysqli->real_escape_string($table).';';//fetch all columns
+        	$sql = 'SHOW COLUMNS FROM `'.$this->mysqli->real_escape_string($table).'`;';//fetch all columns
         	$result = $this->mysqli->query($sql, MYSQLI_USE_RESULT);
         	$set = '';
         	while($column = $result->fetch_assoc()){
         		//create the field- and value string
         		if(isset($data[$column['Field']])){
-        			$set .= $column['Field'].'=\''.$this->mysqli->real_escape_string($data[$column['Field']]).'\', ';
+        			$set .= '`'.$column['Field'].'`=\''.$this->mysqli->real_escape_string($data[$column['Field']]).'\', ';
         		}
         	}
         	$result->free();

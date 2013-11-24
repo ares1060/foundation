@@ -1,6 +1,7 @@
 <?php
 	
 	namespace at\foundation\core;
+	use at\foundation\core\Messages\Messages;
 	
 	/**
 	 * Class providing basic function to Services and Helperclasses
@@ -160,7 +161,6 @@
          */
         protected function debugVar($var){
         	ob_start(); 
-        	var_dump($var);
         	$this->debug(nl2br(ob_get_clean()));
         }
         

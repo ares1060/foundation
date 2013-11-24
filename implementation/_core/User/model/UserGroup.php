@@ -6,6 +6,7 @@
 
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
 	
 	class UserGroup extends core\BaseModel  {
 		private $id;
@@ -15,7 +16,7 @@
 		
 		function __construct($name = ''){
 			$this->id = '';
-			$this->name = $name = '';
+			$this->name = $name;
 			parent::__construct(ServiceProvider::get()->db->prefix.'userdata', array());
 		}
 
@@ -120,7 +121,7 @@
 		}
 		
 		// setter
-		private function setId() { $this->id = $id; return $this; }
+		private function setId($id) { $this->id = $id; return $this; }
 		public function setName($name) { $this->name = $name; return $this; }
 		
 		// getter

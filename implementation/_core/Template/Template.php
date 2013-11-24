@@ -42,7 +42,7 @@
             	mkdir($GLOBALS['config']['root'].'/'.$this->config['cache_folder']);
             }*/
 			$this->template = ($this->settings->tpl_template == null) ? $this->settings->tpl_base_template : $this->settings->tpl_template;
-			
+
             $this->baseReplaces = array('version'=>'PerPedes V '.core\ServiceProvider::VERSION, 
                                         'version_short'=>core\ServiceProvider::VERSION,
                                         'root'=>(isset($GLOBALS['connector_to_root'])) ? $GLOBALS['connector_to_root']: $GLOBALS['to_root'], // connector gets new root if needen because of template rendering from other folder

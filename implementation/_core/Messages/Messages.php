@@ -2,6 +2,9 @@
 	
 	namespace at\foundation\core\Messages;
 	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
+	use at\foundation\core\Template\ViewDescriptor;
+	use at\foundation\core\Template\SubViewDescriptor;
 	
 	/**
 	 * Message Service | stores and displays messages
@@ -21,14 +24,11 @@
         const RUNTIME_ERROR = 5; // runtime errors 
         
         function __construct(){
-            $this->ini_file = $GLOBALS['to_root'].'/_core/Messages/Messages.ini';
+            $this->name = 'Messages';
+        	$this->ini_file = $GLOBALS['to_root'].'_core/Messages/Messages.ini';
         	
         	parent::__construct();
             $this->messages = array();
-            
-            //$this->loadConfig($GLOBALS['config']['root'].'/_core/Messages/Messages.config.php'); //-> geht nicht weil 
-            //$this->config['loc_file'] = $GLOBALS['config']['root'].'/_localization/core.messages.loc.php';
-           // $this->sp->run('Localization', array('load'=>$this->config['loc_file']));
         }
         
         /**
@@ -74,7 +74,7 @@
          */
         public function addMsg($message, $type){
 			       // 	print_r($this->messages);
-        	if($this->_setting('msg.save_messages_in_session')) {
+        	if($this->settings->msg_save_messages_in_session) {
 				$m = array('type'=>$type, 
 							'time'=>microtime(true), 
 							'message'=>$message, 
@@ -101,7 +101,7 @@
         
         public function renderDiv($args){
         	if(isset($args['msg']) && isset($args['msg']['type']) &&isset($args['msg']['msg'])){
-        		$replace = new ViewDescriptor($this->_setting('tpl.tpl_message'));
+        		$replace = new ViewDescriptor($this->settings->tpl.tpl_message);
         		$sv = new SubViewDescriptor('message');
                 $sv->addValue('type', $args['msg']['type']);
                 $sv->addValue('time', '');
@@ -116,14 +116,14 @@
          * Renders active and session stored Messages
          */
         public function renderMe(){
-            $replace = new ViewDescriptor($this->_setting('tpl.tpl_message'));
+            $replace = new ViewDescriptor($this->settings->tpl_message);
 
             /* -- render active Messages --- */
             foreach($this->messages as $key=>$message) {
-            	if(($message['type'] == Messages::ERROR && $this->_setting('msg.display_error')) ||
-            		($message['type'] == Messages::INFO && $this->_setting('msg.display_info')) ||
-             		($message['type'] == Messages::DEBUG && $this->_setting('msg.display_debug')) ||Ê
-	             	($message['type'] == Messages::RUNTIME && $this->_setting('msg.display_runtime'))) {
+            	if(($message['type'] == self::ERROR && $this->settings->msg_display_error) ||
+            		($message['type'] == self::INFO && $this->settings->msg_display_info) ||
+             		($message['type'] == self::DEBUG && $this->settings->msg_display_debug) ||
+	             	($message['type'] == self::RUNTIME && $this->settings->msg_display_runtime)) {
              			
              		$sv = new SubViewDescriptor('message');
             		$sv->addValue('type', $message['type']);
@@ -139,14 +139,14 @@
 			/* -- render $_SESSION Messages from previous Site --- */
 			if(isset($_SESSION['messages'])){
 				foreach($_SESSION['messages'] as $key=>$message) {
-	            	if(($message['type'] == Messages::ERROR && $this->_setting('msg.display_error')) ||
-	            		($message['type'] == Messages::INFO && $this->_setting('msg.display_info')) ||
-	             		($message['type'] == Messages::DEBUG && $this->_setting('msg.display_debug')) ||Ê
-		             	($message['type'] == Messages::RUNTIME && $this->_setting('msg.display_runtime'))) {
+	            	if(($message['type'] == self::ERROR && $this->settings->msg_display_error) ||
+	            		($message['type'] == self::INFO && $this->settings->msg_display_info) ||
+	             		($message['type'] == self::DEBUG && $this->settings->msg_display_debug) ||Ê
+		             	($message['type'] == self::RUNTIME && $this->settings->msg_display_runtime)) {
 	             			
 	             		$sv = new SubViewDescriptor('message');
 	            		$sv->addValue('type', $message['type']);
-	           			$sv->addValue('time', ($message['type'] == Messages::DEBUG || $message['type'] == Messages::DEBUG_ERROR) ? '('.round(($message['time']-$GLOBALS['stat']['start'])*1000,4).')' : '');
+	           			$sv->addValue('time', ($message['type'] == self::DEBUG || $message['type'] == self::DEBUG_ERROR) ? '('.round(($message['time']-$GLOBALS['stat']['start'])*1000,4).')' : '');
 	         			$sv->addValue('message',  $message['message']);
 	   					$sv->addValue('m_id',  $message['id']);
 	        			$replace->addSubView($sv);
@@ -168,20 +168,20 @@
         	$typear = array();
         	foreach($type as $t) $typear[] = $this->getTypeID($t);
         	
-        	if($this->_setting('msg.display_debug')) $typear[] = self::DEBUG;
-        	if($this->_setting('msg.display_runtime')) $typear[] = self::RUNTIME;
-        	if($this->_setting('msg.display_runtime_error')) $typear[] = self::RUNTIME_ERROR;        	
+        	if($this->settings->msg_display_debug) $typear[] = self::DEBUG;
+        	if($this->settings->msg_display_runtime) $typear[] = self::RUNTIME;
+        	if($this->settings->msg_display_runtime_error) $typear[] = self::RUNTIME_ERROR;        	
 			
         	//$_SESSION['messages'] = array();
         	if(count($typear) > 0) {
-        		$replace = new ViewDescriptor($this->_setting('tpl.tpl_message'));
+        		$replace = new ViewDescriptor($this->settings->tpl_message);
         		/* -- render active Messages --- */
 	            foreach($this->messages as $key=>$message) {
 						
 	            	if((in_array($message['type'], $typear))) {
 	            		$sv = new SubViewDescriptor('message');
 	            		$sv->addValue('type', $message['type']);
-	           			$sv->addValue('time', ($message['type'] == Messages::DEBUG || $message['type'] == Messages::DEBUG_ERROR) ? '('.round(($message['time']-$GLOBALS['stat']['start'])*1000,4).')' : '');
+	           			$sv->addValue('time', ($message['type'] == self::DEBUG || $message['type'] == self::DEBUG_ERROR) ? '('.round(($message['time']-$GLOBALS['stat']['start'])*1000,4).')' : '');
 	         			$sv->addValue('message',  $message['message']);
 	   					$sv->addValue('m_id',  $message['id']);
 	        			
@@ -200,7 +200,7 @@
 							$count++;
 		            		$sv = new SubViewDescriptor('message');
 		            		$sv->addValue('type', $message['type']);
-		           			$sv->addValue('time', ($message['type'] == Messages::DEBUG || $message['type'] == Messages::DEBUG_ERROR) ? '('.round(($message['time']-$GLOBALS['stat']['start'])*1000,4).')' : '');
+		           			$sv->addValue('time', ($message['type'] == self::DEBUG || $message['type'] == self::DEBUG_ERROR) ? '('.round(($message['time']-$GLOBALS['stat']['start'])*1000,4).')' : '');
 		         			$sv->addValue('message',  $message['message']);
 		   					$sv->addValue('m_id',  $message['id']);
 		        			

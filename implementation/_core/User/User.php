@@ -2,8 +2,10 @@
 
 	namespace at\foundation\core\User;
 	use at\foundation\core;	
+	use at\foundation\core\ServiceProvider;	
 	use at\foundation\core\User\view\UserAdminView;
 	use at\foundation\core\User\view\UserFrontView;
+	use at\foundation\core\Messages\Messages;
 
 	require_once('model/User.php');
 	require_once('model/UserGroup.php');
@@ -197,7 +199,7 @@
                				break;
             			case 'set_viewing_user':
             				if($this->checkRight('can_change_viewing_user') && $id != -1){
-            					$this->viewingUser = models\User::getUser($id);
+            					$this->viewingUser = model\User::getUser($id);
             					$_SESSION['User']['viewingUser'] = $this->viewingUser;
             					return true;
             				} else {
@@ -208,7 +210,7 @@
             			case 'edit_user_change_pwd':
             				$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
             				$pwd1 = (isset($args['pwd1'])) ? $args['pwd1'] : '';
-            				$u = models\User::getUser($id);
+            				$u = model\User::getUser($id);
             				if($u != null && ($this->checkRight('administer_group', $u->getGroup()->getId()) || $this->checkRight('edit_user', $u->getId()))){
             					if($pwd == $pwd1){
             						if($this->editUser($u->getId(), '', $pwd)) {
@@ -278,7 +280,7 @@
 		    	switch($_POST['action']){
 		    		case 'editUser':
 		    			if(isset($_POST['eu_id']) && isset($_POST['eu_mail']) && isset($_POST['eu_status']) && isset($_POST['eu_group'])){
-		    				$user = models\User::getUser($_POST['eu_id']);
+		    				$user = model\User::getUser($_POST['eu_id']);
 		    				
 		    				if($this->checkRight('edit_user', $user->getId()) || $this->checkRight('administer_group', $user->getGroup()->getId())){
 		    					//potential security risk -> check if authorized to set new group
@@ -332,15 +334,12 @@
          * @param string $pwd
          */
         private function rightPwd($nick, $pwd){
-        	$hash = ($this->settings->no_nick_needed) ? models\User::getUserHashByEMail($nick) : models\User::getUserHashByNick($nick);
+
+        	$hash = ($this->settings->no_nick_needed) ? model\User::getUserHashByMail($nick) : model\User::getUserHashByNick($nick);
+
         	if($hash != ''){
         		
         		$salt = substr($hash, strpos($hash, '#')+1);
-         		
-//         		$this->_msg($salt);
-//          		$this->_msg($this->hashPassword($pwd, $salt));
-//          		$this->_msg($this->hashPassword($pwd, $salt));
-//          		$this->_msg($this->hashPassword($pwd, $salt));
          		 
         		if($hash == $this->hashPassword($pwd, $salt)){  
         			return true;
@@ -358,7 +357,7 @@
          */
         public function login($nick, $pwd){
         	if($this->rightPwd($nick, $pwd)){        			
-        		$u = ($this->settings->no_nick_needed) ? models\User::getUserByEMail($nick) : models\User::getUserByNick($nick);
+        		$u = ($this->settings->no_nick_needed) ? model\User::getUserByEMail($nick) : model\User::getUserByNick($nick);
         		switch($u->getStatus()){
         			case self::STATUS_ACTIVE:
         				$this->setLoggedInUser($u);
@@ -574,7 +573,7 @@
     	
 		/**
 		 *	Calls setLastLogin on the currently logged in User
-		 *	@see: models\User::setLastLogin
+		 *	@see: model\User::setLastLogin
 		 */
     	public function setLastLogin(){
     		if($this->sp->user->isLoggedIn()){
@@ -689,7 +688,7 @@
           * @param $u_id
           */
          public function setViewingUserById($u_id){
-         	$this->setViewingUser(models\User::getUser($u_id));
+         	$this->setViewingUser(model\User::getUser($u_id));
          }
          
 		/**

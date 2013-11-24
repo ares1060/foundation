@@ -22,7 +22,7 @@
 		private static $users = array();
 			
         public function __construct($nick = '', $email = '', $group= '', $status) {
-            $this->nick = $nick;
+        	$this->nick = $nick;
             $this->email = $email;
             $this->id = '';
             $this->groupId = $group;
@@ -66,7 +66,7 @@
 			$u1 = ServiceProvider::get()->db->fetchAll('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user '.$limit);
 			if($u1 != array()){
 				foreach($u1 as $u) {
-					$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+					$ui = new User($u['nick'], $u['email'], $u['group'], $u['status']);
 					$ui->setId($u['id'])->setHash($u['hash']); 
 					$return[] = $ui;
 				}
@@ -83,7 +83,7 @@
 			if(!isset(self::$users[$id])) {
 				$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE id="'.ServiceProvider::get()->db->escape($id).'"');
 				if($u != array()){
-					$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+					$ui = new User($u['nick'], $u['email'], $u['group'], $u['status']);
 					$ui->setId($u['id'])->setHash($u['hash']); 
 					self::$users[$id] = $ui;
 				} else {
@@ -124,7 +124,7 @@
 			}
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.ServiceProvider::get()->db->escape($nick).'"');
 			if($u != array()){
-				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+				$ui = new User($u['nick'], $u['email'], $u['group'], $u['status']);
 				$ui->setId($u['id'])->setHash($u['hash']); 
 				self::$users[$u['id']] = $ui;
 				return self::$users[$u['id']];
@@ -147,7 +147,7 @@
 				 
 				if($array != array()) {
 					$u = $array[0];
-					$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+					$ui = new User($u['nick'], $u['email'], $u['group'], $u['status']);
 					$ui->setId($u['id'])->setHash($u['hash']); 
 					self::$users[$u['id']] = $ui;
 
@@ -167,7 +167,7 @@
 			}
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.ServiceProvider::get()->db->escape($mail).'"');
 			if($u != array()){
-				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+				$ui = new User($u['nick'], $u['email'], $u['group'], $u['status']);
 				$ui->setId($u['id'])->setHash($u['hash']); 
 				self::$users[$u['id']] = $ui;
 				return self::$users[$u['id']];
@@ -183,7 +183,7 @@
 		public static function getUserByActivationCode($activationCode){
 			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.ServiceProvider::get()->db->escape($activationCode).'"');
 			if($u != array()){
-				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
+				$ui = new User($u['nick'], $u['email'], $u['group'], $u['status']);
 				$ui->setId($u['id'])->setHash($u['hash']); 
 				self::$users[$u['id']] = $ui;
 				return self::$users[$u['id']];
@@ -318,7 +318,7 @@
 		public function getEmail(){ return $this->email; }
 		public function getId(){ return $this->id; }
 		public function getGroup() { 
-			if($this->group == null) UserGroup::getGroupById($this->groupId);
+			if($this->group == null) $this->group = UserGroup::getGroupById($this->groupId);
 			return $this->group;
 		}
 		public function getStatus() { return $this->status; }

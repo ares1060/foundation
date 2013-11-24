@@ -6,6 +6,7 @@
 	//setup autoloader for core classes and core services
 	spl_autoload_register(function ($class) {
 		$a = array();
+
 		if(preg_match('/^at\\\\foundation\\\\core\\\\[^\\\\]+\\\\.*$/', $class, $a) > 0){
 			$class = str_replace('\\', '/', str_replace('at\foundation\core\\', $GLOBALS['config']['root'].'_core/', $class));
 			require_once $class . '.php';

@@ -105,20 +105,22 @@
          * Creates a right with the given name for the given service
          * @param $service The service's name.
          * @param $name The name of the right. If the right already exists the call is ignored.
+         * @return boolean True if successfully saved
          */
         public function addRight($service, $name){
         	$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'rights (`id`, `name`, `service`) VALUES (\'\', \''.mysql_real_escape_string($name).'\', \''.mysql_real_escape_string($service).'\');';
-        	mysql_query($sql);
+        	return $this->sp->db->fetchBool($sql);
         }
         
         /**
          * Removes the right with the given name for the given service
          * @param $service The service's name.
          * @param $name The name of the right. If the right doesn't exist the call is ignored.
+         * @param boolean True if successfully removed
          */
 		public function removeRight($service, $name){
         	$sql = 'DELETE FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($name).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-        	mysql_query($sql);
+        	return $this->sp->db->fetchBool($sql);
         }
         
         /**
@@ -130,16 +132,16 @@
          */
 		public function authorizeUser($service, $rightName, $userID, $param = ''){
         	$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-        	$row = mysql_fetch_row(mysql_query($sql));
+        	$row = $this->sp->db->fetchRow(mysql_query($sql));
         	if(is_array($row)){
         	    //check if an entry for this user already exists
-        		if(mysql_num_rows(mysql_query('SELECT * FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row[0]).'\' AND param = \''.mysql_real_escape_string($param).'\';')) > 0){
-        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_user SET auth = \'1\' WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row[0]).'\' AND param = \''.mysql_real_escape_string($param).'\';';
+        		if($this->sp->db->fetchExists('SELECT COUNT(*) as count FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';')){
+        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_user SET auth = \'1\' WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';';
         		} else {
-        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_user (`user_id`, `right_id`, `param`, `auth`) VALUES (\''.mysql_real_escape_string($userID).'\', \''.mysql_real_escape_string($row[0]).'\', \''.mysql_real_escape_string($param).'\', \'1\');';
+        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_user (`user_id`, `right_id`, `param`, `auth`) VALUES (\''.mysql_real_escape_string($userID).'\', \''.mysql_real_escape_string($row['id']).'\', \''.mysql_real_escape_string($param).'\', \'1\');';
         		}
         		//$this->debugVar($sql);
-        		return mysql_query($sql);
+        		return $this->sp->db->fetchBool($sql);
         	} return false;
         }
         
@@ -152,15 +154,15 @@
          */
 		public function authorizeGroup($service, $rightName, $groupID, $param = ''){
 		    $sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-        	$row = mysql_fetch_row(mysql_query($sql));
+        	$row = $this->sp->db->fetchRow(mysql_query($sql));
         	if(is_array($row) && $row != array()){
         		//check if an entry for this group already exists
-        		if(mysql_num_rows(mysql_query('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row[0]).'\' AND param = \''.mysql_real_escape_string($param).'\';')) > 0){
-        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_group SET auth = \'1\' WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row[0]).'\' AND param = \''.mysql_real_escape_string($param).'\';';
+        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';')){
+        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_group SET auth = \'1\' WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';';
         		} else {
-        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row[0]).'\', \''.mysql_real_escape_string($param).'\', \'1\');';
+        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row['id']).'\', \''.mysql_real_escape_string($param).'\', \'1\');';
         		}
-        		mysql_query($sql);
+        		$this->sp->db->fetchBool($sql);
         	}
         }
 
@@ -173,15 +175,15 @@
          */
 		public function unauthorizeUser($service, $rightName, $userID, $param = ''){
 			$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-        	$row = mysql_fetch_row(mysql_query($sql));
+        	$row = $this->sp->db->fetchRow($sql);
         	if(is_array($row)){
         	    //check if an entry for this user already exists
-        		if(mysql_num_rows(mysql_query('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row[0]).'\' AND param = \''.mysql_real_escape_string($param).'\';')) > 0){
-        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_user SET auth = \'0\' WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row[0]).'\' AND param = \''.mysql_real_escape_string($param).'\';';
+        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_user WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';')){
+        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_user SET auth = \'0\' WHERE user_id = \''.mysql_real_escape_string($userID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';';
         		} else {
-        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row[0]).'\', \''.mysql_real_escape_string($param).'\', \'0\');';
+        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row['id']).'\', \''.mysql_real_escape_string($param).'\', \'0\');';
         		}
-        		mysql_query($sql);
+        		$this->sp->db->fetchBool($sql);
         	}
         }
         
@@ -194,13 +196,13 @@
          */
 		public function unauthorizeGroup($service, $rightName, $groupID, $param = ''){
 			$sql = 'SELECT id FROM '.$GLOBALS['db']['db_prefix'].'rights WHERE name = \''.mysql_real_escape_string($rightName).'\' AND service = \''.mysql_real_escape_string($service).'\';';
-        	$row = mysql_fetch_row(mysql_query($sql));
+        	$row = $this->sp->db->fetchRow($sql);
         	if(is_array($row)){
         		//check if an entry for this group already exists
-        		if(mysql_num_rows(mysql_query('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row[0]).'\' AND param = \''.mysql_real_escape_string($param).'\';')) > 0){
-        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_group SET auth = \'0\' WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row[0]).'\' AND param = \''.mysql_real_escape_string($param).'\';';
+        		if($this->sp->db->fetchExists('SELECT id FROM '.$GLOBALS['db']['db_prefix'].'right_group WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';')){
+        			$sql = 'UPDATE '.$GLOBALS['db']['db_prefix'].'right_group SET auth = \'0\' WHERE group_id = \''.mysql_real_escape_string($groupID).'\' AND right_id = \''.mysql_real_escape_string($row['id']).'\' AND param = \''.mysql_real_escape_string($param).'\';';
         		} else {
-        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row[0]).'\', \''.mysql_real_escape_string($param).'\', \'0\');';
+        			$sql = 'INSERT INTO '.$GLOBALS['db']['db_prefix'].'right_group (`id`, `group_id`, `right_id`, `param`, `auth`) VALUES (\'\', \''.mysql_real_escape_string($groupID).'\', \''.mysql_real_escape_string($row['id']).'\', \''.mysql_real_escape_string($param).'\', \'0\');';
         		}
         		mysql_query($sql);
         	}

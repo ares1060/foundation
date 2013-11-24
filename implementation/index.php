@@ -5,10 +5,13 @@
     
 	use at\foundation\core;
 	use at\foundation\core\Template;
+	use at\foundation\core\User;
     
     $main = new Template\ViewDescriptor('main');
         
     echo $main->render();
-	
+    
+    echo $sp->db->getLastError();
+    
 	echo '<br>runtime: '.(microtime(true)-$GLOBALS['stat']['start']);
 ?>

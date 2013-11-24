@@ -93,13 +93,14 @@
          * @param string $query
          */
         public function fetchRow($query){
-       		$result = $this->mysqli->query($query);
+       		$result = $this->mysqli->query($query, MYSQLI_USE_RESULT);
        		
        		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		
        		if($result) {
 				$a = $result->fetch_assoc();
 				$this->cacheQuery($query, $a);
+				$result->free();
 				return $a;
 			} else {
 				return null;
@@ -111,7 +112,7 @@
          * @param string $query
          */
         public function fetchAll($query){
-       		$result = $this->mysqli->query($query);
+       		$result = $this->mysqli->query($query, MYSQLI_USE_RESULT);
        		
        		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		
@@ -123,7 +124,7 @@
 				}
 				
 	       		$this->cacheQuery($query, $a);
-	       		
+	       		$result->free();
 	            return $a;
        		} else return array();
         }
@@ -133,16 +134,60 @@
          * @param string $query
          */
         public function fetchBool($query){
-       		$result = $this->mysqli->real_query($query);
-       		//$id = $this->mysqli->insert_id;
-       		
-       		$result ? $this->querycount['success']++ : $this->querycount['error']++;
-       		
-       		$this->cacheQuery($query, $result);
-       		
-       		return $result;
+        	$result = $this->mysqli->real_query($query);
+        	if($res = $this->mysqli->use_result()) $res->free();
+        	//$id = $this->mysqli->insert_id;
+        	
+        	$result ? $this->querycount['success']++ : $this->querycount['error']++;
+        	
+        	$this->cacheQuery($query, $result);
+        	
+        	return $result;
+        }
+        
+        /**
+        * returnes a boolean if the query yields a result
+        * @param string $query
+        */
+        public function fetchExists($query){
+        	$result = $this->mysqli->real_query($query);
+        	if($res = $this->mysqli->use_result()) {
+        		$rows = $res->num_rows;
+        		$res->free();
+        	}
+        	 
+        	//$id = $this->mysqli->insert_id;
+        	 
+        	$result ? $this->querycount['success']++ : $this->querycount['error']++;
+        	 
+        	$this->cacheQuery($query, $result);
+        	 
+        	return $result && $rows > 0;
+        }
+        
+        /**
+         * Escapes the string for save use in a sql query. 
+         * Uses the native ServiceProvider::get()->db->escape on the internal mysqli instance
+         * @param string $str The string to escape
+         * @return string The escaped string
+         */
+        public function escape($str){
+        	return $this->mysqli->real_escape_string($str);
         }
 
+        /**
+         * Returns the last inserted ID
+         */
+        public function getInsertedID(){
+        	return $this->mysqli->insert_id;
+        }
+        
+        /**
+        * Returns the last thrown database error
+        */
+        public function getLastError(){
+        	return $this->mysqli->error;
+        }
         
         public function exists($query){
             $a = $this->fetchRow($query);
@@ -195,7 +240,7 @@
         public function lazyInsert($table, $data){
         	//TODO: cache columns
         	$sql = 'SHOW COLUMNS FROM '.$table.';';//fetch all columns
-        	$result = $this->mysqli->query($sql);
+        	$result = $this->mysqli->query($sql, MYSQLI_USE_RESULT);
         	$colstring = '';
         	$valuestring = '';
         	while($column = $result->fetch_assoc()){
@@ -204,6 +249,7 @@
         		if(isset($data[$column['Field']])) $valuestring .= '\''.$this->mysqli->real_escape_string($data[$column['Field']]).'\', ';
         		else $valuestring .= '\'\', ';
         	}
+        	$result->free();
         	$values = substr($valuestring,0,-2);
         	$cols = substr($colstring,0,-1);
         	$succ = $this->mysqli->real_query('INSERT INTO '.$table.' ('.$cols.') VALUES ('.$values.');');//insert the data
@@ -225,7 +271,7 @@
         public function lazyUpdate($table, $where, $data){
         	//TODO: cache columns
         	$sql = 'SHOW COLUMNS FROM '.$this->mysqli->real_escape_string($table).';';//fetch all columns
-        	$result = $this->mysqli->query($sql);
+        	$result = $this->mysqli->query($sql, MYSQLI_USE_RESULT);
         	$set = '';
         	while($column = $result->fetch_assoc()){
         		//create the field- and value string
@@ -233,8 +279,9 @@
         			$set .= $column['Field'].'=\''.$this->mysqli->real_escape_string($data[$column['Field']]).'\', ';
         		}
         	}
+        	$result->free();
         	$set = substr($set,0,-2);
-        	return mysql_query('UPDATE '.$table.' SET '.$set.' WHERE '.$where.';');//insert the data
+        	return $this->mysqli->real_query('UPDATE '.$table.' SET '.$set.' WHERE '.$where.';');//insert the data
         }
         
         public function reloadConfig() {

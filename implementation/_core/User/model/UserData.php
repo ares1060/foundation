@@ -6,6 +6,7 @@
 
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
 
 	use at\foundation\core\User\model\UserDataItem;
 	use at\foundation\core\User\model\UserDataField;
@@ -24,7 +25,7 @@
 			$qry = ServiceProvider::get()->db->fetchAll('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata` AS ud 
 															LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdatafield` AS udf 
 																ON ud.field_id = udf.id; 
-															WHERE ud.user_id = \''.mysqli_real_escape_string($id).'\';');
+															WHERE ud.user_id = \''.ServiceProvider::get()->db->escape($id).'\';');
 			
 			$this->data = array();
 			$this->keys = array();
@@ -56,7 +57,7 @@
 		 * @return boolean
 		 */
 		public static function deleteDataForUser($id) {
-			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE user_id=\''.mysqli_real_escape_string($id).'\';');
+			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE user_id=\''.ServiceProvider::get()->db->escape($id).'\';');
 		}
 	
 	/* INSTANCE FUNCTIONS */
@@ -122,7 +123,7 @@
 		 */
 		public function delete(){
 			$this->data = array();
-			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE user_id=\''.mysqli_real_escape_string($this->userId).'\';');
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE user_id=\''.$this->sp->db->escape($this->userId).'\';');
 			return $ok;
 		}
 		

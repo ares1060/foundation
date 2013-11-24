@@ -37,7 +37,7 @@
 			$row = ServiceProvider::get()->db->fetchRow('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata` AS ud 
 															LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdatafield` AS udf 
 																ON ud.field_id = udf.id; 
-															WHERE ud.user_id = \''.mysqli_real_escape_string($id).'\' AND udf.name = \''.mysqli_real_escape_string($name).'\' LIMIT 0,1;');
+															WHERE ud.user_id = \''.ServiceProvider::get()->db->escape($id).'\' AND udf.name = \''.ServiceProvider::get()->db->escape($name).'\' LIMIT 0,1;');
 			if($row && isset($row['id'])){
 				$o = new UserDataItem($row['user_id'], $row['field_id'], $row['value']);
 				$o->setId($row['id']);
@@ -52,7 +52,7 @@
 		 * @return boolean
 		 */
 		public static function deleteDataForUser($uid) {
-			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE user_id=\''.mysqli_real_escape_string($uid).'\';');
+			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE user_id=\''.ServiceProvider::get()->db->escape($uid).'\';');
 		}
 	
 	/* INSTANCE FUNCTIONS */
@@ -63,15 +63,15 @@
 		public function save(){
 			if($this->id == ''){
 				//insert
-				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'userdata 
+				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'userdata 
 								(`user_id`, `field_id`, `value`, `last_change`) VALUES 
-								(\''.mysqli_real_escape_string($this->userId).'\', 
-									\''.mysqli_real_escape_string($this->fieldId).'\', 
-									\''.mysqli_real_escape_string($this->value).'\', 
+								(\''.ServiceProvider::get()->db->escape($this->userId).'\', 
+									\''.ServiceProvider::get()->db->escape($this->fieldId).'\', 
+									\''.ServiceProvider::get()->db->escape($this->value).'\', 
 									NOW()
 								);');
 				if($succ) {
-					$this->id = mysqli_insert_id();
+					$this->id = $this->sp->db->getInsertedID();
 					return true;
 				} else {
 					return false;
@@ -80,11 +80,11 @@
 			} else if($this->changed) {
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'userdata SET
-						field_id = \''.mysqli_real_escape_string($this->fieldId).'\',
-						user_id = \''.mysqli_real_escape_string($this->userId).'\',
-						value = \''.mysqli_real_escape_string($this->value).'\',
+						field_id = \''.ServiceProvider::get()->db->escape($this->fieldId).'\',
+						user_id = \''.ServiceProvider::get()->db->escape($this->userId).'\',
+						value = \''.ServiceProvider::get()->db->escape($this->value).'\',
 						last_change = NOW()
-					WHERE id="'.mysqli_real_escape_string($this->id).'"');
+					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
 		}
@@ -93,7 +93,7 @@
 		 *	Deletes the user data item from the database
 		 */
 		public function delete(){
-			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
 			return $ok;
 		}
 		

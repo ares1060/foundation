@@ -328,8 +328,8 @@
         /* functions */
         /**
          * returnes false if pwd is wrong
-         * @param unknown_type $nick
-         * @param unknown_type $pwd
+         * @param string $nick
+         * @param string $pwd
          */
         private function rightPwd($nick, $pwd){
         	$hash = ($this->settings->no_nick_needed) ? models\User::getUserHashByEMail($nick) : models\User::getUserHashByNick($nick);
@@ -347,6 +347,7 @@
         		} else return false;
         	} else return false;
         }
+        
         /**
          * 
          * Logs in User by nick and pwd
@@ -446,9 +447,9 @@
 		    			   				if($obj->usedByGroup($group)){
 		    			   					$x = ($this->mysqlInsert('INSERT INTO '.ServiceProvider::get()->db->prefix.'userdata_user 
 		    			   										(`u_id`, `ud_id`, `value`, `last_change`) VALUES
-		    			   										(\''.mysqli_real_escape_string($user->getId()).'\',
-		    			   										\''.mysqli_real_escape_string($key).'\',
-		    			   										\''.mysqli_real_escape_string($value).'\', NOW());') == 0);
+		    			   										(\''.ServiceProvider::get()->db->escape($user->getId()).'\',
+		    			   										\''.ServiceProvider::get()->db->escape($key).'\',
+		    			   										\''.ServiceProvider::get()->db->escape($value).'\', NOW());') == 0);
 		    			   					$ok = $ok && $x;
 		    			   				}
 		    			   			}

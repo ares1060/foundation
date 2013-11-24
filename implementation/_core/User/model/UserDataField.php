@@ -35,7 +35,7 @@
 		 * @return UserDataField
 		 */
 		public static function getUserDataFieldById($id){
-			$q = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE id = "'.mysqli_real_escape_string($id).'"');
+			$q = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE id = "'.ServiceProvider::get()->db->escape($id).'"');
 			if($q != null){
 				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
 				$t->setId($q['id']);
@@ -48,7 +48,7 @@
 		 * @return UserDataField
 		 */
 		public static function getUserDataFieldByName($name) {
-			$q = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE name = "'.mysqli_real_escape_string($name).'"');
+			$q = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE name = "'.ServiceProvider::get()->db->escape($name).'"');
 			if($q != null){
 				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
 				$t->setId($q['id']);
@@ -66,28 +66,28 @@
 			if($this->id != ''){
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'userdatafield SET
-						name = \''.mysqli_real_escape_string($this->name).'\',
-						info = \''.mysqli_real_escape_string($this->info).'\',
-						type = \''.mysqli_real_escape_string($this->type).'\',
-						group = \''.mysqli_real_escape_string($this->groupId).'\',
-						vis_register = \''.mysqli_real_escape_string($this->visibility['register']).'\',
-						vis_login = \''.mysqli_real_escape_string($this->visibility['login']).'\',
-						vis_edit = \''.mysqli_real_escape_string($this->visibility['edit']).'\'
-					WHERE id="'.mysqli_real_escape_string($this->id).'"');
+						name = \''.$this->sp->db->escape($this->name).'\',
+						info = \''.$this->sp->db->escape($this->info).'\',
+						type = \''.$this->sp->db->escape($this->type).'\',
+						group = \''.$this->sp->db->escape($this->groupId).'\',
+						vis_register = \''.$this->sp->db->escape($this->visibility['register']).'\',
+						vis_login = \''.$this->sp->db->escape($this->visibility['login']).'\',
+						vis_edit = \''.$this->sp->db->escape($this->visibility['edit']).'\'
+					WHERE id="'.$this->sp->db->escape($this->id).'"');
 			} else {
 				//insert
-				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'userdatafield 
+				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'userdatafield 
 								(`name`, `info`, `type`, `group`, `vis_register`, `vis_login`, `vis_edit`) VALUES 
-								(\''.mysqli_real_escape_string($this->name).'\', 
-									\''.mysqli_real_escape_string($this->info).'\', 
-									\''.mysqli_real_escape_string($this->type).'\', 
-									\''.mysqli_real_escape_string($this->groupId).'\', 
-									\''.mysqli_real_escape_string($this->visibility['register']).'\', 
-									\''.mysqli_real_escape_string($this->visibility['login']).'\',
-									\''.mysqli_real_escape_string($this->visibility['edit']).'\'
+								(\''.$this->sp->db->escape($this->name).'\', 
+									\''.$this->sp->db->escape($this->info).'\', 
+									\''.$this->sp->db->escape($this->type).'\', 
+									\''.$this->sp->db->escape($this->groupId).'\', 
+									\''.$this->sp->db->escape($this->visibility['register']).'\', 
+									\''.$this->sp->db->escape($this->visibility['login']).'\',
+									\''.$this->sp->db->escape($this->visibility['edit']).'\'
 								);');
 				if($succ) {
-					$this->id = mysqli_insert_id();
+					$this->id = $this->sp->db->getInsertedID();
 					return true;
 				} else {
 					return false;
@@ -99,7 +99,7 @@
 		 *	Deletes the user from the database
 		 */
 		public function delete(){
-			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE id=\''.$this->sp->db->escape($this->id).'\';');
 			//TODO remove all links where possible
 			return $ok;
 		}

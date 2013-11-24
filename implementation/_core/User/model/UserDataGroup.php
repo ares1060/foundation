@@ -27,7 +27,7 @@
 		 */
 		public static function getGroup($id){
 			if(!isset(self::$groups[$id])) {
-				$g = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup WHERE id="'.mysqli_real_escape_string($id).'"');
+				$g = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup WHERE id="'.ServiceProvider::get()->db->escape($id).'"');
 				if($g != array()){
 					$gi = new UserDataGroup($g['name']);
 					$gi->setId($g['id']);
@@ -62,7 +62,7 @@
 			$from = ($page-1)*(ServiceProvider::get()->groups->settings->perpage_user_group);
 			if($from > $all) $from = 0;
 			
-			$limit = ($page == -1) ? '' : 'LIMIT '.mysqli_real_escape_string($from).', '.mysqli_real_escape_string(ServiceProvider::get()->groups->settings->perpage_user_group).';';
+			$limit = ($page == -1) ? '' : 'LIMIT '.ServiceProvider::get()->db->escape($from).', '.ServiceProvider::get()->db->escape(ServiceProvider::get()->groups->settings->perpage_user_group).';';
 			
 			$gs = ServiceProvider::get()->db->fetchAll('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup '.$limit);
 			if($gs != array()){
@@ -93,14 +93,14 @@
 				//update usergroup
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'userdata_datagroup SET
 						name = \''.$this->name.'\'
-					WHERE id="'.mysqli_real_escape_string($this->id).'"');
+					WHERE id="'.$this->sp->db->escape($this->id).'"');
 			} else {
 				//insert usergroup
-				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'userdata_datagroup 
+				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'userdata_datagroup 
 								(`name`) VALUES 
-								(\''.mysqli_real_escape_string($this->name).'\');');
+								(\''.$this->sp->db->escape($this->name).'\');');
 				if($succ) {
-					$this->id = mysqli_insert_id();
+					$this->id = $this->sp->db->getInsertedID();
 					return true;
 				} else {
 					return false;
@@ -112,7 +112,7 @@
 		 *	Deletes the usergroup from the database
 		 */
 		public function delete(){
-			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'userdata_datagroup WHERE id=\''.$this->sp->db->escape($this->id).'\';');
 			//TODO remove all links
 			return $ok;
 		}

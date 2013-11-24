@@ -6,6 +6,7 @@
 
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
 	
 	class User extends core\BaseModel {
         private $nick;
@@ -29,7 +30,7 @@
             $this->pwd = '';
             $this->userData = null;
 			$this->group = null;
-            parent::__construct($ServiceProvider::get()->db->prefix.'user', array());
+            parent::__construct(ServiceProvider::get()->db->prefix.'user', array());
         }
 		
 		
@@ -41,7 +42,7 @@
 		 * @return boolean True if nick is available
 		 */
 		public static function checkNickAvailability($nick){
-			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.ServiceProvider::get()->db->escape($nick).'"');
 			if($u != array()) return false;
 			else return true;
 		}
@@ -60,7 +61,7 @@
 			$from = ($page-1)*(ServiceProvider::get()->user->settings->perpage_user);
 			if($from > $all) $from = 0;
 			
-			$limit = ($page == -1) ? '' : 'LIMIT '.mysqli_real_escape_string($from).', '.mysqli_real_escape_string(ServiceProvider::get()->user->settings->perpage_user).';';
+			$limit = ($page == -1) ? '' : 'LIMIT '.ServiceProvider::get()->db->escape($from).', '.ServiceProvider::get()->db->escape(ServiceProvider::get()->user->settings->perpage_user).';';
 			
 			$u1 = ServiceProvider::get()->db->fetchAll('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user '.$limit);
 			if($u1 != array()){
@@ -80,7 +81,7 @@
 		 */
 		public static function getUser($id){
 			if(!isset(self::$users[$id])) {
-				$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE id="'.mysqli_real_escape_string($id).'"');
+				$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE id="'.ServiceProvider::get()->db->escape($id).'"');
 				if($u != array()){
 					$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
 					$ui->setId($u['id'])->setHash($u['hash']); 
@@ -121,7 +122,7 @@
 			foreach(self::$users as $u){
 				if($u->getNick() == $nick) return $u;
 			}
-			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.ServiceProvider::get()->db->escape($nick).'"');
 			if($u != array()){
 				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
 				$ui->setId($u['id'])->setHash($u['hash']); 
@@ -142,7 +143,7 @@
 				$array = ServiceProvider::get()->db->fetchAll('SELECT * FROM
 						'.ServiceProvider::get()->db->prefix.'userdata_user du
 						LEFT JOIN '.ServiceProvider::get()->db->prefix.'user u ON du.u_id = u.id
-						WHERE du.value=\''.mysqli_real_escape_string($value).'\' AND du.ud_id = \''.mysqli_real_escape_string($data_id).'\';');
+						WHERE du.value=\''.ServiceProvider::get()->db->escape($value).'\' AND du.ud_id = \''.ServiceProvider::get()->db->escape($data_id).'\';');
 				 
 				if($array != array()) {
 					$u = $array[0];
@@ -164,7 +165,7 @@
 			foreach(self::$users as $u){
 				if($u->getEMail() == $mail) return $u;
 			}
-			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.ServiceProvider::get()->db->escape($mail).'"');
 			if($u != array()){
 				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
 				$ui->setId($u['id'])->setHash($u['hash']); 
@@ -180,7 +181,7 @@
 		 * @return User
 		 */
 		public static function getUserByActivationCode($activationCode){
-			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($activationCode).'"');
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.ServiceProvider::get()->db->escape($activationCode).'"');
 			if($u != array()){
 				$ui = new User($u['nick'], $u['id'], $u['email'], $u['group'], $u['status']);
 				$ui->setId($u['id'])->setHash($u['hash']); 
@@ -196,7 +197,7 @@
 		 * @return string
 		 */
 		public static function getUserHashByMail($mail){
-			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.mysqli_real_escape_string($mail).'"');
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE email="'.ServiceProvider::get()->db->escape($mail).'"');
 	       	if($u != '' && $u != array() && isset($u['hash'])){
 	       		return $u['hash'];
 	       	} else return '';
@@ -208,7 +209,7 @@
 		 * @return string
 		 */
 		public static function getUserHashByNick($nick){
-			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.mysqli_real_escape_string($nick).'"');
+			$u = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE nick="'.ServiceProvider::get()->db->escape($nick).'"');
 	       	if($u != '' && $u != array() && isset($u['hash'])){
 	       		return $u['hash'];
 	       	} else return '';
@@ -220,9 +221,9 @@
 		 *	@return bool True if activated successfully
 		 */
 		public static function activateUser($activationCode) {
-			$g = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.mysqli_real_escape_string($activationCode).'"');
+			$g = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'user WHERE activate="'.ServiceProvider::get()->db->escape($activationCode).'"');
 			if($g !== false){
-				$q = ServiceProvider::get()->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET activate="", status="'.at\foundation\core\User::STATUS_ACTIVE.'" WHERE activate="'.mysqli_real_escape_string($activationCode).'"');
+				$q = ServiceProvider::get()->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET activate="", status="'.at\foundation\core\User\User::STATUS_ACTIVE.'" WHERE activate="'.ServiceProvider::get()->db->escape($activationCode).'"');
 				if($q !== false){
 					return true;
 				} else {
@@ -237,7 +238,7 @@
 		 *	Deletes the user with the given id from the database
 		 */
 		public static function deleteById($id){
-			$ok = ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($id).'\';');
+			$ok = ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.ServiceProvider::get()->db->escape($id).'\';');
 			UserData::deleteDataForUser($id);
 			return $ok;
 		}
@@ -251,27 +252,27 @@
 			if($this->id != ''){
 				//update user
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET
-						nick = \''.mysqli_real_escape_string($this->nick).'\',
-						hash = \''.mysqli_real_escape_string($this->pwd).'\',
-						group = \''.mysqli_real_escape_string($this->groupId).'\',
-						email = \''.mysqli_real_escape_string($this->email).'\',
-						status = \''.mysqli_real_escape_string($this->status).'\'
-					WHERE id="'.mysqli_real_escape_string($this->id).'"');
+						nick = \''.$this->sp->db->escape($this->nick).'\',
+						hash = \''.$this->sp->db->escape($this->pwd).'\',
+						group = \''.$this->sp->db->escape($this->groupId).'\',
+						email = \''.$this->sp->db->escape($this->email).'\',
+						status = \''.$this->sp->db->escape($this->status).'\'
+					WHERE id="'.$this->sp->db->escape($this->id).'"');
 			} else {
 				//insert user
-				$activate_code = ($this->status == core\User::STATUS_HAS_TO_ACTIVATE) ? md5(time().$this->sp->ref('TextFunctions')->generatePassword(20, 10, 0, 0)): ''; 
-				$succ = $this->db->fetchBoolean('INSERT INTO '.$this->sp->db->prefix.'user 
+				$activate_code = ($this->status == core\User\User::STATUS_HAS_TO_ACTIVATE) ? md5(time().$this->sp->ref('TextFunctions')->generatePassword(20, 10, 0, 0)): ''; 
+				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'user 
 								(`nick`, `hash`, `group`, `email`, `status`, `created`, `last_login`, `activate`) VALUES 
-								(\''.mysqli_real_escape_string($this->nick).'\', 
-									\''.mysqli_real_escape_string($this->pwd).'\', 
-									\''.mysqli_real_escape_string($this->groupId).'\', 
-									\''.mysqli_real_escape_string($this->email).'\',
-									\''.mysqli_real_escape_string($this->status).'\',
-									\''.mysqli_real_escape_string(time()) .'\',
+								(\''.$this->sp->db->escape($this->nick).'\', 
+									\''.$this->sp->db->escape($this->pwd).'\', 
+									\''.$this->sp->db->escape($this->groupId).'\', 
+									\''.$this->sp->db->escape($this->email).'\',
+									\''.$this->sp->db->escape($this->status).'\',
+									\''.$this->sp->db->escape(time()) .'\',
 									\'-1\',
 									\''.$activate_code.'\');');
 				if($succ) {
-					$this->id = mysqli_insert_id();
+					$this->id = $this->sp->db->getInsertedID();
 					return true;
 				} else {
 					return false;
@@ -283,7 +284,7 @@
 		 *	Deletes the user from the database and all linked userdata
 		 */
 		public function delete(){
-			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.mysqli_real_escape_string($this->id).'\';');
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'user WHERE id=\''.$this->sp->db->escape($this->id).'\';');
 			if($ok) UserData::deleteDataForUser($this->id);
 			
 			//TODO remove all links where possible
@@ -300,7 +301,7 @@
 		 *	Saves the current time as lastLogin time to the database
 		 */
     	public function setLastLogin(){
-    		return $this->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET `last_login` = \''.mysqli_real_escape_string(time()).'\' WHERE `id`=\''.mysqli_real_escape_string($this->id).'\';');
+    		return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET `last_login` = \''.ServiceProvider::get()->db->escape(time()).'\' WHERE `id`=\''.$this->sp->db->escape($this->id).'\';');
     	}
 	   
 		public function setNick($nick){ $this->nick = $nick; return $this; }
@@ -326,7 +327,7 @@
 			return $this->userData; 
 		}
 		public function getGroupId() { return $this->groupId; }
-		public function isActive() { return ($this->status == at\foundation\core\User::STATUS_ACTIVE); }
+		public function isActive() { return ($this->status == at\foundation\core\User\User::STATUS_ACTIVE); }
 		
     }
 ?>

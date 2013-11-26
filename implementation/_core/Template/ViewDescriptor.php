@@ -1,6 +1,8 @@
 <?php
 	namespace at\foundation\core\Template;
-
+	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
+	
 	/**
 	 *	This class is a container for template parsing instructions and replace values
 	 */
@@ -19,7 +21,7 @@
 		 * @param $name The name of the template.
 		 */
 		function __construct($name){
-			$this->sp = $GLOBALS['ServiceProvider'];
+			$this->sp = ServiceProvider::getInstance();
 			$this->tplService = $this->sp->ref('Template');
 			$this->values = array();
 			$this->subViews = array();
@@ -66,7 +68,7 @@
 		 *	@param $assocArray An associative array. If a the the same key already exists it will be replaced by the assocArray's value. 
 		 */
 		function addValues($assocArray){
-			array_merge($this->values, $assocArray);
+			$this->values = array_merge($this->values, $assocArray);
 		}
 		
 		/**

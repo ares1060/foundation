@@ -60,7 +60,7 @@
         	
 			$all = self::getGroupCount(-1, -1);
         	
-			$from = ($page-1)*(ServiceProvider::get()->groups->settings->perpage_user_group);
+			$from = ($page-1)*(ServiceProvider::get()->user->settings->perpage_user_group);
 			if($from > $all) $from = 0;
 			
 			$limit = ($page == -1) ? '' : 'LIMIT '.ServiceProvider::get()->db->escape($from).', '.ServiceProvider::get()->db->escape(ServiceProvider::get()->groups->settings->perpage_user_group).';';

@@ -10,16 +10,10 @@
     $main = new Template\ViewDescriptor('main');
         
     echo $main->render();
-    
+	
     $sp->user->login('tester', 'asdf');
     
     echo '<br>Welcome: '.$sp->user->getLoggedInUser()->getNick();
-    
-	$bm = core\BaseModel::getItem('pp_user', '19');
-	$bm->email = 'ehehehe@lol.com';
-	$bm->save();
-	$bm->email = 'yadada@lol.com';
-	$bm->save();
 	
 	echo $sp->db->getLastError();
     

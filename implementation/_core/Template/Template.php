@@ -49,7 +49,7 @@
             							'abs_root'=>$GLOBALS['abs_root'],
 //             							'working_dir'=>$GLOBALS['working_dir'],
                                         'tpl_root_folder'=>'_templates/'.$this->settings->tpl_base_template,
-                                        'tpl_folder'=>'_templates/'.$this->template,
+                                        'tpl_folder'=>'_templates/'.$this->template.'/',
             							'service_folder' => '_services',
                                         'user_id'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getId() : '',
                                         'user_group'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getGroup()->getName() : '',
@@ -239,7 +239,7 @@
 				$tpl = $this->rawTemplateCache[$this->template.'::'.$tID];
 			} else {
 				$file = $GLOBALS['config']['root'].'_templates/'.$this->template.'/'.$tID.'.html';
-				if(!is_file($file)) $file = $GLOBALS['config']['root'].'_templates/'.$this->setting->tpl_base_template.'/'.$tID.'.html';
+				if(!is_file($file)) $file = $GLOBALS['config']['root'].'_templates/'.$this->settings->tpl_base_template.'/'.$tID.'.html';
 				//echo $file.'<br />';
 				//print_r($this->config);
 				if(is_file($file)){
@@ -603,7 +603,7 @@
         public function setTemplate($tpl_name){
         	if($this->isAllowedToChangeTemplate()){
         		$this->template = $tpl_name;
-        		$this->baseReplaces['tpl_folder'] = '_templates/'.$this->template;
+        		$this->baseReplaces['tpl_folder'] = '_templates/'.$this->template.'/';
         		$GLOBALS['tpl']['activeTemplate'] = $tpl_name;
         	}
         }

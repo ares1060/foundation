@@ -21,7 +21,7 @@
 			
 		private static $users = array();
 			
-        public function __construct($nick = '', $email = '', $group= '', $status) {
+        public function __construct($nick = '', $email = '', $group = '', $status = '') {
         	$this->nick = $nick;
             $this->email = $email;
             $this->id = '';

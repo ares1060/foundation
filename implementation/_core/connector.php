@@ -34,7 +34,6 @@
 	if(isset($args['template'])) $sp->ref('Template')->setTemplate($args['template']);
 	
     $service_name = (isset($_GET['service_name'])) ? $_GET['service_name'] : ((isset($_POST['service_name'])) ? $_POST['service_name'] : '');
-    $service_method = (isset($_GET['service_method'])) ? $_GET['service_method'] : ((isset($_POST['service_method'])) ? $_POST['service_method'] : '');
 	
     header('Cache-Control: no-cache, must-revalidate');
 	header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
@@ -46,11 +45,11 @@
 		echo json_encode(array('content'=>'session_expired', 'msg'=>''));
 	} else {
 		if(!isset($args['noMsg'])) {
-	    	echo json_encode(array('content'=>$sp->exe($service_name, $service_method, $args), 
-	    							'msg'=>$sp->view('Messages', array('action'=>'viewType', 'type'=>'error/info')),
-	    							'debug'=>$sp->view('Messages', array('action'=>'viewType', 'type'=>'debug'))));	
+	    	echo json_encode(array('content'=>$sp->render($service_name, $args), 
+	    							'msg'=>$sp->render('Messages', array('action'=>'viewType', 'type'=>'error/info')),
+	    							'debug'=>$sp->render('Messages', array('action'=>'viewType', 'type'=>'debug'))));	
 	    } else {
-	  		echo json_encode(array('content'=>$sp->exe($service_name, $service_method, $args)));
+	  		echo json_encode(array('content'=>$sp->render($service_name, $args)));
 	    }
 	}
 // 	error_log('TF:Connector: end');

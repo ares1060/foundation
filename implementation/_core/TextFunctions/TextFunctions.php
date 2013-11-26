@@ -2,9 +2,8 @@
 
 	namespace at\foundation\core\TextFunctions;
 	use at\foundation\core;
-	
-	require_once 'MailChecker.php';
-	require_once 'PasswordStrength.php';
+	use at\foundation\core\TextFunctions\PasswordStrength;
+	use at\foundation\core\TextFunctions\MailChecker;
 	
 	/**
      * Description
@@ -490,7 +489,7 @@
 	 	 * @return array() 
 	 	 */
 		function getPasswordStrengthInfo($password) {
-			if(!isset($this->password_strength)) $this->password_strength = new TextFunctionsPasswordStrength();
+			if(!isset($this->password_strength)) $this->password_strength = new PasswordStrength();
 			
 			$r = $this->password_strength->scorePwd($password);
 			
@@ -505,7 +504,7 @@
 	 	 * @return int
 	 	 */
 		function getPasswordStrength($password) {
-			if(!isset($this->password_strength)) $this->password_strength = new TextFunctionsPasswordStrength();
+			if(!isset($this->password_strength)) $this->password_strength = new PasswordStrength();
 			
 			$r = $this->password_strength->scorePwd($password);
 			

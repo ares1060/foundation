@@ -184,9 +184,8 @@
 		 * Magic function for getting various internal values
 		 */
 		public function __get($name){
-			switch($name){
-				
-			}
+			$ref = $this->ref($name);
+			if($ref) return $ref;
 			
 			$trace = debug_backtrace();
 			trigger_error(

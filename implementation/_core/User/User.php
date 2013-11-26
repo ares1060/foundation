@@ -82,7 +82,6 @@
          public function render($args){
          	/*$this->debugVar($this->loggedInUser);
          	$this->debugVar($_SESSION['User']);*/
-         	$chapter = (isset($args['chapter']) && $args['chapter'] != '') ? $args['chapter'] : '';
             $action = (isset($args['action'])) ? $args['action'] : '';
           	$page = (isset($args['page']) && $args['page'] > 0) ? $args['page'] : 1;
         	$id = (isset($args['id']) && $args['id'] > 0) ? $args['id'] : -1;
@@ -122,7 +121,7 @@
          			
          			return $this->register($nick, $email, $group, $pwd, $pwd2);
          			break;
-         		case 'do.newUser':
+         		case 'do.create_user':
          			$nick = isset($args['nick']) ? $args['nick'] : '';
          			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
          			$pwd2 = isset($args['pwd2']) ? $args['pwd2'] : '';
@@ -149,20 +148,11 @@
          			$code = isset($args['code']) ? $args['code'] : '';
          			return $this->rejectActivation($code);
          			break;
-					
-          		default:
-          			return 'idk';
-          			break;
-          	}  
-			
-            switch($chapter){
-            	case 'view.user':
-            		return $this->viewAdmin->tplUser($page);
-            		break;
-            	case 'view.edit_user':
+
+            	case 'admin.edit_user':
             		return $this->viewAdmin->tplUserEdit($id);
                		break;
-            	case 'view.new_user':
+            	case 'admin.new_user':
             		return $this->viewAdmin->tplUserNew($id);
             		break;
             	case 'usergroup':
@@ -190,77 +180,73 @@
             	case 'profile_privacy':
             		return $this->viewAdmin->tplProfilePrivacy();
             		break;
-            	default:
-            		switch($action){
-            			case 'unset_viewing_user':
-            				$this->viewingUser = $this->loggedInUser;
-          					$_SESSION['User']['viewingUser'] = $this->viewingUser;
-          					return true;
-               				break;
-            			case 'set_viewing_user':
-            				if($this->checkRight('can_change_viewing_user') && $id != -1){
-            					$this->viewingUser = model\User::getUser($id);
-            					$_SESSION['User']['viewingUser'] = $this->viewingUser;
-            					return true;
-            				} else {
-            					$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
-            					return false;
-            				}
-            				break;
-            			case 'edit_user_change_pwd':
-            				$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
-            				$pwd1 = (isset($args['pwd1'])) ? $args['pwd1'] : '';
-            				$u = model\User::getUser($id);
-            				if($u != null && ($this->checkRight('administer_group', $u->getGroup()->getId()) || $this->checkRight('edit_user', $u->getId()))){
-            					if($pwd == $pwd1){
-            						if($this->editUser($u->getId(), '', $pwd)) {
-            							$this->_msg($this->_('Password changed successfull'), Messages::INFO);
-            							return true;
-            						} else {
-            							$this->_msg($this->_('Password could not be changed'), Messages::ERROR);
-            							return false;
-            						}
-            					} else {
-            						$this->_msg($this->_('Passwords dont match', 'core'), Messages::ERROR);
-            						return false;
-            					}
-            				} else {
-            					$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
-            					return false;
-            				}
-            				break;
-            			case 'profile_edit_email':
-            				$email = (isset($args['email'])) ? $args['email'] : '';
-            				return $this->editUser(-1, '', '', $email);
-            				break;
-            			case 'profile_change_pwd':
-            				$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
-            				$pwd1 = (isset($args['pwd1'])) ? $args['pwd1'] : '';
-            				$pwd_old = (isset($args['pwd_old'])) ? $args['pwd_old'] : '';
-            				
-            				if($pwd == $pwd1){
-            					if($this->rightPwd($this->loggedInUser->getNick(), $pwd_old)){
-            						if($this->editUser(-1, '', $pwd)) {
-            							$this->_msg($this->_('Password changed successfull'), Messages::INFO);
-            							return true;
-            						} else {
-            							$this->_msg($this->_('Password could not be changed'), Messages::ERROR);
-            							return false;
-            						}
-            					} else {
-            						$this->_msg($this->_('Wrong Password', 'core'), Messages::ERROR);
-            						return false;
-            					}
-            				} else {
-            					$this->_msg($this->_('Passwords dont match', 'core'), Messages::ERROR);
-            					return false;
-            				}
-            				break;
-            			default:
-        					return $this->viewAdmin->tplUsercenter();
-            				break;
-            		}
-            		break;
+				case 'unset_viewing_user':
+					$this->viewingUser = $this->loggedInUser;
+					$_SESSION['User']['viewingUser'] = $this->viewingUser;
+					return true;
+					break;
+				case 'set_viewing_user':
+					if($this->checkRight('can_change_viewing_user') && $id != -1){
+						$this->viewingUser = model\User::getUser($id);
+						$_SESSION['User']['viewingUser'] = $this->viewingUser;
+						return true;
+					} else {
+						$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
+						return false;
+					}
+					break;
+				case 'edit_user_change_pwd':
+					$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
+					$pwd1 = (isset($args['pwd1'])) ? $args['pwd1'] : '';
+					$u = model\User::getUser($id);
+					if($u != null && ($this->checkRight('administer_group', $u->getGroup()->getId()) || $this->checkRight('edit_user', $u->getId()))){
+						if($pwd == $pwd1){
+							if($this->editUser($u->getId(), '', $pwd)) {
+								$this->_msg($this->_('Password changed successfull'), Messages::INFO);
+								return true;
+							} else {
+								$this->_msg($this->_('Password could not be changed'), Messages::ERROR);
+								return false;
+							}
+						} else {
+							$this->_msg($this->_('Passwords dont match', 'core'), Messages::ERROR);
+							return false;
+						}
+					} else {
+						$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
+						return false;
+					}
+					break;
+				case 'profile_edit_email':
+					$email = (isset($args['email'])) ? $args['email'] : '';
+					return $this->editUser(-1, '', '', $email);
+					break;
+				case 'profile_change_pwd':
+					$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
+					$pwd1 = (isset($args['pwd1'])) ? $args['pwd1'] : '';
+					$pwd_old = (isset($args['pwd_old'])) ? $args['pwd_old'] : '';
+					
+					if($pwd == $pwd1){
+						if($this->rightPwd($this->loggedInUser->getNick(), $pwd_old)){
+							if($this->editUser(-1, '', $pwd)) {
+								$this->_msg($this->_('Password changed successfull'), Messages::INFO);
+								return true;
+							} else {
+								$this->_msg($this->_('Password could not be changed'), Messages::ERROR);
+								return false;
+							}
+						} else {
+							$this->_msg($this->_('Wrong Password', 'core'), Messages::ERROR);
+							return false;
+						}
+					} else {
+						$this->_msg($this->_('Passwords dont match', 'core'), Messages::ERROR);
+						return false;
+					}
+					break;
+				case 'admin.main':
+					return $this->viewAdmin->tplUserList();
+					break;
             }
          }
          
@@ -428,7 +414,7 @@
 		 */
     	public function register($nick, $email, $group, $pwd, $pwd2, $status=User::STATUS_HAS_TO_ACTIVATE, $data=array()){
 		    if($status == -1) $status = User::STATUS_HAS_TO_ACTIVATE;			   			
-    		if($this->checkNickAvailability($nick) || ($nick == '' && $this->settings->no_nick_needed)){
+    		if(model\User::checkNickAvailability($nick) || ($nick == '' && $this->settings->no_nick_needed)){
     			if(strpos($this->settings->register_groups, ':'.$group.':') !== false || $this->checkRight('administer_group', $group) &&
     			   ($status==User::STATUS_HAS_TO_ACTIVATE || $this->checkRight('administer_user'))){
     			   	if($pwd == $pwd2){
@@ -616,7 +602,7 @@
 				
     			// nick just can be changed by authorized uer and if available
     			if($nick != '' && $this->checkRight('administer_user')) {
-    				if($this->checkNickAvailability($nick)){
+    				if(model\User::checkNickAvailability($nick)){
     					$user->setNick($nick);
     				} else $this->_msg($this->_('Nick not available'), Messages::ERROR);
     			} else $nick = '';

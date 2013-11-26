@@ -2,17 +2,19 @@
 	
 	namespace at\foundation\core\User\view;
 	use at\foundation\core;
+	use at\foundation\core\Messages\Messages;
+	use at\foundation\core\User\User;
+	use at\foundation\core\User\model;
+	use at\foundation\core\Template\ViewDescriptor;
+	use at\foundation\core\Template\SubViewDescriptor;
 	
 	class UserAdminView extends core\CoreService{
 		protected $name;
-		
-		private $dataHelper;
 
-		function __construct($settings, $datahelper){
+		function __construct($settings){
 			parent::__construct();
 			$this->setSettingsCore($settings);
 			$this->name = 'User';
-			$this->dataHelper = $datahelper;
 		}
 		/* ======   INTERFACE ADMINCENTER ======= */
 		/**
@@ -20,34 +22,36 @@
 		 * @param unknown_type $id
 		 */
 		public function tplGetGroupDropdown($id){
-			$dropdown = $this->sp->ref('UIWidgets')->getWidget('Select');
-
-        	$dropdown->setName('eu_group');
-        	$dropdown->setId('eu_group');
-        	
-        	$groups = $this->dataHelper->getGroups();
+			
+			$out = '<select name="eu_group" id="eu_group" class="form-control">';
+			
+        	$groups = model\UserGroup::getGroups();
 
         	foreach($groups as $group){
-        		if($this->checkRight('administer_group', $group->getId()) || $sel==$group->getId()) $dropdown->addOption($group->getName(), $group->getId(), $id==$group->getId());
+        		if($this->checkRight('administer_group', $group->getId()) || $sel==$group->getId()) $out .= '<option value="'.$group->getId().'" '.(($id==$group->getId())?'selected="selected"':'').'>'.$group->getName().'</option>';
         	}
+			
+			$out .= '</select>';
         	
-        	return $dropdown->render();
+        	return $out;
 		}
 		/**
 		 * returnes rendered Status Dropdown
 		 * @param unknown_type $status
 		 */
 		public function tplGetStatusDropdown($status=-1) {
-           	$dropdown = $this->sp->ref('UIWidgets')->getWidget('Select');
 
-        	$dropdown->setName('eu_status');
-        	$dropdown->setId('eu_status');
+			$out = '<select name="eu_status" id="eu_status" class="form-control">';
+
         	
-        	$dropdown->addOption($this->_('_Status: Active', 'core'), User::STATUS_ACTIVE, $status==User::STATUS_ACTIVE);
-        	$dropdown->addOption($this->_('_Status: Blocked', 'core'), User::STATUS_BLOCKED, $status==User::STATUS_BLOCKED);
-        	$dropdown->addOption($this->_('_Status: Deleted', 'core'), User::STATUS_DELETED, $status==User::STATUS_DELETED);
-        	$dropdown->addOption($this->_('_Status: Has to activate', 'core'), User::STATUS_HAS_TO_ACTIVATE, $status==User::STATUS_HAS_TO_ACTIVATE);
-        	return $dropdown->render();
+        	$out .= '<option value="'.User::STATUS_ACTIVE.'" '.(($status==User::STATUS_ACTIVE)?'selected="selected"':'').'>'.$this->_('_Status: Active', 'core').'</option>';
+        	$out .= '<option value="'.User::STATUS_BLOCKED.'" '.(($status==User::STATUS_BLOCKED)?'selected="selected"':'').'>'.$this->_('_Status: Blocked', 'core').'</option>';
+        	$out .= '<option value="'.User::STATUS_DELETED.'" '.(($status==User::STATUS_DELETED)?'selected="selected"':'').'>'.$this->_('_Status: Deleted', 'core').'</option>';
+        	$out .= '<option value="'.User::STATUS_HAS_TO_ACTIVATE.'" '.(($status==User::STATUS_HAS_TO_ACTIVATE)?'selected="selected"':'').'>'.$this->_('_Status: Has to activate', 'core').'</option>';
+			
+			$out .= '</select>';
+			
+			return $out;
         }
 		
 		/* ======   Template Profile ======= */
@@ -109,16 +113,16 @@
 			}
 		}
 		/* ======   User ======= */
-		public function tplUser($page=1) {
+		public function tplUserList($page=1) {
 			if($this->sp->user->isLoggedIn() && $this->checkRight('usercenter')){
 				if($page < -1) $page = 0;
         		
-				$view = new ViewDescriptor($this->settings->usercenter_user);
+				$view = new ViewDescriptor($this->settings->usercenter_list_user);
 				
         		$view->addValue('pagina_active', $page);
-        		$view->addValue('pagina_count', ceil($this->dataHelper->getAllUserCount(-1, -1)/$this->settings->perpage_user));
+        		$view->addValue('pagina_count', ceil(model\User::getAllUserCount(-1, -1)/$this->settings->perpage_user));
         			
-        		$user = $this->dataHelper->getUsers($page);
+        		$user = model\User::getUsers($page);
 				
         		foreach($user as $u){
         			$stpl = new SubViewDescriptor('user');
@@ -130,13 +134,13 @@
         			$stpl->addValue('group', $u->getGroup()->getName());
         			$stpl->addValue('group_id', $u->getGroup()->getId());
         			
-        			if(($this->checkRight('administer_group', $u->getGroup()->getId()) || $this->checkRight('edit_user', $u->getId()))) {
+        			/*if(($this->checkRight('administer_group', $u->getGroup()->getId()) || $this->checkRight('edit_user', $u->getId()))) {
         				$sub = new SubViewDescriptor('edit');
         				$sub->addValue('id', $u->getId());
         				
         				$stpl->addSubView($sub);
         				unset($sub);
-        			}
+        			}*/
         			
         			$view->addSubView($stpl);
         			unset($stpl);
@@ -149,7 +153,7 @@
 			}	
 		}
 		public function tplUserEdit($id) {
-			$user = $this->dataHelper->getUser($id);
+			$user = model\User::getUser($id);
 			if($this->sp->user->isLoggedIn() && $this->checkRight('usercenter') &&  ($this->checkRight('edit_user', $user->getId()) || $this->checkRight('administer_group', $user->getGroup()->getId()))){
 				$view = new ViewDescriptor($this->settings->usercenter_edit_user);
 				
@@ -194,10 +198,10 @@
 				$view = new ViewDescriptor($this->settings->usercenter_userdata);
 				
         		$view->addValue('pagina_active', $page);
-        		$view->addValue('pagina_count', ceil($this->dataHelper->getAllUserDataCount(-1, -1)/$this->settings->perpage_user_data));
+        		$view->addValue('pagina_count', ceil(model\User::getAllUserDataCount(-1, -1)/$this->settings->perpage_user_data));
         			
-        		$user = $this->dataHelper->getUserData($page);
-        		$usergroups = $this->dataHelper->getGroups();
+        		$user = model\UserDataField::getUserDataField($page);
+        		$usergroups = model\UserGroup::getGroups();
 
         		foreach($usergroups as $ug){
         			$t = new SubViewDescriptor('usergroups_header');

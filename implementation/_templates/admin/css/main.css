@@ -68,3 +68,7 @@ body {
         padding: 0px;
     }
 }
+
+#tf_msg {
+	color:#999999;
+}

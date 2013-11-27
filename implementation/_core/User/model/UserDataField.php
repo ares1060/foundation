@@ -6,6 +6,7 @@
 
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
 	
 	class UserDataField extends core\BaseModel {
 		private $id;
@@ -37,7 +38,7 @@
 		public static function getUserDataFieldById($id){
 			$q = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE id = "'.ServiceProvider::get()->db->escape($id).'"');
 			if($q != null){
-				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
+				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_register'], $q['vis_login'], $q['vis_edit']);
 				$t->setId($q['id']);
 				return $t;
 			} else return null;
@@ -50,7 +51,7 @@
 		public static function getUserDataFieldByName($name) {
 			$q = ServiceProvider::get()->db->fetchRow('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield WHERE name = "'.ServiceProvider::get()->db->escape($name).'"');
 			if($q != null){
-				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_reg'], $q['vis_login'], $q['vis_edit']);
+				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_register'], $q['vis_login'], $q['vis_edit']);
 				$t->setId($q['id']);
 				return $t;
 			} else return null;
@@ -70,14 +71,14 @@
 						info = \''.$this->sp->db->escape($this->info).'\',
 						type = \''.$this->sp->db->escape($this->type).'\',
 						group = \''.$this->sp->db->escape($this->groupId).'\',
-						vis_register = \''.$this->sp->db->escape($this->visibility['register']).'\',
+						vis_registerister = \''.$this->sp->db->escape($this->visibility['register']).'\',
 						vis_login = \''.$this->sp->db->escape($this->visibility['login']).'\',
 						vis_edit = \''.$this->sp->db->escape($this->visibility['edit']).'\'
 					WHERE id="'.$this->sp->db->escape($this->id).'"');
 			} else {
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'userdatafield 
-								(`name`, `info`, `type`, `group`, `vis_register`, `vis_login`, `vis_edit`) VALUES 
+								(`name`, `info`, `type`, `group`, `vis_registerister`, `vis_login`, `vis_edit`) VALUES 
 								(\''.$this->sp->db->escape($this->name).'\', 
 									\''.$this->sp->db->escape($this->info).'\', 
 									\''.$this->sp->db->escape($this->type).'\', 

@@ -23,7 +23,7 @@
 		 */
 		public function tplGetGroupDropdown($id){
 			
-			$out = '<select name="eu_group" id="eu_group" class="form-control">';
+			$out = '<select name="group" id="group" class="form-control">';
 			
         	$groups = model\UserGroup::getGroups();
 
@@ -41,7 +41,7 @@
 		 */
 		public function tplGetStatusDropdown($status=-1) {
 
-			$out = '<select name="eu_status" id="eu_status" class="form-control">';
+			$out = '<select name="status" id="status" class="form-control">';
 
         	
         	$out .= '<option value="'.User::STATUS_ACTIVE.'" '.(($status==User::STATUS_ACTIVE)?'selected="selected"':'').'>'.$this->_('_Status: Active', 'core').'</option>';
@@ -163,11 +163,13 @@
         		$view->addValue('group', $this->tplGetGroupDropdown($user->getGroup()->getId()));
         		$view->addValue('groupId', $user->getGroup()->getId());
 				
-        		$s = new SubViewDescriptor('status');
-        		$s->addValue('status', $this->tplGetStatusDropdown($user->getStatus()));
-        		$view->addSubView($s);
-        		unset($s);
-        		//TODO: Userdata
+        		$view->addValue('status', $this->tplGetStatusDropdown($user->getStatus()));
+        		
+				$ud = $user->getUserData();
+				$fn = $ud->getFieldNames();
+				foreach($fn as $n){
+					$view->addValue('userdata_'.$n, $ud->get($n, true)->getValue());
+				}
         		
 				return $view->render();
 			} else {

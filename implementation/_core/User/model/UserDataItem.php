@@ -6,6 +6,7 @@
 
 	namespace at\foundation\core\User\model;
 	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
 	
 	class UserDataItem extends core\BaseModel {
 		private $id;
@@ -98,8 +99,8 @@
 		}
 		
 		//setter
-		private function setId($Id) { $this->id = $id; return $this; }
-		public function __setId($Id) { $this->id = $id; return $this; }
+		private function setId($id) { $this->id = $id; return $this; }
+		public function __setId($id) { $this->id = $id; return $this; }
 		public function setUser($id) { $this->userId = $id; $this->user=null; $this->changed = true; return $this; }
 		public function setUserId($id) { $this->userId = $id; $this->user=null; $this->changed = true; return $this; }
 		public function setField($id) { $this->fieldId = $id; $this->field=null; $this->changed = true; return $this; }

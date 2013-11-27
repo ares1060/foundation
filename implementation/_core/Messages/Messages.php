@@ -141,7 +141,7 @@
 				foreach($_SESSION['messages'] as $key=>$message) {
 	            	if(($message['type'] == self::ERROR && $this->settings->msg_display_error) ||
 	            		($message['type'] == self::INFO && $this->settings->msg_display_info) ||
-	             		($message['type'] == self::DEBUG && $this->settings->msg_display_debug) ||Ê
+	             		($message['type'] == self::DEBUG && $this->settings->msg_display_debug) ||
 		             	($message['type'] == self::RUNTIME && $this->settings->msg_display_runtime)) {
 	             			
 	             		$sv = new SubViewDescriptor('message');

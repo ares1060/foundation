@@ -17,10 +17,58 @@
 				<td>{@pp:nick}</td>
 				<td>{@pp:email}</td>
 				<td style="text-align:center;">{@pp:status}</td>
-				<td style="text-align:center;"><a class="btn btn-default" href="#edit"><span class="glyphicon glyphicon-pencil"></span></a></td>
+				<td style="text-align:center;"><a class="btn btn-default" href="?service=User&action=edit_user&id={@pp:id}"><span class="glyphicon glyphicon-pencil"></span></a></td>
 				<td style="text-align:center;"><a class="btn btn-default" href="#delete"><span class="glyphicon glyphicon-remove"></span></a></td>
 			</tr>
 			</pp:dynamic>
 		</tbody>
 	</table>
+	<script type="text/javascript">
+		$(function(){
+			$('a[href="#delete"]').unbind().click(function(){
+				var _this = this;
+				$.ajax({
+					type: "POST",
+					url: "../_core/connector.php",
+					data: {
+						'service_name' : 'User',
+						'args' : {
+							'ajax' : true,
+							'action' : 'do.delete_user',
+							'id': $(this).parent().parent().attr('data-id')
+						}
+					},
+					dataType: 'json',
+					success: function (answer) {
+						try {
+							console.log(answer);
+							json = answer;
+							if(json.content != undefined){
+								if(json.content == 'session_expired') document.location = this.login_url;
+								if(json.content) {
+									$('#messageModal').unbind().on('hidden.bs.modal', function(){
+										window.location = '?service=User';
+									});
+								}
+							}
+
+							if(json.msg != undefined && json.msg != ''){
+								$('#tf_msg').html(json.msg);
+								$('#messageModal').find('.modal-body').html(json.msg);
+								$('#messageModal').find('.modal-title').html('Fehler');
+								$('#messageModal').modal('show');
+							} 
+							
+							if(json.debug != undefined && json.debug != ''){
+								console.log(json.debug);
+							}
+						} catch (e) {
+							console.log(e);
+						}
+					}
+				});
+				return false;
+			});
+		});
+	</script>
 </div>

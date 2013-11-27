@@ -24,16 +24,16 @@
 			
 			$qry = ServiceProvider::get()->db->fetchAll('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata` AS ud 
 															LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdatafield` AS udf 
-																ON ud.field_id = udf.id; 
-															WHERE ud.user_id = \''.ServiceProvider::get()->db->escape($id).'\';');
-			
+																ON ud.field_id = udf.id 
+															WHERE ud.user_id = \''.ServiceProvider::get()->db->escape($userId).'\';');
+															
 			$this->data = array();
 			$this->keys = array();
 			if($qry != array()) {
 				foreach($qry as $d){
-					$d = new UserDataItem($d['user_id'], $d['field_id'], $d['value']);
-					$d->__setId($d['id']);
-					$data[$d['name']] = $di;
+					$di = new UserDataItem($d['user_id'], $d['field_id'], $d['value']);
+					$di->__setId($d['id']);
+					$this->data[$d['name']] = $di;
 					$this->keys[] = $d['name'];
 				}
 			}		
@@ -66,16 +66,21 @@
 		 * Returns the UserDataItem for the given name
 		 * @param string $name The name of the corresponding UserDataField
 		 * @param bool $create If true an empty UserDataItem is created if it doesn't already exist.
-		 * @return at\foundation\core\User\model\UserDataItem The resulting user data item
+		 * @return at\foundation\core\User\model\UserDataItem The resulting user data item or null
 		 */
 		public function get($name, $create=false){
-			if(isset($this->data[$name])) return $udi;
+			if(isset($this->data[$name])) return $this->data[$name];
 			else {
 				$f = UserDataField::getUserDataFieldByName($name);
 				if(!$f) return null;
-				$udi = new UserDataItem($this->userId, $f->getId(), '');
-				$this->data[$name] = $udi;
-				return $udi;
+				if($create){
+					$udi = new UserDataItem($this->userId, $f->getId(), '');
+					$this->data[$name] = $udi;
+					$this->keys[] = $name;
+					return $udi;
+				} else {
+					return null;
+				}
 			}
 		}
 		
@@ -85,16 +90,21 @@
 		 * @param string $name The name of the corresponding UserDataField
 		 * @param object $default The default value of the field which is returned if it doesn't exist
 		 * @param bool $create If true an UserDataItem containing the value given in $default is created if it doesn't already exist.
-		 * @return at\foundation\core\User\model\UserDataItem The resulting user data item
+		 * @return at\foundation\core\User\model\UserDataItem The resulting user data item or null
 		 */
 		public function opt($name, $default='', $create=false){
-			if(isset($this->data[$name])) return $udi;
+			if(isset($this->data[$name])) return $this->data[$name];
 			else {
 				$f = UserDataField::getUserDataFieldByName($name);
 				if(!$f) return null;
-				$udi = new UserDataItem($this->userId, $f->getId(), $default);
-				$this->data[$name] = $udi;
-				return $udi;
+				if($create) {
+					$udi = new UserDataItem($this->userId, $f->getId(), $default);
+					$this->data[$name] = $udi;
+					$this->keys[] = $name;
+					return $udi;
+				} else {
+					return null;
+				}
 			}
 		}
 		

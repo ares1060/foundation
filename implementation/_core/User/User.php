@@ -84,7 +84,7 @@
          	$this->debugVar($_SESSION['User']);*/
             $action = (isset($args['action'])) ? $args['action'] : '';
           	$page = (isset($args['page']) && $args['page'] > 0) ? $args['page'] : 1;
-        	$id = (isset($args['id']) && $args['id'] > 0) ? $args['id'] : -1;
+        	$id = (isset($args['id']) && $args['id'] > 0) ? $args['id'] : ((isset($_GET['id']) && $_GET['id'] > 0) ? $_GET['id'] : -1);
         	
 			
 			switch($action){
@@ -128,10 +128,11 @@
          			$email = isset($args['email']) ? $args['email'] : '';
          			$group = isset($args['group']) ? $args['group'] : '';
          			$status = isset($args['status']) ? $args['status'] : '';
+         			$data = isset($args['data']) ? $args['data'] : array();
          			
     				if($this->checkRight('administer_user') && $this->checkRight('administer_group', $_POST['eu_group'])){
     					
-    					$nId = $this->register($nick, $mail, $group, $pwd, $pwd2, $status);
+    					$nId = $this->register($nick, $email, $group, $pwd, $pwd2, $status, $data);
     					if($nId !== false){
     						return $nId;
     					} else return false;
@@ -414,29 +415,22 @@
 		 */
     	public function register($nick, $email, $group, $pwd, $pwd2, $status=User::STATUS_HAS_TO_ACTIVATE, $data=array()){
 		    if($status == -1) $status = User::STATUS_HAS_TO_ACTIVATE;			   			
-    		if(model\User::checkNickAvailability($nick) || ($nick == '' && $this->settings->no_nick_needed)){
+    		if(model\User::checkNickAvailability($nick) && ($nick != '' || $this->settings->no_nick_needed)){
     			if(strpos($this->settings->register_groups, ':'.$group.':') !== false || $this->checkRight('administer_group', $group) &&
     			   ($status==User::STATUS_HAS_TO_ACTIVATE || $this->checkRight('administer_user'))){
     			   	if($pwd == $pwd2){
-    			   		if($this->sp->txtfun->getPasswordStrength($pwd) >= $this->settings->pwd_min_strength){
-    			   			if($email != '' && $this->sp->txtfun->isEmail($email)){
+    			   		if($pwd != '' && $this->sp->txtfun->getPasswordStrength($pwd) >= $this->settings->pwd_min_strength){
+							if($email != '' && $this->sp->txtfun->isEmail($email)){
     			   				
     			   				$user = new model\User($nick, $email, $group, $status);
     			   				$user->setPassword($pwd);
 								
 		    			   		if($user->save()) {	
-		    			   			$ok = true;	 
+		    			   			$ok = true;	
+									$ud = $user->getUserData();								
 		    			   			foreach($data as $key=>$value) {
-		    			   				$obj = $this->getUserDataById($key);
-		    			   				// security check to not insert data for other groups
-		    			   				if($obj->usedByGroup($group)){
-		    			   					$x = ($this->mysqlInsert('INSERT INTO '.ServiceProvider::get()->db->prefix.'userdata_user 
-		    			   										(`u_id`, `ud_id`, `value`, `last_change`) VALUES
-		    			   										(\''.ServiceProvider::get()->db->escape($user->getId()).'\',
-		    			   										\''.ServiceProvider::get()->db->escape($key).'\',
-		    			   										\''.ServiceProvider::get()->db->escape($value).'\', NOW());') == 0);
-		    			   					$ok = $ok && $x;
-		    			   				}
+		    			   				$udi = $ud->opt($key, $value, true);
+										if($udi) $udi->save();
 		    			   			}
 
 		    			   			if($ok) {
@@ -444,7 +438,7 @@
 			    			   				$mail = new ViewDescriptor($this->settings->tpl_activation_mail);
 			    			   				
 			    			   				$mail->addValue('nick', $nick);
-			    			   				$mail->addValue('id', $id);
+			    			   				$mail->addValue('id', $user->getId());
 			    			   				$mail->addValue('email', $email);
 			    			   				$mail->addValue('group', $group);
 			    			   				$mail->addValue('pwd', $pwd);
@@ -456,10 +450,10 @@
 			    			   					$this->_msg($this->_('Activation mail vould not be sent', 'core'), Messages::ERROR);
 			    			   				}
 			    			   			} else $this->_msg($this->_('New user created successfully', 'core'), Messages::INFO);
-		    							return $id;
+		    							return $user->getId();
 		    			   			} else {
 		    			   				// delete every entered data
-		    			   				$u->delete();
+		    			   				$user->delete();
 		    			   				$this->_msg($this->_('New user could not be created__', 'core'), Messages::ERROR);
 		    							return false;
 		    			   			}
@@ -468,7 +462,7 @@
 		    						return false;
 		    					}
     			   			} else {
-    			   				$this->_msg($this->_('Please enter a valid email'), Messages::ERROR);
+    			   				$this->_msg($this->_('Please enter a valid email -> '.$email), Messages::ERROR);
     							return false;
     			   			}
     			   		} else {

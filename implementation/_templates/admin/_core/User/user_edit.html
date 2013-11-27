@@ -1,6 +1,118 @@
 <div class="col-md-12">
 	<h1>User Editieren</h1>
 	
-	<button class="btn btn-default">Speichern</button>
-	<button class="btn btn-default">Abbrechen</button>
+	<form class="form-horizontal" role="form" action="#" method="post">
+		<div class="form-group">
+			<label for="nick" class="col-sm-2 control-label">Username</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="nick" placeholder="Username" value="{@pp:nick}">
+			</div>
+		</div>
+		
+		<div class="form-group">
+			<label for="vname" class="col-sm-2 control-label">Vorname</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="vname" placeholder="Vorname" value="{@pp:userdata_vname}">
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="nname" class="col-sm-2 control-label">Nachname</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="nname" placeholder="Nachname" value="{@pp:userdata_nname}">
+			</div>
+		</div>
+		
+		<div class="form-group">
+			<label for="email" class="col-sm-2 control-label">E-Mail</label>
+			<div class="col-sm-10">
+				<input type="email" class="form-control" id="email" placeholder="E-Mail" value="{@pp:email}">
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="pw" class="col-sm-2 control-label">Passwort</label>
+			<div class="col-sm-5">
+				<input class="form-control" id="pw" type="password" placeholder="Passwort">
+			</div>
+			<div class="col-sm-5">
+				<input class="form-control" id="pw2" type="password" placeholder="Passwort wdh.">
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="group" class="col-sm-2 control-label">Gruppe</label>
+			<div class="col-sm-10">
+				{@pp:group}
+			</div>
+		</div>		
+		<div class="form-group">
+			<label for="status" class="col-sm-2 control-label">Status</label>
+			<div class="col-sm-10">
+				{@pp:status}
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<button class="btn btn-default" autocomplete="off" data-loading-text="Speichere ..." id="form_save">Speichern</button>
+				<a class="btn btn-default" href="?service=User">Abbrechen</a>
+			</div>
+		</div>
+	</form>
+	<script type="text/javascript">
+		$(function(){
+			$('#form_save').unbind().click(function(){
+				var _this = this;
+				$(this).button('loading');
+				$.ajax({
+					type: "POST",
+					url: "../_core/connector.php",
+					data: {
+						'service_name' : 'User',
+						'args' : {
+							'ajax' : true,
+							'action' : 'do.edit_user',
+							'nick': $('#nick').val(),
+							'email': $('#email').val(),
+							'pwd': $('#pw').val(),
+							'pwd2': $('#pw2').val(),
+							'group': $('#group').val(),
+							'status': $('#status').val(),
+							'data': {
+								'vname' : $('#vname').val(),
+								'nname' : $('#nname').val()
+							}
+						}
+					},
+					dataType: 'json',
+					success: function (answer) {
+						try {
+							console.log(answer);
+							$(_this).button('reset');
+							json = answer;
+							if(json.content != undefined){
+								if(json.content == 'session_expired') document.location = this.login_url;
+								if(json.content) {
+									$('#messageModal').unbind().on('hidden.bs.modal', function(){
+										window.location = '?service=User';
+									});
+								}
+							}
+
+							if(json.msg != undefined && json.msg != ''){
+								$('#tf_msg').html(json.msg);
+								$('#messageModal').find('.modal-body').html(json.msg);
+								$('#messageModal').find('.modal-title').html('Fehler');
+								$('#messageModal').modal('show');
+							} 
+							
+							if(json.debug != undefined && json.debug != ''){
+								console.log(json.debug);
+							}
+						} catch (e) {
+							console.log(e);
+						}
+					}
+				});
+				return false;
+			});
+		});
+	</script>
 </div>

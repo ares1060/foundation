@@ -2,6 +2,7 @@
 	<h1>User Editieren</h1>
 	
 	<form class="form-horizontal" role="form" action="#" method="post">
+		<input type="hidden" value="{@pp:id}" id="id" name="id"/>
 		<div class="form-group">
 			<label for="nick" class="col-sm-2 control-label">Username</label>
 			<div class="col-sm-10">
@@ -69,6 +70,7 @@
 						'args' : {
 							'ajax' : true,
 							'action' : 'do.edit_user',
+							'id' : $('#id').val(),
 							'nick': $('#nick').val(),
 							'email': $('#email').val(),
 							'pwd': $('#pw').val(),
@@ -87,9 +89,11 @@
 							console.log(answer);
 							$(_this).button('reset');
 							json = answer;
+							var title = 'Fehler';
 							if(json.content != undefined){
 								if(json.content == 'session_expired') document.location = this.login_url;
 								if(json.content) {
+									title = 'Erfolgreich gespeichert'
 									$('#messageModal').unbind().on('hidden.bs.modal', function(){
 										window.location = '?service=User';
 									});
@@ -99,7 +103,7 @@
 							if(json.msg != undefined && json.msg != ''){
 								$('#tf_msg').html(json.msg);
 								$('#messageModal').find('.modal-body').html(json.msg);
-								$('#messageModal').find('.modal-title').html('Fehler');
+								$('#messageModal').find('.modal-title').html(title);
 								$('#messageModal').modal('show');
 							} 
 							

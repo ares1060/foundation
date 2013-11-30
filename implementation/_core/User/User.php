@@ -141,6 +141,27 @@
     					return false;
     				}
          			break;
+         		case 'do.edit_user':
+         			$id = isset($args['id']) ? $args['id'] : '';
+         			$nick = isset($args['nick']) ? $args['nick'] : '';
+         			$pwd = isset($args['pwd']) ? $args['pwd'] : '';
+         			$pwd2 = isset($args['pwd2']) ? $args['pwd2'] : '';
+         			$email = isset($args['email']) ? $args['email'] : '';
+         			$group = isset($args['group']) ? $args['group'] : '';
+         			$status = isset($args['status']) ? $args['status'] : '';
+         			$data = isset($args['data']) ? $args['data'] : array();
+         			
+         			if($this->checkRight('administer_user') && $this->checkRight('administer_group', $_POST['eu_group'])){
+         				$ok = $this->editUser($id, $nick, $pwd, $pwd2, $email, $status, $group, $data);
+         				if($ok !== false){
+         					return true;
+         				} else return false;
+         			} else {
+         				$this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
+         				return false;
+         			}
+
+         			break;
          		case 'activateRegistration':
          			$code = isset($args['code']) ? $args['code'] : '';
          			return $this->activateRegistration($code);
@@ -193,55 +214,6 @@
 						return true;
 					} else {
 						$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
-						return false;
-					}
-					break;
-				case 'edit_user_change_pwd':
-					$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
-					$pwd1 = (isset($args['pwd1'])) ? $args['pwd1'] : '';
-					$u = model\User::getUser($id);
-					if($u != null && ($this->checkRight('administer_group', $u->getGroup()->getId()) || $this->checkRight('edit_user', $u->getId()))){
-						if($pwd == $pwd1){
-							if($this->editUser($u->getId(), '', $pwd)) {
-								$this->_msg($this->_('Password changed successfull'), Messages::INFO);
-								return true;
-							} else {
-								$this->_msg($this->_('Password could not be changed'), Messages::ERROR);
-								return false;
-							}
-						} else {
-							$this->_msg($this->_('Passwords dont match', 'core'), Messages::ERROR);
-							return false;
-						}
-					} else {
-						$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
-						return false;
-					}
-					break;
-				case 'profile_edit_email':
-					$email = (isset($args['email'])) ? $args['email'] : '';
-					return $this->editUser(-1, '', '', $email);
-					break;
-				case 'profile_change_pwd':
-					$pwd = (isset($args['pwd'])) ? $args['pwd'] : '';
-					$pwd1 = (isset($args['pwd1'])) ? $args['pwd1'] : '';
-					$pwd_old = (isset($args['pwd_old'])) ? $args['pwd_old'] : '';
-					
-					if($pwd == $pwd1){
-						if($this->rightPwd($this->loggedInUser->getNick(), $pwd_old)){
-							if($this->editUser(-1, '', $pwd)) {
-								$this->_msg($this->_('Password changed successfull'), Messages::INFO);
-								return true;
-							} else {
-								$this->_msg($this->_('Password could not be changed'), Messages::ERROR);
-								return false;
-							}
-						} else {
-							$this->_msg($this->_('Wrong Password', 'core'), Messages::ERROR);
-							return false;
-						}
-					} else {
-						$this->_msg($this->_('Passwords dont match', 'core'), Messages::ERROR);
 						return false;
 					}
 					break;
@@ -579,12 +551,13 @@
     	 * @param $id
     	 * @param $nick
     	 * @param $pwd
+    	 * @param $pwd2
     	 * @param $email
     	 * @param $status
     	 * @param $group
     	 * @param $userData
     	 */
-    	public function editUser($id=-1, $nick='', $pwd='', $email='', $status=-1, $group=-1, $userData=array()){
+    	public function editUser($id=-1, $nick='', $pwd='', $pwd2='', $email='', $status=-1, $group=-1, $data=array()){
     		if($id == -1) $id = $this->sp->user->getLoggedInUser()->getId();
 			
     		if($id == $this->sp->user->getLoggedInUser()->getId() || $this->checkRight('administer_user', $id)){
@@ -594,8 +567,13 @@
     			
 				$user = model\User::getUser($id);
 				
-    			// nick just can be changed by authorized uer and if available
-    			if($nick != '' && $this->checkRight('administer_user')) {
+				if($user == null){
+					$this->_msg($this->_('User does not exist'), Messages::ERROR);
+					return false;
+				}
+				
+    			// nick just can be changed by authorized user and if available
+    			if($nick != '' && $nick != $user->getNick() && $this->checkRight('administer_user')) {
     				if(model\User::checkNickAvailability($nick)){
     					$user->setNick($nick);
     				} else $this->_msg($this->_('Nick not available'), Messages::ERROR);
@@ -612,34 +590,54 @@
     			}
     			// create new password hash
     			if($pwd != '') {
-    				if($this->sp->txtfun->getPasswordStrength($pwd) >= $this->settings->pwd_min_strength){
-    					$user->setPassword($pwd);
+    				if($pwd == $pwd2){
+	    				if($this->sp->txtfun->getPasswordStrength($pwd) >= $this->settings->pwd_min_strength){
+	    					$user->setPassword($pwd);
+	    				} else {
+	    					$this->_msg($this->_('New Password is too weak'), Messages::ERROR);
+	    					$err = true;
+	    				}
     				} else {
-    					$this->_msg($this->_('New Password is too weak'), Messages::ERROR);
+    					$this->_msg($this->_('Different Passwords'), Messages::ERROR);
     					$err = true;
     				}
        			}
        			
        			if($status != -1 && $this->checkRight('administer_user')){
        				$user->setStatus($status);
-       				if($status != User::STATUS_HAS_TO_ACTIVATE) $user->setStatus('');
+       				//if($status != User::STATUS_HAS_TO_ACTIVATE) $user->setStatus('');
        			}
        			
        			if($group != -1 && $this->checkRight('administer_user')){
        				$user->setGroupId($group);
        			}
        			
-       			//TODO: userData
-       			       			
        			if(!$err) {
        				if($user->save()) {
+       					
+       					$ud = $user->getUserData();
+       					foreach($data as $key=>$value) {
+       						$udi = $ud->opt($key, $value, true);
+       						if($udi) {
+       							$udi->setValue($value);
+       							$udi->save();
+       						}
+       					}
+       					
        					if($id == $this->sp->user->getLoggedInUser()->getId()) $this->sp->user->updateActiveUsers();
        					return true;
        				} else {
+       					$this->_msg($this->_('Couldnt save: '.$this->sp->db->getLastError()), Messages::ERROR);
        					return false;
        				}
-       			} else return false;
-      		} else return false;
+       			} else  {
+       				$this->_msg($this->_('wtf:'.$this->sp->db->getLastError()), Messages::ERROR);
+       				return false;
+				}
+      		}  else  {
+				$this->_msg($this->_('hä:'.$this->sp->db->getLastError()), Messages::ERROR);
+				return false;
+			}
     	}
 		
 		

@@ -252,12 +252,12 @@
 			if($this->id != ''){
 				//update user
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'user SET
-						nick = \''.$this->sp->db->escape($this->nick).'\',
-						hash = \''.$this->sp->db->escape($this->pwd).'\',
-						group = \''.$this->sp->db->escape($this->groupId).'\',
-						email = \''.$this->sp->db->escape($this->email).'\',
-						status = \''.$this->sp->db->escape($this->status).'\'
-					WHERE id="'.$this->sp->db->escape($this->id).'"');
+						`nick` = \''.$this->sp->db->escape($this->nick).'\',
+						`hash` = \''.$this->sp->db->escape($this->pwd).'\',
+						`group` = \''.$this->sp->db->escape($this->groupId).'\',
+						`email` = \''.$this->sp->db->escape($this->email).'\',
+						`status` = \''.$this->sp->db->escape($this->status).'\'
+					WHERE `id`="'.$this->sp->db->escape($this->id).'"');
 			} else {
 				//insert user
 				$activate_code = ($this->status == core\User\User::STATUS_HAS_TO_ACTIVATE) ? md5(time().$this->sp->ref('TextFunctions')->generatePassword(20, 10, 0, 0)): ''; 

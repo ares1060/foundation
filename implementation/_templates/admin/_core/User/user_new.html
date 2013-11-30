@@ -87,9 +87,11 @@
 							console.log(answer);
 							$(_this).button('reset');
 							json = answer;
+							var title = 'Fehler';
 							if(json.content != undefined){
 								if(json.content == 'session_expired') document.location = this.login_url;
 								if(json.content) {
+									title = 'Erfolgreich erstellt';
 									$('#messageModal').unbind().on('hidden.bs.modal', function(){
 										window.location = '?service=User';
 									});
@@ -99,7 +101,7 @@
 							if(json.msg != undefined && json.msg != ''){
 								$('#tf_msg').html(json.msg);
 								$('#messageModal').find('.modal-body').html(json.msg);
-								$('#messageModal').find('.modal-title').html('Fehler');
+								$('#messageModal').find('.modal-title').html(title);
 								$('#messageModal').modal('show');
 							} 
 							

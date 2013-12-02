@@ -46,7 +46,7 @@
 		 *  @param $table string The name of the table to fetch the data from
 		 *  @param $from int The row from which to fetch the entries
 		 *  @param $rows int The numer of rows to fetch
-		 *	@return array.<BaseModel> The array of resulting BaseModels
+		 *	@return BaseModel[] The array of resulting BaseModels
 		 */
 		public static function getItems($table, $from = 0, $rows = -1){
 			if($from >= 0 && $rows > 0) $limit = ' LIMIT '.ServiceProvider::get()->db->escape($from).','.ServiceProvider::get()->db->escape($rows);
@@ -64,7 +64,7 @@
 		
 		/**
 		 *	Fetches all items from the given sql. Saving is supported but may yield unexpected results.
-		 *	@return array.<BaseModel> The array of resulting BaseModels
+		 *	@return BaseModel[] The array of resulting BaseModels
 		 */
 		public static function getItemsSql($table, $sql){
 			$vals = ServiceProvider::get()->db->fetchAll($sql);

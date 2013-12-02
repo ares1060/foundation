@@ -5,20 +5,14 @@
 	
 		private $formats = array('gif', 'jpg', 'png');
 		
-		/**
-		 * @var Filehandler
-		 */
-		private $fh = null;
-		
 		function __construct(){
+			$this->name = 'Image';
 			$this->ini_file = $GLOBALS['to_root'].'_services/Image/Image.ini';	
 			parent::__construct();
-           
-			$this->fh = $this->sp->ref('Filehandler');
         }
         
         public function render($args){ 
-        	if(isset($args['path']) && $args['path'] != '' && file_exists($this->fh->getPath($args['path']))){
+        	if(isset($args['path']) && $args['path'] != '' && file_exists($this->sp->fh->getPath($args['path']))){
 
 				$cacheName = str_replace('/', '_', $args['path']);
 				$cacheName = explode('.', $cacheName);
@@ -26,13 +20,13 @@
 				$cacheFolder = $this->config['cache_folder'].'/'.$cacheName[0].'_'.$cacheName[1].'/'; 
 				$cacheName = $cacheFolder.((isset($args['width']))?$args['width']:'').'x'.((isset($args['height']))?$args['height']:'').'_'.((isset($args['mode']))?$args['mode']:'').'.'.$cacheName[1];
 				
-				if(!file_exists($this->fh->getPath($cacheName))){					
+				if(!file_exists($this->sp->fh->getPath($cacheName))){					
 					
 					//if(!file_exists($GLOBALS['config']['root'].'/'.$cacheFolder)) mkdir($GLOBALS['config']['root'].'/'.$cacheFolder, 0777, true);	
-					$info = getimagesize($this->fh->getPath($args['path']));
+					$info = getimagesize($this->sp->fh->getPath($args['path']));
 					header('Content-type: '.$info['mime']);
 					if(isset($args['width']) && isset($args['height']) && ($args['width'] < $info[0] || $args['height'] < $info[1])){
-						$image = $this->getImage($this->fh->getPath($args['path']));
+						$image = $this->getImage($this->sp->fh->getPath($args['path']));
 						
 						if(isset($args['mode']) && $args['mode'] == 'cropscale'){
 							$image = $this->resizeCropImage($image, $args['width'], $args['height'], isset($args['upscale']));
@@ -40,23 +34,23 @@
 							$image = $this->resizeImage($image, $args['width'], $args['height'], isset($args['upscale']));
 						}
 						
-						if(!file_exists($this->fh->getPath($cacheName)))  fclose($this->fh->openFile($cacheName, 'w'));
-						$this->compressSaveImage($image, $this->formats[$info[2]-1], $this->fh->getPath($cacheName));
+						if(!file_exists($this->sp->fh->getPath($cacheName)))  fclose($this->sp->fh->openFile($cacheName, 'w'));
+						$this->compressSaveImage($image, $this->formats[$info[2]-1], $this->sp->fh->getPath($cacheName));
 						imagedestroy($image);
 						
-						$image = $this->fh->openFile($this->fh->getPath($cacheName), 'r');
-						echo fread($image, filesize($this->fh->getPath($cacheName)));
+						$image = $this->sp->fh->openFile($this->sp->fh->getPath($cacheName), 'r');
+						echo fread($image, filesize($this->sp->fh->getPath($cacheName)));
 						fclose($image);
 					} else {
-						$image = $this->fh->openFile($args['path'], 'r');
-						echo fread($image, filesize($this->fh->getPath($args['path'])));
+						$image = $this->sp->fh->openFile($args['path'], 'r');
+						echo fread($image, filesize($this->sp->fh->getPath($args['path'])));
 						fclose($image);
 					}
 				} else {
-					$image = $this->fh->openFile($cacheName, 'r');
-					$info = getimagesize($this->fh->getPath($cacheName));
+					$image = $this->sp->fh->openFile($cacheName, 'r');
+					$info = getimagesize($this->sp->fh->getPath($cacheName));
 					header('Content-type: '.$info['mime']);
-					echo fread($image, filesize($this->fh->getPath($cacheName)));
+					echo fread($image, filesize($this->sp->fh->getPath($cacheName)));
 					fclose($image);
 				}
 			}
@@ -222,7 +216,7 @@
 		 * @param string $dir
 		 */
 		private function rrmdir($dir) {
-			$this->fh->deleteDirectory($dir);
+			$this->sp->fh->deleteDirectory($dir);
 			/*if (is_dir($dir)) {
 				$objects = scandir($dir);
 				foreach ($objects as $object) {

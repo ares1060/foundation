@@ -1,7 +1,7 @@
 <?php
-	require_once($GLOBALS['config']['root'].'_services/Contacts/models/Contact.php');
-	require_once($GLOBALS['config']['root'].'_services/Contacts/models/ContactData.php');
-	require_once($GLOBALS['config']['root'].'_services/Contacts/models/ContactDataItem.php');
+	require_once($GLOBALS['config']['root'].'_services/Contacts/model/Contact.php');
+	require_once($GLOBALS['config']['root'].'_services/Contacts/model/ContactData.php');
+	require_once($GLOBALS['config']['root'].'_services/Contacts/model/ContactDataItem.php');
 
 	class Image extends AbstractService implements IService {
 		

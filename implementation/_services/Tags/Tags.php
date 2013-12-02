@@ -210,5 +210,10 @@
      	public function tplGetTagCloud($service, $param){
         	return $this->viewHelper->getTagCloud($service, $param);
         }
+		
+		/* ===========================  RIGHTS  ===========================  */
+		private function allowUser($service, $u_id){
+			return $this->sp->ref('Rights')->authorizeUser('Tags', 'administer_tags', $u_id, $service);
+		}
     }
 ?>

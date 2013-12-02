@@ -230,61 +230,6 @@
 			include_once('setup/setup.php');
         	return $error;
 		}
-    	/**
-         * handles Post Variables in Admincenter
-         */
-        public function handleAdminPost(){
-//         	print_r($_POST);
-		    if(isset($_POST['action'])){
-		    	switch($_POST['action']){
-		    		case 'editUser':
-		    			if(isset($_POST['eu_id']) && isset($_POST['eu_mail']) && isset($_POST['eu_status']) && isset($_POST['eu_group'])){
-		    				$user = model\User::getUser($_POST['eu_id']);
-		    				
-		    				if($this->checkRight('edit_user', $user->getId()) || $this->checkRight('administer_group', $user->getGroup()->getId())){
-		    					//potential security risk -> check if authorized to set new group
-		    					$group = $this->checkRight('administer_group', $_POST['eu_group']) ? $_POST['eu_group'] : -1;
-		    					
-		    					// edit password
-		    					if((($_POST['eu_pwd_new'] != '' || $_POST['eu_pwd_new2'] != '') && $_POST['eu_pwd_new'] == $_POST['eu_pwd_new2']) ||
-		    							($_POST['eu_pwd_new'] == '' && $_POST['eu_pwd_new2'] == '')) {
-		    						
-		    						$pwd = $_POST['eu_pwd_new'] == $_POST['eu_pwd_new2'] ? $_POST['eu_pwd_new'] : '';
-		    						
-		    						if($this->editUser($_POST['eu_id'], '', $pwd, $_POST['eu_mail'], $_POST['eu_status'], $group, array())){
-		    							$this->_msg($this->_('_User Update success', 'core'), Messages::INFO);
-		    						
-		    							header('Location: '.$_SERVER["HTTP_REFERER"].$_POST['back_link']);
-		    							exit(0);
-		    						} else $this->_msg($this->_('_User Update error', 'core'), Messages::ERROR);
-		    					} else {
-		    						$this->_msg($this->_('_Passwords have to match', 'core'), Messages::ERROR);
-		    					}
-		    					
-		    				} else $this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
-		    			}
-		    			break;
-		    		/*case 'upload':
-		    			$this->executeNewProfileImage();
-		    			break;*/
-		    		case 'newUser':
-		    			//TODO: save data if error 
-		    			if(isset($_POST['eu_nick']) && isset($_POST['eu_mail']) && isset($_POST['eu_status']) && isset($_POST['eu_group']) && isset($_POST['eu_pwd_new']) && isset($_POST['eu_pwd_new2'])){
-		    				if($this->checkRight('administer_user') && $this->checkRight('administer_group', $_POST['eu_group'])){
-		    					
-		    					$nId = $this->register($_POST['eu_nick'], $_POST['eu_mail'], $_POST['eu_group'], $_POST['eu_pwd_new'], $_POST['eu_pwd_new2'], $_POST['eu_status']);
-		    					if($nId !== false){
-		    						if(isset($_POST['back_link'])) header('Location: '.$_SERVER["HTTP_REFERER"].$_POST['back_link'].$nId.'/');
-		    						else return true;
-		    					}
-		    				} else $this->_msg($this->_('You are not authorized', 'core'), Messages::ERROR);
-		    			}
-		    			break;
-		    		default:
-		    			break;
-		    	}
-		    }
-        }
          
         /* functions */
         /**
@@ -576,7 +521,10 @@
     			if($nick != '' && $nick != $user->getNick() && $this->checkRight('administer_user')) {
     				if(model\User::checkNickAvailability($nick)){
     					$user->setNick($nick);
-    				} else $this->_msg($this->_('Nick not available'), Messages::ERROR);
+    				} else {
+						$this->_msg($this->_('Nick not available'), Messages::ERROR);
+						$err = true;
+					}
     			} else $nick = '';
     			
     			// accept email just if it is an email
@@ -631,11 +579,9 @@
        					return false;
        				}
        			} else  {
-       				$this->_msg($this->_('wtf:'.$this->sp->db->getLastError()), Messages::ERROR);
        				return false;
 				}
       		}  else  {
-				$this->_msg($this->_('hä:'.$this->sp->db->getLastError()), Messages::ERROR);
 				return false;
 			}
     	}

@@ -63,6 +63,13 @@ body {
     z-index: 999 !important;
 }
 
+.tf_admc-login {
+    background-color: #F5F5F5 !important;
+    overflow: hidden;
+    border-radius: 4px 4px 4px 4px;
+    margin: 100px 0 0 0;
+}
+
 @media (max-width: 768px) {
     .tf_admc-content-navigation {
         padding: 0px;

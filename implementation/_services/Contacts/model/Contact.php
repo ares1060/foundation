@@ -22,6 +22,7 @@
 		private $notes;
 		private $socialSecurityNumber;
 		private $lastContact;
+		private $image;
 		 
         private $contactData;
 			
@@ -37,6 +38,7 @@
 			$this->notes = $notes;
 			$this->socialSecurityNumber = $socialSecurityNumber;
 			$this->lastContact = '';
+			$this->image = '';
             parent::__construct(ServiceProvider::get()->db->prefix.'contact', array());
         }
 		
@@ -47,6 +49,7 @@
 		/**
 		 * Fetches the contact with the given id
 		 * @param int $id The ID of the contact
+		 * @return Contact
 		 */
 		public static function getContact($id){
 			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.';');
@@ -58,9 +61,11 @@
 		 * @param string $whereSQL An optional SQL WHERE statement.
 		 * @return Contact[] An array containing all fetched Contacts
 		 */
-		public static function getContacts($whereSQL = ''){
+		public static function getContacts($whereSQL = '', $from = 0, $rows = -1){
 			if($whereSQL != '' && strpos($whereSQL, 'WHERE') === FALSE) $whereSQL = 'WHERE '.$whereSQL;
-			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.';');
+			if($from !== 0 && $rows >= 0) $limit = ' LIMIT '.$from.', '.$rows;
+			else $limit = '';
+			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.$limit.';');
 			$out = array();
 			foreach($contacts as $contact) {
 				$coo = new Contact($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum']);
@@ -81,7 +86,7 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'contacts 
-								(`user_id`, `firstname`, `lastname`, `address`, `pc`, `city`, `email`, `phone`, `notes`, `last_contact`, `ssnum`) VALUES 
+								(`user_id`, `firstname`, `lastname`, `address`, `pc`, `city`, `email`, `phone`, `notes`, `last_contact`, `ssnum`, `image`) VALUES 
 								(\''.ServiceProvider::get()->db->escape($this->ownerId).'\', 
 									\''.ServiceProvider::get()->db->escape($this->firstName).'\', 
 									\''.ServiceProvider::get()->db->escape($this->lastName).'\',
@@ -92,7 +97,8 @@
 									\''.ServiceProvider::get()->db->escape($this->phone).'\',
 									\''.ServiceProvider::get()->db->escape($this->notes).'\',
 									\''.ServiceProvider::get()->db->escape($this->lastContact).'\',
-									\''.ServiceProvider::get()->db->escape($this->ssnum).'\'
+									\''.ServiceProvider::get()->db->escape($this->ssnum).'\',
+									\''.ServiceProvider::get()->db->escape($this->image).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -114,7 +120,8 @@
 						phone = \''.ServiceProvider::get()->db->escape($this->phone).'\',
 						notes = \''.ServiceProvider::get()->db->escape($this->notes).'\',
 						last_contact = \''.ServiceProvider::get()->db->escape($this->lastContact).'\',
-						ssnum = \''.ServiceProvider::get()->db->escape($this->socialSecurityNumber).'\'
+						ssnum = \''.ServiceProvider::get()->db->escape($this->socialSecurityNumber).'\',
+						image = \''.ServiceProvider::get()->db->escape($this->image).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -125,6 +132,7 @@
 		 */
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'contacts WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
+			if($ok) $this->getContactData()->delete();
 			return $ok;
 		}
 		
@@ -144,6 +152,7 @@
 		public function setNotes($notes) { $this->notes = $notes; return $this; }
 		public function setSocialSecurityNumber($socialSecurityNumber) { $this->socialSecurityNumber = $socialSecurityNumber; return $this; }
 		public function setLastContact($lastContact) { $this->lastContact = $lastContact; return $this; }
+		public function setImage($image) { $this->image = $image; return $this; }
 		
 		
 		
@@ -166,7 +175,11 @@
 		public function getNotes(){ return $this->notes; }
 		public function getSocialSecurityNumber(){ return $this->socialSecurityNumber; }
 		public function getLastContact(){ return $this->lastContact; }
+		/**
+		 * @return ContactData
+		 */
 		public function getContactData(){ return $this->socialSecurityNumber; }
+		public function getImage(){ return $this->image; }
 		
 	
 	}

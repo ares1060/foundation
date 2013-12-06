@@ -82,7 +82,7 @@
 		}
 		
 		/**
-		 *	Createas and adds a SubViewDescriptor for the given name
+		 *	Creates and adds a SubViewDescriptor for the given name
 		 *	@param string $name The name of the sub view
 		 *	@return SubViewDescriptor The SubViewDescriptor of the sub view
 		 */

@@ -1,26 +1,56 @@
 -- phpMyAdmin SQL Dump
--- version 4.0.3
+-- version 3.4.5
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 22. Nov 2013 um 15:13
--- Server Version: 5.6.11-log
--- PHP-Version: 5.5.0
+-- Erstellungszeit: 06. Dez 2013 um 23:40
+-- Server Version: 5.5.16
+-- PHP-Version: 5.3.8
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
 
 --
 -- Datenbank: `foundation`
 --
-CREATE DATABASE IF NOT EXISTS `foundation` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `foundation`;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_contactdata`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_contactdata` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `contact_id` int(11) NOT NULL,
+  `key` varchar(200) NOT NULL,
+  `value` text NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `contact_id` (`contact_id`,`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_contacts`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_contacts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `firstname` varchar(200) NOT NULL,
+  `lastname` varchar(100) NOT NULL,
+  `address` varchar(200) NOT NULL,
+  `pc` int(11) NOT NULL,
+  `city` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(100) NOT NULL,
+  `notes` text NOT NULL,
+  `last_contact` datetime NOT NULL,
+  `ssnum` int(11) NOT NULL,
+  `image` varchar(200) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -154,14 +184,20 @@ CREATE TABLE IF NOT EXISTS `pp_user` (
   `created` int(11) NOT NULL,
   `last_login` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=25 ;
 
 --
 -- Daten für Tabelle `pp_user`
 --
 
 INSERT INTO `pp_user` (`id`, `nick`, `hash`, `group`, `email`, `activate`, `reset`, `status`, `created`, `last_login`) VALUES
-(1, 'root', 'a3597971769fc171e38fb92ff3cd4cc429370b618342836ff7a2eb61fe7d6f70ead7dd6586c2044d759ab962b6fbb96d48981259e592e3c79b559d84a79fe64a#me:fpeH2cc68;p9npeQ/Qemi0UQ%Wu!g4Hweu=US4JsPUxqa-Oe', 1, 'root@apple.com', '', '', 1, 0, 1347803752);
+(1, 'root', 'a3597971769fc171e38fb92ff3cd4cc429370b618342836ff7a2eb61fe7d6f70ead7dd6586c2044d759ab962b6fbb96d48981259e592e3c79b559d84a79fe64a#me:fpeH2cc68;p9npeQ/Qemi0UQ%Wu!g4Hweu=US4JsPUxqa-Oe', 1, 'root@apple.com', '', '', 1, 0, 1347803752),
+(24, 'tester', 'c708109949e40eb065844fad07f90e45114c1f3a5beb06b5a451855894b9f7a8aa7a72903e761d67ec9ea30269abeef15989dd4ce931d8f853a0468c12be154c#d3x,Zgv2F|;dntc5Zq_YUuucom!|R6tB5j5dj$VxmUaj8fNhAYG', 1, 'lol@test.com', '', '', 1, 1385307568, 1386364276),
+(23, 'tester1', '671ccdec908af53b2701e800c40695fff0db7970495fa13448fb2aecb7cfefe15feb100679ea1d559ff08ae707c96fb4c36f7af12204a3d24acbc69390456778#yTlji4B7C\\!klsnm4-J3i\\X14iDsuXiA$3.NkmL$fLLddutwoZf', 1, 'lol@test.com', '', '', 1, 1385307568, -1),
+(22, 'tester2', 'a929adf5e33f76c17fbc1084b26e6ba234804b40808ba33f78c08aea044c38ee2b77ed0ed2978d3e85a479067d22a1454c8e66ca5488331b7458ab4bdd1b97a7#XjUOu@6jWEKf$ci$Ydxp:V3o52ah5&tN5hmNikzk%?q5pFeWhIg', 1, 'lol@test.com', '', '', 1, 1385307567, -1),
+(21, 'tester3', 'e34f95d898907dc4a1bebd377679ea945b3854c3879fbc0df459551690cfb4017419f665ad79b6aae3f207771962592e18ac2e24a72f78d0650c5f220b1f64f6#KwnsI1fdYQk2M5u2\\9lBlXwHzmo5|xG?,+mExwudiU%dcsh7PY$', 1, 'lol@test.com', '', '', 1, 1385307566, -1),
+(20, 'tester4', 'eb60f595c996a0dd9837577f642829e0d83d029546eb91d69cad066297ffddcf4b470684acb34df1551ff099ae167385b128eb8c986e9c4db58c8a00b023d255#Mv5lH5q*si6dkGLzud\\r:bU6RRp)nek5pyx3tZdYzq(Kx*W%4MO', 1, 'loler@test.com', '', '', 1, 1385307566, -1),
+(19, 'tester5', '72b56bb632fda7b56e1f779945377271b84f4ee29afd8f5b7011c523de5c83648a7fd0706864bf41121ad0511f5f40124dc6a32766d1737fe9c5aeb4046fcb5e#%&wz7y2!KKgvCNcepzb3alpP59V_\\g:IgynxAfKbURs+W6eH4xn', 1, 'yadada@lol.com', '', '', 1, 1385306186, -1);
 
 -- --------------------------------------------------------
 
@@ -177,7 +213,17 @@ CREATE TABLE IF NOT EXISTS `pp_userdata` (
   `last_change` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`field_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
+
+--
+-- Daten für Tabelle `pp_userdata`
+--
+
+INSERT INTO `pp_userdata` (`id`, `user_id`, `field_id`, `value`, `last_change`) VALUES
+(1, 19, 1, 'Tester', '2013-11-30 21:53:26'),
+(2, 19, 2, 'McTestinger', '2013-11-30 21:53:26'),
+(3, 20, 1, '', '2013-11-30 21:53:54'),
+(4, 20, 2, '', '2013-11-30 21:53:54');
 
 -- --------------------------------------------------------
 
@@ -195,7 +241,15 @@ CREATE TABLE IF NOT EXISTS `pp_userdatafield` (
   `vis_login` int(1) NOT NULL COMMENT 'visibility register 0-2',
   `vis_edit` int(1) NOT NULL COMMENT 'visibility edit 0-2',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+
+--
+-- Daten für Tabelle `pp_userdatafield`
+--
+
+INSERT INTO `pp_userdatafield` (`id`, `name`, `info`, `type`, `group`, `vis_register`, `vis_login`, `vis_edit`) VALUES
+(1, 'vname', 'Vorname', 0, 0, 1, 0, 1),
+(2, 'nname', 'Nachname', 0, 0, 1, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -231,7 +285,3 @@ INSERT INTO `pp_usergroup` (`id`, `name`) VALUES
 (3, 'user'),
 (4, 'moderator'),
 (5, 'guest');
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

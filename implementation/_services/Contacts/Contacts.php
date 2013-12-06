@@ -27,7 +27,21 @@
 		private function handleViewList($args){
 			$user = $this->sp->user->getLoggedInUser();
 			$whereSQL = 'user_id = \''.$user->getId().'\'';
-			$contacts = Contact::getContacts($whereSQL);
+			if(isset($args['search']) && strlen($args['search']) > 2){
+					$args['search'] = $this->sp->db->escape($args['search']);
+					$whereSQL .= ' AND (`firstname` LIKE \'%'.$args['search'].'%\' OR `lastname` LIKE \'%'.$args['search'].'%\')';
+			}
+			$from = 0;
+			if(isset($args['from']) && is_int($args['from']) && $args['from'] > 0) {
+				$from = $args['from'];
+			}
+			
+			$rows = -1;
+			if(isset($args['rows']) && is_int($args['rows']) && $args['rows'] >= 0){
+				$rows = $args['rows'];
+			}
+			
+			$contacts = Contact::getContacts($whereSQL, $from, $rows);
 			$view = new core\Template\SubViewDescriptor('contact_list');
 			foreach($contacts as $contact){
 				$sv = $view->showSubView('list_item');

@@ -63,7 +63,7 @@
 		 */
 		public static function getContacts($whereSQL = '', $from = 0, $rows = -1){
 			if($whereSQL != '' && strpos($whereSQL, 'WHERE') === FALSE) $whereSQL = 'WHERE '.$whereSQL;
-			if($from !== 0 && $rows >= 0) $limit = ' LIMIT '.$from.', '.$rows;
+			if($from !== 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
 			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.$limit.';');
 			$out = array();

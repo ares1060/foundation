@@ -115,6 +115,14 @@
 				if(isset($args['phone'])) $contact->setPhone($args['phone']);
 				if(isset($args['notes'])) $contact->setNotes($args['notes']);
 				if(isset($args['ssnum'])) $contact->setSocialSecurityNumber($args['ssnum']);
+				if(isset($args['image'])) {
+					if(file_exists($GLOBALS['config']['root'].$this->settings->upload_folder.$args['image'])){
+						//move file from upload folder to image folder
+						if(rename($GLOBALS['config']['root'].$this->settings->upload_folder.$args['image'], $GLOBALS['config']['root'].$this->settings->image_folder.$args['image'])){
+							$contact->setImage($args['image']);
+						}
+					}
+				}
 				
 				if(isset($args['data'])){
 					$cd = $contact->getContactData();

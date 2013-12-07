@@ -18,9 +18,11 @@
 		private $type;
 	
 		function __construct(){
+			$this->ini_file = $GLOBALS['to_root'].'_services/Uploader/Uploader.ini';
 			$this->label = '';
 			$this->max_uploads = 5;
 			$this->max_file_size = 100000;
+			parent::__construct();
 		}
 		
 		public function render($args) {	

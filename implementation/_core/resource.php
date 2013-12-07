@@ -11,6 +11,14 @@
 	
 	error_reporting(E_ALL ^ E_NOTICE);
 	
+	if(isset($_REQUEST['type'])){
+		if($_REQUEST['type'] == 'image'){
+			ini_set("memory_limit","128M");
+			
+			$sp->ref('Image')->render($_REQUEST);
+		}
+	}
+	
     //TODO: find requested resource
 	
 	//TODO: modify headery accordingly

@@ -1,7 +1,9 @@
 <?php
 	require_once($GLOBALS['config']['root'].'_services/Image/classes/exifReader.inc');
 
-	class Image extends AbstractService implements IService {
+	use at\foundation\core;
+	
+	class Image extends core\AbstractService implements core\IService {
 	
 		private $formats = array('gif', 'jpg', 'png');
 		
@@ -17,7 +19,7 @@
 				$cacheName = str_replace('/', '_', $args['path']);
 				$cacheName = explode('.', $cacheName);
 				
-				$cacheFolder = $this->config['cache_folder'].'/'.$cacheName[0].'_'.$cacheName[1].'/'; 
+				$cacheFolder = $this->settings->cache_folder.$cacheName[0].'_'.$cacheName[1].'/'; 
 				$cacheName = $cacheFolder.((isset($args['width']))?$args['width']:'').'x'.((isset($args['height']))?$args['height']:'').'_'.((isset($args['mode']))?$args['mode']:'').'.'.$cacheName[1];
 				
 				if(!file_exists($this->sp->fh->getPath($cacheName))){					
@@ -205,7 +207,7 @@
 			$cacheName = str_replace('/', '_', $imageURL);
 			$cacheName = explode('.', $cacheName);
 			
-			$cacheFolder = $this->config['cache_folder'].'/'.$cacheName[0].'_'.$cacheName[1];
+			$cacheFolder = $this->settings->cache_folder.$cacheName[0].'_'.$cacheName[1];
 			
 			$this->rrmdir($cacheFolder);
 		}

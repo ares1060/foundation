@@ -30,6 +30,20 @@
 		public static function deleteDataForContact($id) {
 			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'contactdata WHERE contact_id=\''.ServiceProvider::get()->db->escape($id).'\';');
 		}
+		
+		
+		/**
+		* Fetches the ContactDataItem with the given id from the database
+		* @return ContactDataItem
+		*/
+		public static function getContactDataItem($id){
+			$val = ServiceProvider::get()->db->fetchRow('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'contactdata` WHERE id=\''.ServiceProvider::get()->db->escape($id).'\' LIMIT 0,1;');
+			if($val != null) {
+				$di = new ContactDataItem($val['contact_id'], $val['key'], $val['value']);
+				$di->setId($val['id']);
+				return $di;
+			} else return null;
+		}
 	
 	/* INSTANCE FUNCTIONS */
 		
@@ -82,6 +96,9 @@
 		// getter
 		public function getId() { return $this->id; }
 		public function getValue() { return $this->value; }
+		/**
+		 * @return Contact
+		 */
 		public function getContact() { 
 			if($this->contact == null) Contact::getContact($this->contactId);
 			return $this->contact;

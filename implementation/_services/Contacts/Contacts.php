@@ -20,6 +20,7 @@
 				case 'view.detail': return handleViewDetail($args); break;
 				case 'do.save': return handleSave($args); break;
 				case 'do.delete': return handleDelete($args); break;
+				case 'do.delete_contact_data': return handleDeleteContactData($args); break;
 				default: return 'mooh!'; break;
 			}
 		}
@@ -42,7 +43,8 @@
 			}
 			
 			$contacts = Contact::getContacts($whereSQL, $from, $rows);
-			$view = new core\Template\SubViewDescriptor('contact_list');
+			if(isset($args['mode']) && $args['mode'] == 'short') $view = new core\Template\SubViewDescriptor('contact_short_list');
+			else $view = new core\Template\SubViewDescriptor('contact_list');
 			foreach($contacts as $contact){
 				$sv = $view->showSubView('list_item');
 				$sv->addValue('fname', $contact->getFirstName());
@@ -142,6 +144,20 @@
 				}
 			}
 			
+			return false;
+		}
+		
+		private function handleDeleteContactData($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				if(isset($args['id'])){
+					$cdi = ContactDataItem::getContactDataItem($args['id']);
+					if($cdi && $cdi->getContact()->getOwnerId() == $user->getId()) {
+						return $cdi->delete();
+					}
+				}
+			}
+				
 			return false;
 		}
 		

@@ -43,16 +43,52 @@
 			}
 			
 			$contacts = Contact::getContacts($whereSQL, $from, $rows);
-			if(isset($args['mode']) && $args['mode'] == 'short') $view = new core\Template\SubViewDescriptor('contact_short_list');
-			else $view = new core\Template\SubViewDescriptor('contact_list');
-			foreach($contacts as $contact){
-				$sv = $view->showSubView('list_item');
-				$sv->addValue('fname', $contact->getFirstName());
-				$sv->addValue('lname', $contact->getlastName());
-				$sv->addValue('email', $contact->getEmail());
-				$sv->addValue('phone', $contact->getPhone());
-				$sv->addValue('image', ($contact->getImage() == '')?'blank.png':$contact->getImage());
+			if(isset($args['mode']) && $args['mode'] == 'short'){
+				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_short_list');
+				foreach($contacts as $contact){
+					$sv = $view->showSubView('row');
+					$sv->addValue('firstname', $contact->getFirstName());
+					$sv->addValue('lastname', $contact->getlastName());
+					$sv->addValue('email', $contact->getEmail());
+					$sv->addValue('phone', $contact->getPhone());
+					$sv->addValue('image', ($contact->getImage() == '')?'blank.png':$contact->getImage());
+				}
+			} else {
+				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_list');	
+				if($rows < 0) $rows = count($contacts);
+				$third = ceil($rows / 3);
+				$count = 0;
+				$fc = '';
+				foreach($contacts as $contact){
+					if($count % $third == 0) {
+						if(isset($col)) $col->addValue('content', $colContent);
+						$col = $view->showSubView('col');
+						$colContent = '';
+					}
+					
+					if($fc != strtoupper(substr($contact->getlastName(),0, 1))){
+						$fc = strtoupper(substr($contact->getlastName(),0, 1));
+						$svh = new core\Template\SubViewDescriptor('segment_header');
+						$svh->setParent($view);
+						$svh->updateQualifiedName($col->getQualifiedName());
+						$svh->addValue('label', $fc);
+						$colContent .= $svh->render();
+					}
+					
+					$sv = new core\Template\SubViewDescriptor('row');
+					$sv->setParent($view);
+					$sv->updateQualifiedName($col->getQualifiedName());
+					$sv->addValue('firstname', $contact->getFirstName());
+					$sv->addValue('lastname', $contact->getlastName());
+					$sv->addValue('email', $contact->getEmail());
+					$sv->addValue('phone', $contact->getPhone());
+					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$contact->getImage()));
+					$colContent .= $sv->render();
+					$count++;
+				}
 			}
+			if(isset($col)) $col->addValue('content', $colContent);
+			
 			return $view->render();
 		}
 		
@@ -61,7 +97,7 @@
 			if($user && isset($args['id'])){
 				$contact = Contact::getContact($args['id']);
 				if($contact && $contact->getOwnerId() == $user->getId()){
-					$view = new core\Template\SubViewDescriptor('contact_list');
+					$view = new core\Template\SubViewDescriptor('_services/Contacts/contact_detail');
 					$view->addValue('fname', $contact->getFirstName());
 					$view->addValue('lname', $contact->getlastName());
 					$view->addValue('email', $contact->getEmail());

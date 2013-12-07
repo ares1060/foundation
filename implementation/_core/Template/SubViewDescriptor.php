@@ -1,6 +1,8 @@
 <?php
 	namespace at\foundation\core\Template;
 
+	use at\foundation\core\Messages\Messages;
+	
 	/**
 	 *	This class is a container for template parsing instructions and raplace values
 	 */
@@ -28,7 +30,7 @@
 		 */
 		function render(){
 			if(!isset($this->parentView)) {
-				$this->sp->msg->run(array('message'=>$this->sp->ref('Localization')->translate('_SubViewDescriptor rendered without parent View', 'core'), 
+				$this->sp->msg->render(array('message'=>$this->sp->ref('Localization')->translate('_SubViewDescriptor rendered without parent View', 'core'), 
 										  'type'=>Messages::RUNTIME_ERROR));
 				return '';
 				break;

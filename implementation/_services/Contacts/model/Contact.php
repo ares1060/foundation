@@ -71,7 +71,7 @@
 			if($whereSQL != '' && strpos($whereSQL, 'WHERE') === FALSE) $whereSQL = 'WHERE '.$whereSQL;
 			if($from !== 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
-			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.$limit.';');
+			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.'ORDER BY lastname ASC '.$limit.';');
 			$out = array();
 			foreach($contacts as $contact) {
 				$coo = new Contact($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum']);

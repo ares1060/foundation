@@ -8,7 +8,7 @@
 	use at\foundation\core\User;
 	
     $main = new Template\ViewDescriptor('main');
-        
+    
     echo $main->render();
 	
     $sp->user->login('tester', 'asdf');

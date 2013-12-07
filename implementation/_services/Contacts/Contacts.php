@@ -16,11 +16,11 @@
 		public function render($args){
 			if(isset($args['action'])) $action = $args['action'];
 			switch($action){
-				case 'view.list': return handleViewList($args); break;
-				case 'view.detail': return handleViewDetail($args); break;
-				case 'do.save': return handleSave($args); break;
-				case 'do.delete': return handleDelete($args); break;
-				case 'do.delete_contact_data': return handleDeleteContactData($args); break;
+				case 'view.list': return $this->handleViewList($args); break;
+				case 'view.detail': return $this->handleViewDetail($args); break;
+				case 'do.save': return $this->handleSave($args); break;
+				case 'do.delete': return $this->handleDelete($args); break;
+				case 'do.delete_contact_data': return $this->handleDeleteContactData($args); break;
 				default: return 'mooh!'; break;
 			}
 		}

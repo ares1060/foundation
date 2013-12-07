@@ -69,10 +69,10 @@
 			} else if($this->changed) {
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'contactdata SET
-						key = \''.ServiceProvider::get()->db->escape($this->fieldId).'\',
-						contact_id = \''.ServiceProvider::get()->db->escape($this->userId).'\',
-						value = \''.ServiceProvider::get()->db->escape($this->value).'\'
-					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
+						`key` = \''.ServiceProvider::get()->db->escape($this->key).'\',
+						`contact_id` = \''.ServiceProvider::get()->db->escape($this->contactId).'\',
+						`value` = \''.ServiceProvider::get()->db->escape($this->value).'\'
+					WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
 			}
 			return true;
 		}

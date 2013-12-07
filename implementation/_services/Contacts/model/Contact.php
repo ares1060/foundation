@@ -52,8 +52,14 @@
 		 * @return Contact
 		 */
 		public static function getContact($id){
-			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.';');
-
+			$contact = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts WHERE id =\''.ServiceProvider::getInstance()->db->escape($id).'\';');
+			if($contact){
+				$coo = new Contact($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum']);
+				$coo->setId($contact['id']);
+				return $coo;
+			} else {
+				return null;
+			}
 		}
 		
 		/**
@@ -91,13 +97,13 @@
 									\''.ServiceProvider::get()->db->escape($this->firstName).'\', 
 									\''.ServiceProvider::get()->db->escape($this->lastName).'\',
 									\''.ServiceProvider::get()->db->escape($this->address).'\',
-									\''.ServiceProvider::get()->db->escape($this->postalCode).'\',
+									\''.ServiceProvider::get()->db->escape($this->postCode).'\',
 									\''.ServiceProvider::get()->db->escape($this->city).'\',
 									\''.ServiceProvider::get()->db->escape($this->email).'\',
 									\''.ServiceProvider::get()->db->escape($this->phone).'\',
 									\''.ServiceProvider::get()->db->escape($this->notes).'\',
 									\''.ServiceProvider::get()->db->escape($this->lastContact).'\',
-									\''.ServiceProvider::get()->db->escape($this->ssnum).'\',
+									\''.ServiceProvider::get()->db->escape($this->socialSecurityNumber).'\',
 									\''.ServiceProvider::get()->db->escape($this->image).'\'
 								);');
 				if($succ) {
@@ -114,7 +120,7 @@
 						firstname = \''.ServiceProvider::get()->db->escape($this->firstName).'\',
 						lastname = \''.ServiceProvider::get()->db->escape($this->lastName).'\',
 						address = \''.ServiceProvider::get()->db->escape($this->address).'\',
-						pc = \''.ServiceProvider::get()->db->escape($this->postalCode).'\',
+						pc = \''.ServiceProvider::get()->db->escape($this->postCode).'\',
 						city = \''.ServiceProvider::get()->db->escape($this->city).'\',
 						email = \''.ServiceProvider::get()->db->escape($this->email).'\',
 						phone = \''.ServiceProvider::get()->db->escape($this->phone).'\',
@@ -178,7 +184,10 @@
 		/**
 		 * @return ContactData
 		 */
-		public function getContactData(){ return $this->socialSecurityNumber; }
+		public function getContactData(){ 
+			if($this->contactData == null) $this->contactData = ContactData::getDataForContact($this->id);
+			return $this->contactData;
+		}
 		public function getImage(){ return $this->image; }
 		
 	

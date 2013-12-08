@@ -33,12 +33,12 @@
 					$whereSQL .= ' AND (`firstname` LIKE \'%'.$args['search'].'%\' OR `lastname` LIKE \'%'.$args['search'].'%\')';
 			}
 			$from = 0;
-			if(isset($args['from']) && is_int($args['from']) && $args['from'] > 0) {
+			if(isset($args['from']) && $args['from'] > 0) {
 				$from = $args['from'];
 			}
 			
 			$rows = -1;
-			if(isset($args['rows']) && is_int($args['rows']) && $args['rows'] >= 0){
+			if(isset($args['rows']) && $args['rows'] >= 0){
 				$rows = $args['rows'];
 			}
 			
@@ -56,6 +56,15 @@
 			} else {
 				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_list');	
 				if($rows < 0) $rows = count($contacts);
+				$pages =  ceil(Contact::getContactCount($whereSQL) / $rows);
+				$view->addValue('pages', $pages);
+				if(isset($args['mode']) && $args['mode'] == 'wrapped'){
+					$view->showSubView('header');
+					$footer = $view->showSubView('footer');
+					$footer->addValue('current_page', '0');
+					$footer->addValue('contacts_per_page', $rows);
+					$footer->addValue('pages', $pages);
+				}
 				$third = ceil($rows / 3);
 				$count = 0;
 				$fc = '';

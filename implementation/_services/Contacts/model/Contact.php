@@ -69,7 +69,7 @@
 		 */
 		public static function getContacts($whereSQL = '', $from = 0, $rows = -1){
 			if($whereSQL != '' && strpos($whereSQL, 'WHERE') === FALSE) $whereSQL = 'WHERE '.$whereSQL;
-			if($from !== 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
+			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
 			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.'ORDER BY lastname ASC '.$limit.';');
 			$out = array();
@@ -79,6 +79,20 @@
 				$out[] = $coo;
 			}
 			return $out;
+		}
+		
+		/**
+		* Fetches the number of available contacts
+		* @return int
+		*/
+		public static function getContactCount($whereSQL = ''){
+			if($whereSQL != '' && strpos($whereSQL, 'WHERE') === FALSE) $whereSQL = 'WHERE '.$whereSQL;
+			$count = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) as count FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.';');
+			if($count && isset($count['count'])){
+				return $count['count'];
+			} else {
+				return 0;
+			}
 		}
 		
 		/**

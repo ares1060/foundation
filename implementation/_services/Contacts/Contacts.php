@@ -87,6 +87,7 @@
 					$sv = new core\Template\SubViewDescriptor('row');
 					$sv->setParent($view);
 					$sv->updateQualifiedName($col->getQualifiedName());
+					$sv->addValue('id', $contact->getId());
 					$sv->addValue('firstname', $contact->getFirstName());
 					$sv->addValue('lastname', $contact->getlastName());
 					$sv->addValue('email', $contact->getEmail());
@@ -106,9 +107,9 @@
 			if($user && isset($args['id'])){
 				$contact = Contact::getContact($args['id']);
 				if($contact && $contact->getOwnerId() == $user->getId()){
-					$view = new core\Template\SubViewDescriptor('_services/Contacts/contact_detail');
-					$view->addValue('fname', $contact->getFirstName());
-					$view->addValue('lname', $contact->getlastName());
+					$view = new core\Template\ViewDescriptor('_services/Contacts/contact_detail');
+					$view->addValue('firstname', $contact->getFirstName());
+					$view->addValue('lastname', $contact->getlastName());
 					$view->addValue('email', $contact->getEmail());
 					$view->addValue('address', $contact->getAddress());
 					$view->addValue('pc', $contact->getPostCode());
@@ -116,8 +117,8 @@
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
-					$view->addValue('image', ($contact->getImage() == '')?'blank.png':$contact->getImage());
-	
+					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$contact->getImage()));
+						
 					$cd = $contact->getContactData();
 					$cdk = $cd->getKeys();
 					
@@ -132,11 +133,11 @@
 					
 					return $view->render();
 				} else {
-					return '';
+					return 'not for you';
 				}
 			} 
 			
-			return '';
+			return 'wut';
 		}
 		
 		private function handleSave($args){

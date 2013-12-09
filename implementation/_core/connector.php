@@ -50,7 +50,7 @@
 		if(!isset($args['noMsg'])) {
 	    	echo json_encode(array('content'=>$sp->render($service_name, $args), 
 	    							'msg'=>$sp->render('Messages', array('action'=>'viewType', 'type'=>'error/info')),
-	    							'debug'=>$sp->render('Messages', array('action'=>'viewType', 'type'=>'debug'))));	
+	    							'debug'=>$sp->render('Messages', array('action'=>'viewType', 'type'=>'debug'))));
 	    } else {
 	  		echo json_encode(array('content'=>$sp->render($service_name, $args)));
 	    }

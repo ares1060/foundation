@@ -18,6 +18,7 @@
 			switch($action){
 				case 'view.list': return $this->handleViewList($args); break;
 				case 'view.detail': return $this->handleViewDetail($args); break;
+				case 'view.form': return $this->handleViewForm($args); break;
 				case 'do.save': return $this->handleSave($args); break;
 				case 'do.delete': return $this->handleDelete($args); break;
 				case 'do.delete_contact_data': return $this->handleDeleteContactData($args); break;
@@ -108,6 +109,7 @@
 				$contact = Contact::getContact($args['id']);
 				if($contact && $contact->getOwnerId() == $user->getId()){
 					$view = new core\Template\ViewDescriptor('_services/Contacts/contact_detail');
+					$view->addValue('id', $contact->getId());
 					$view->addValue('firstname', $contact->getFirstName());
 					$view->addValue('lastname', $contact->getlastName());
 					$view->addValue('email', $contact->getEmail());
@@ -126,7 +128,8 @@
 						$cdi = $cd->get($key);
 						if($cdi){
 							$sv = $view->addSubView('data_item');
-							$sv->addValue('label', $cdi->getKey());
+							$sv->addValue('id', $cdi->getId());
+							$sv->addValue('key', $cdi->getKey());
 							$sv->addValue('value', $cdi->getValue());
 						}
 					}
@@ -137,6 +140,49 @@
 				}
 			} 
 			
+			return 'wut';
+		}
+		
+		private function handleViewForm($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_detail');
+				if(isset($args['id'])) $contact = Contact::getContact($args['id']);
+				if($contact && $contact->getOwnerId() == $user->getId()){
+					$view->addValue('id', $contact->getId());
+					$view->addValue('firstname', $contact->getFirstName());
+					$view->addValue('lastname', $contact->getlastName());
+					$view->addValue('email', $contact->getEmail());
+					$view->addValue('address', $contact->getAddress());
+					$view->addValue('pc', $contact->getPostCode());
+					$view->addValue('city', $contact->getCity());
+					$view->addValue('notes', $contact->getNotes());
+					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
+					$view->addValue('phone', $contact->getPhone());
+					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$contact->getImage()));
+		
+					$cd = $contact->getContactData();
+					$cdk = $cd->getKeys();
+						
+					foreach($cdk as $key){
+						$cdi = $cd->get($key);
+						if($cdi){
+							$sv = $view->addSubView('data_item');
+							$sv->addValue('id', $cdi->getId());
+							$sv->addValue('key', $cdi->getKey());
+							$sv->addValue('value', $cdi->getValue());
+						}
+					}
+						
+					
+				} else {
+					$view->addValue('image', urlencode($this->settings->default_image));
+					$view->addValue('title', 'Neuer Kontakt');
+				}
+				
+				return $view->render();
+			}
+				
 			return 'wut';
 		}
 		
@@ -152,12 +198,12 @@
 					$contact = new Contact();
 				}
 				
-				if(isset($args['fname'])) $contact->setFirstName($args['fname']);
-				if(isset($args['lname'])) $contact->setLastName($args['lname']);
+				if(isset($args['firstname'])) $contact->setFirstName($args['firstname']);
+				if(isset($args['lastname'])) $contact->setLastName($args['lastname']);
 				if(isset($args['address'])) $contact->setAddress($args['address']);
 				if(isset($args['pc'])) $contact->setPostCode($args['pc']);
 				if(isset($args['city'])) $contact->setCity($args['city']);
-				if(isset($args['email'])) $contact->setCity($args['email']);
+				if(isset($args['email'])) $contact->setEmail($args['email']);
 				if(isset($args['phone'])) $contact->setPhone($args['phone']);
 				if(isset($args['notes'])) $contact->setNotes($args['notes']);
 				if(isset($args['ssnum'])) $contact->setSocialSecurityNumber($args['ssnum']);
@@ -179,9 +225,9 @@
 					}
 				}
 				
-				if($contact->getOwnerId() == '') $contact->setOwner($user->getId());
+				if($contact->getOwnerId() < 0) $contact->setOwner($user->getId());
 				
-				$contact->save();
+				return $contact->save();
 			} else {
 				return false;
 			}

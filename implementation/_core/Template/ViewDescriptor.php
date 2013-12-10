@@ -2,6 +2,7 @@
 	namespace at\foundation\core\Template;
 	use at\foundation\core;
 	use at\foundation\core\ServiceProvider;
+	use at\foundation\core\Template\SubViewDescriptor;
 	
 	/**
 	 *	This class is a container for template parsing instructions and replace values

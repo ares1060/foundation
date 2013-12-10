@@ -127,7 +127,7 @@
 					foreach($cdk as $key){
 						$cdi = $cd->get($key);
 						if($cdi){
-							$sv = $view->addSubView('data_item');
+							$sv = $view->showSubView('data_item');
 							$sv->addValue('id', $cdi->getId());
 							$sv->addValue('key', $cdi->getKey());
 							$sv->addValue('value', $cdi->getValue());
@@ -167,7 +167,7 @@
 					foreach($cdk as $key){
 						$cdi = $cd->get($key);
 						if($cdi){
-							$sv = $view->addSubView('data_item');
+							$sv = $view->showSubView('data_item');
 							$sv->addValue('id', $cdi->getId());
 							$sv->addValue('key', $cdi->getKey());
 							$sv->addValue('value', $cdi->getValue());
@@ -218,7 +218,7 @@
 				
 				if(isset($args['data'])){
 					$cd = $contact->getContactData();
-					foreach($data as $k => $d){
+					foreach($args['data'] as $k => $d){
 						$cdi = $cd->opt($k, $d, true);
 						$cdi->setValue($d);
 						$cdi->save();

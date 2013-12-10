@@ -181,7 +181,7 @@
 		 * @return at/foundation/_core/User/model/User
 		 */
 		public function getOwner(){ 
-			if(!$this->ownerUser == null) $this->ownerUser = User::getUser();
+			if(!$this->ownerUser == null) $this->ownerUser = User::getUser($this->ownerId);
 			return $this->ownerUser;
 		}
 		public function getOwnerId(){ return $this->ownerId; }

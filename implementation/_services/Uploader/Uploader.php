@@ -18,6 +18,7 @@
 		private $type;
 	
 		function __construct(){
+			$this->name = 'Uploader';
 			$this->ini_file = $GLOBALS['to_root'].'_services/Uploader/Uploader.ini';
 			$this->label = '';
 			$this->max_uploads = 5;
@@ -176,103 +177,100 @@
 			$r = array();
 			//print_r($_FILES);
 			//print_r($_POST);
-			if(isset($_POST['action']) && $_POST['action'] == 'upload'){
-				switch($_POST['selected_type']){
-					case 'html':
-						if(isset($_FILES['files']) && isset($_FILES['files']['name']) && $_FILES['files']['name'][0] != ''){
-							for($i=0; $i<count($_FILES['files']['name']) ; $i++){
-								switch($_FILES['files']['error'][$i]){
-									case 1: //size extends upload_max_filesize directive in php.ini
-										$this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_MAX_FILE_SIZE')));
-										break;
-									case 2: //size extends MAX_FILE_SIZE
-										$this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_MAX_FILE_SIZE')));
-										break;
-									case 3: //The uploaded file was only partially uploaded.
-										$this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_UPLOAD_PARTIALLY')));
-										break;
-									case 4: // no file uploaded - just debug error
-										$this->__($this->_('ERROR_NO_FILE_UPLOADED'), Messages::DEBUG_ERROR);
-										break;
-									case 6: //Missing a temporary folder
-										$this->__($this->_('ERROR_MISSING_TEMP_FOLDER'), Messages::DEBUG_ERROR);
-										break;
-									case 7: //cant write at disk
-										$this->__($this->_('ERROR_CANT_WRITE_DISK'), Messages::DEBUG_ERROR);
-										break;
-									case 8: //php extension stopped upload
-										$this->__($this->_('ERROR_EXTENTION_STOPPED_UPLOAD'), Messages::DEBUG_ERROR);
-										break;
-									case 0: //ok
-										$r[] = array('name'=>$_FILES['files']['name'][$i],
-					        								 'tmp_name'=>$_FILES['files']['tmp_name'][$i], 
-					        								 'error'=>$_FILES['files']['error'][$i], 
-					        								 'size'=>$_FILES['files']['size'][$i],
-					        								 'type'=>$_FILES['files']['type'][$i]);
-										break;
-								}
+			switch($_POST['selected_type']){
+				case 'html':
+					if(isset($_FILES['files']) && isset($_FILES['files']['name']) && $_FILES['files']['name'][0] != ''){
+						for($i=0; $i<count($_FILES['files']['name']) ; $i++){
+							switch($_FILES['files']['error'][$i]){
+								case 1: //size extends upload_max_filesize directive in php.ini
+									$this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_MAX_FILE_SIZE')));
+									break;
+								case 2: //size extends MAX_FILE_SIZE
+									$this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_MAX_FILE_SIZE')));
+									break;
+								case 3: //The uploaded file was only partially uploaded.
+									$this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_UPLOAD_PARTIALLY')));
+									break;
+								case 4: // no file uploaded - just debug error
+									$this->__($this->_('ERROR_NO_FILE_UPLOADED'), Messages::DEBUG_ERROR);
+									break;
+								case 6: //Missing a temporary folder
+									$this->__($this->_('ERROR_MISSING_TEMP_FOLDER'), Messages::DEBUG_ERROR);
+									break;
+								case 7: //cant write at disk
+									$this->__($this->_('ERROR_CANT_WRITE_DISK'), Messages::DEBUG_ERROR);
+									break;
+								case 8: //php extension stopped upload
+									$this->__($this->_('ERROR_EXTENTION_STOPPED_UPLOAD'), Messages::DEBUG_ERROR);
+									break;
+								case 0: //ok
+									$r[] = array('name'=>$_FILES['files']['name'][$i],
+														 'tmp_name'=>$_FILES['files']['tmp_name'][$i], 
+														 'error'=>$_FILES['files']['error'][$i], 
+														 'size'=>$_FILES['files']['size'][$i],
+														 'type'=>$_FILES['files']['type'][$i]);
+									break;
 							}
 						}
-						break;
-					case 'flash':
-						if(is_dir($this->config['tmpFolder'])){
-							$count=0;
-							if ($handle = opendir($this->config['tmpFolder'])) {
-								while (false !== ($file = readdir($handle))) {
-									if ($file != '.' && $file != '..' && substr($file, 0, 1) != '.') {
-										//if(preg_match("/\." . $types . "$/i", $file)){
-										$size = filesize($this->config['tmpFolder'].$file);
-										$type = pathinfo($this->config['tmpFolder'].$file);
-										/*if($size > $_POST['MAX_FILE_SIZE']){			//size extends MAX_FILE_SIZE
-										 $this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_MAX_FILE_SIZE')));
-										} else {*/
-										$count++;
-										$r[] = array('name'=>$file,
-						        					'tmp_name'=>$this->config['tmpFolder'].$file,
-						        					'error'=>0,
-						        					'size'=>$size,
-						        					'type'=>$type['extension']);
-										//}
-										//	}
-									}
-								}
-								closedir($handle);
-							}
-							if($count==0) $this->__($this->_('NO_UPLOADS'));
-						}
-						break;
-					case 'ftp':
-						if(is_dir($this->config['ftpFolder'])){
-							$count=0;
-							if ($handle = opendir($this->config['ftpFolder'])) {
-								while (false !== ($file = readdir($handle))) {
-									if ($file != '.' && $file != '..' && substr($file, 0, 1) != '.') {
-										//if(preg_match("/\." . $types . "$/i", $file)){
-										$size = filesize($this->config['ftpFolder'].$file);
-										$type = pathinfo($this->config['ftpFolder'].$file);
-										/*if($size > $_POST['MAX_FILE_SIZE']){			//size extends MAX_FILE_SIZE
-										 $this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_MAX_FILE_SIZE')));
-										} else {*/
-										$count++;
-										$r[] = array('name'=>$file,
-										        					'tmp_name'=>$this->config['ftpFolder'].$file,
-										        					'error'=>0,
-										        					'size'=>$size,
-										        					'type'=>$type['extension']);
-										//}
-										//	}
-									}
-								}
-								closedir($handle);
-							}
-							if($count==0) $this->__($this->_('NO_UPLOADS'));
-						}
-						break;
-					default:
-						$this->__(str_replace('{@pp:service}', $this->name, $this->_('WRONG_PARAMETER', 'core'))); //Error Message Internal Error
+					}
 					break;
-				}
-		
+				case 'flash':
+					if(is_dir($this->settings->tmp_folder)){
+						$count=0;
+						if ($handle = opendir($this->settings->tmp_folder)) {
+							while (false !== ($file = readdir($handle))) {
+								if ($file != '.' && $file != '..' && substr($file, 0, 1) != '.') {
+									//if(preg_match("/\." . $types . "$/i", $file)){
+									$size = filesize($this->settings->tmp_folder.$file);
+									$type = pathinfo($this->settings->tmp_folder.$file);
+									/*if($size > $_POST['MAX_FILE_SIZE']){			//size extends MAX_FILE_SIZE
+									 $this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_MAX_FILE_SIZE')));
+									} else {*/
+									$count++;
+									$r[] = array('name'=>$file,
+												'tmp_name'=>$this->settings->tmp_folder.$file,
+												'error'=>0,
+												'size'=>$size,
+												'type'=>$type['extension']);
+									//}
+									//	}
+								}
+							}
+							closedir($handle);
+						}
+						if($count==0) $this->__($this->_('NO_UPLOADS'));
+					}
+					break;
+				case 'ftp':
+					if(is_dir($this->settings->ftp_folder)){
+						$count=0;
+						if ($handle = opendir($this->settings->ftp_folder)) {
+							while (false !== ($file = readdir($handle))) {
+								if ($file != '.' && $file != '..' && substr($file, 0, 1) != '.') {
+									//if(preg_match("/\." . $types . "$/i", $file)){
+									$size = filesize($this->settings->ftp_folder.$file);
+									$type = pathinfo($this->settings->ftp_folder.$file);
+									/*if($size > $_POST['MAX_FILE_SIZE']){			//size extends MAX_FILE_SIZE
+									 $this->__(str_replace('{@pp:file}', $_FILES['files']['name'][$i], $this->_('ERROR_MAX_FILE_SIZE')));
+									} else {*/
+									$count++;
+									$r[] = array('name'=>$file,
+																'tmp_name'=>$this->settings->ftp_folder.$file,
+																'error'=>0,
+																'size'=>$size,
+																'type'=>$type['extension']);
+									//}
+									//	}
+								}
+							}
+							closedir($handle);
+						}
+						if($count==0) $this->__($this->_('NO_UPLOADS'));
+					}
+					break;
+				default:
+					$this->__(str_replace('{@pp:service}', $this->name, $this->_('WRONG_PARAMETER', 'core'))); //Error Message Internal Error
+				break;
 			}
 			return $r;
 		}

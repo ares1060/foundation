@@ -28,19 +28,19 @@
 		
 		private function handleViewList($args){
 			$user = $this->sp->user->getLoggedInUser();
-			$whereSQL = 'user_id = \''.$user->getId().'\'';
+			$whereSQL = 'WHERE user_id = \''.$user->getId().'\'';
 			if(isset($args['search']) && strlen($args['search']) > 2){
 					$args['search'] = $this->sp->db->escape($args['search']);
 					$whereSQL .= ' AND (`firstname` LIKE \'%'.$args['search'].'%\' OR `lastname` LIKE \'%'.$args['search'].'%\')';
 			}
 			$from = 0;
 			if(isset($args['from']) && $args['from'] > 0) {
-				$from = $args['from'];
+				$from = $this->sp->db->escape($args['from']);
 			}
 			
 			$rows = -1;
 			if(isset($args['rows']) && $args['rows'] >= 0){
-				$rows = $args['rows'];
+				$rows = $this->sp->db->escape($args['rows']);
 			}
 			
 			$contacts = Contact::getContacts($whereSQL, $from, $rows);

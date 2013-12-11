@@ -176,6 +176,15 @@
         	return $this->dataHelper->deleteServiceTags($service, $param);
         }
         
+		/**
+		 * Creates a SQL subselect for joining when filtering for tags
+		 * @param string $service The name of the service
+		 * @param string $param
+		 */
+		public function getSubSelectSQL($service, $param) {
+			return Tag::getSubSelectSQL($service, $param);
+		}
+		
         /* =========  Getter ====== */
         /**
          * returnes Tag by given webname

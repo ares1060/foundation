@@ -64,14 +64,13 @@
 		
 		/**
 		 * Fetches all contacts matching the given SQL where statement
-		 * @param string $whereSQL An optional SQL WHERE statement.
+		 * @param string $insertSQL An optional SQL string which inserted between the select and the order statement.
 		 * @return Contact[] An array containing all fetched Contacts
 		 */
-		public static function getContacts($whereSQL = '', $from = 0, $rows = -1){
-			if($whereSQL != '' && strpos($whereSQL, 'WHERE') === FALSE) $whereSQL = 'WHERE '.$whereSQL;
+		public static function getContacts($insertSQL = '', $from = 0, $rows = -1){
 			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
-			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.'ORDER BY lastname ASC '.$limit.';');
+			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$insertSQL.' ORDER BY lastname ASC '.$limit.';');
 			$out = array();
 			foreach($contacts as $contact) {
 				$coo = new Contact($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum']);
@@ -85,9 +84,8 @@
 		* Fetches the number of available contacts
 		* @return int
 		*/
-		public static function getContactCount($whereSQL = ''){
-			if($whereSQL != '' && strpos($whereSQL, 'WHERE') === FALSE) $whereSQL = 'WHERE '.$whereSQL;
-			$count = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) as count FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$whereSQL.';');
+		public static function getContactCount($insertSQL = ''){
+			$count = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) as count FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$insertSQL.';');
 			if($count && isset($count['count'])){
 				return $count['count'];
 			} else {

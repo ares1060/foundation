@@ -123,7 +123,13 @@
 				return false;
 			}
 		}
-	
+		
+		/**
+		 * @return string The database table name of the model
+		 */
+		public function getTable(){
+			return $this->table:
+		}
 	}
 
 ?>

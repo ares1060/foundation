@@ -84,7 +84,7 @@
 			} else return null;
 		}
 		
-	/**
+		/**
 		 * returnes all connected Params By given Tag and service
 		 * @param TagsTag $tag
 		 */
@@ -105,15 +105,15 @@
 		 * 
 		 * @param unknown_type $service
 		 * @param unknown_type $param
+		 * @param boolean $doQuery If false the sql statemnt is returend instead of the result.
 		 */
 		public function getTagsByService($service, $param=''){
 			if($service != ''){
 				if($this->serviceTags == array() || !isset($this->serviceTags[$service])){
 					$param = ($param != '') ? ' AND tl.param="'.ServiceProvider::getInstance()->db->escape($param).'"' : '';
-					
 					$a = $this->mysqlArray('SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags_link` tl
-													LEFT JOIN `'.ServiceProvider::getInstance()->db->prefix.'tags` t ON tl.t_id = t.t_id 
-													WHERE tl.service="'.ServiceProvider::getInstance()->db->escape($service).'" '.$param);
+												LEFT JOIN `'.ServiceProvider::getInstance()->db->prefix.'tags` t ON tl.t_id = t.t_id 
+												WHERE tl.service="'.ServiceProvider::getInstance()->db->escape($service).'" '.$param;);
 					if($a != ''){
 						$this->serviceTags[$service] = array();
 						foreach($a as $tag){
@@ -129,6 +129,17 @@
 		}
 
 		/**
+		 * Creates a SQL subselect for joining when filtering for tags
+		 * @param string $service The name of the service
+		 * @param string $param 
+		 */
+		public static function getSubSelectSQL($service, $param) {
+			return 'SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags_link` tl
+												LEFT JOIN `'.ServiceProvider::getInstance()->db->prefix.'tags` t ON tl.t_id = t.t_id 
+												WHERE tl.service="'.ServiceProvider::getInstance()->db->escape($service).'" '.$param;
+		}
+		
+		/**
 		 * Returnes TagCount by Tag id
 		 * 
 		 * @param unknown_type $tag_id
@@ -142,6 +153,7 @@
 				} else return -1;
 			} else return -1;
 		}
+		
 		
 		/** 
 		 * INSTANCE METHODS

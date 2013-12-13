@@ -10,9 +10,16 @@
 		private $invoice;
 		private $date;
 		private $notes;
-		private $value;
+		private $amount;
 	
-		public function __construct() {
+		public function __construct($invoiceId = -1, $date = '', $notes = '', $amount = '') {
+
+			$this->id = '';
+			$this->invoiceId = $invoiceId;
+			$this->date = $date;
+			$this->notes = $notes;
+			$this->amount = $amount;
+		
             parent::__construct(ServiceProvider::get()->db->prefix.'bookie_invoice_parts', array());
         }
 		
@@ -20,8 +27,20 @@
 		 * STATIC METHODS
 		 */
 	
+		/**
+		 * Fetches all InvoiceParts for the given invoiceId and returns them in an array
+		 * @param int $invoiceId The id of the Invoice
+		 * @return InvoicePart[] An array containing all InvoiceParts for the given invoiceId
+		 */
 		public static function getPartsForInvoice($invoiceId) {
-
+			$result = ServiceProvider::get()->db->fetchAll('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'bookie_invoice_parts` WHERE `invoice_id` = \''.ServiceProvider::get()->db->escape($invoiceId).'\';');
+			$out = array();
+			foreach($result as $ip) {
+				$ivp = new InvoicePart($ip['invoice_id'], $ip['date'], $ip['notes'], $ip['amount']);
+				$ivp->setId($ip['id']);
+				$out[] = $ivp;
+			}
+			return $out;
 		}
 	
 		/**
@@ -76,7 +95,7 @@
 		public function setInvoice($invoiceId) { $this->invoiceId = $invoiceId; $this->invoice = null; return $this; }
 		public function setNotes($notes) { $this->notes = $notes; return $this; }
 		public function setDate($date) { $this->date = $date; return $this; }
-		public function setValue($value) { $this->value = $value; return $this; }
+		public function setAmount($amount) { $this->amount = $amount; return $this; }
 	
 		public function getId(){ return $this->id; }
 		/**
@@ -89,6 +108,6 @@
 		public function getInvoiceId(){ return $this->invoiceId; }
 		public function getNotes() { return $this->notes; }
 		public function getDate() { return $this->date; }
-		public function getValue() { return $this->value; }
+		public function getAmount() { return $this->amount; }
 	}
 ?>

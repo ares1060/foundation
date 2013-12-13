@@ -19,20 +19,53 @@
 		private $reminderDate;
 		private $dunnings;
 	
-		public function __construct() {
-            parent::__construct(ServiceProvider::get()->db->prefix.'bookie_invoices', array());
+		public function __construct($entryId = -1, $contactId = -1, $altSrcAddress = '', $altDstAddress = '', $number = '', $payDate = '', $reminderDate = '', $dunnings = '') {
+            
+			$this->entryId = $entryId;
+			$this->contactId = $contactId;
+			$this->altSrcAddress = $altSrcAddress;
+			$this->altDstAddress = $altDstAddress;
+			$this->number = $number;
+			$this->payDate = $payDate;
+			$this->reminderDate = $reminderDate;
+			$this->dunnings = $dunnings;
+			
+			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_invoices', array());
         }
 		
 		/**
 		 * STATIC METHODS
 		 */
 	
-		public static function getInvoices() {
-		
+		/**
+		 * Fetches an array of invoices matching the given parameters
+		 * @param $insertSQL additional SQL code to be inserted between select from and limit;
+		 * @param $from The row from withc to select 
+		 * @param $rows The number of rows to select
+		 * @return Invoice[] An array containing the resulting Invoices
+		 */
+		public static function getInvoices($insertSQL = '', $from = 0, $rows = -1){
+			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
+			else $limit = '';
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices '.$insertSQL.' '.$limit.';');
+			$out = array();
+			foreach($result as $invoice) {
+				$ivo = new Invoice($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum']);
+				$ivo->setId($invoice['id']);
+				$out[] = $ivo;
+			}
+			return $out;
 		}
 		
 		public static function getInvoicesForEntry($entryId) {
-		
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices WHERE `entry_id` = \''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
+			$out = array();
+			foreach($result as $invoice) {
+				$ivo = new Invoice($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum']);
+				$ivo->setId($invoice['id']);
+				$out[] = $ivo;
+			}
+			return $out;
 		}
 		
 		/**

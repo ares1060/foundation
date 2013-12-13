@@ -216,7 +216,11 @@
 					}
 				}
 				
-				if(isset($args['data'])){
+				if($contact->getOwnerId() < 0) $contact->setOwner($user->getId());
+				
+				$ok = $contact->save();
+				
+				if($ok && isset($args['data'])){
 					$cd = $contact->getContactData();
 					$hk = array();
 					//save values
@@ -235,10 +239,8 @@
 						}
 					}
 				}
-				
-				if($contact->getOwnerId() < 0) $contact->setOwner($user->getId());
-				
-				return $contact->save();
+								
+				return $ok;
 			} else {
 				return false;
 			}

@@ -46,8 +46,16 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_invoices 
-								() VALUES 
+								(`entry_id`, `contact_id`, `alt_dst_adr`, `alt_src_adr`, `number`, `pay_date`, `reminder_date`, `dunnings`) VALUES 
 								(
+									\''.$this->sp->db->escape($this->entryId).'\',
+									\''.$this->sp->db->escape($this->contactId).'\',
+									\''.$this->sp->db->escape($this->altDstAddress).'\',
+									\''.$this->sp->db->escape($this->altSrcAddress).'\',
+									\''.$this->sp->db->escape($this->number).'\',
+									\''.$this->sp->db->escape($this->payDate).'\',
+									\''.$this->sp->db->escape($this->reminderDate).'\',
+									\''.$this->sp->db->escape($this->dunnings).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -59,7 +67,14 @@
 			} else {
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'bookie_invoices SET
-						
+						`entry_id` = \''.$this->sp->db->escape($this->entryId).'\',
+						`contact_id` = \''.$this->sp->db->escape($this->contactId).'\',
+						`alt_dst_adr` = \''.$this->sp->db->escape($this->altDstAddress).'\',
+						`alt_src_adr` = \''.$this->sp->db->escape($this->altSrcAddress).'\',
+						`number` = \''.$this->sp->db->escape($this->number).'\',
+						`pay_date` = \''.$this->sp->db->escape($this->payDate).'\',
+						`reminder_date` = \''.$this->sp->db->escape($this->reminderDate).'\',
+						`dunnings` = \''.$this->sp->db->escape($this->dunnings).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -69,7 +84,7 @@
 		 *	Deletes the contact data item from the database
 		 */
 		public function delete(){
-			
+			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_invoices WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
 		}
 		 
 		 

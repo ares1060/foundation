@@ -38,8 +38,12 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_receipts 
-								() VALUES 
+								(`entry_id`, `date`, `number`, `account`) VALUES 
 								(
+									\''.$this->sp->db->escape($this->entryId).'\',
+									\''.$this->sp->db->escape($this->date).'\',
+									\''.$this->sp->db->escape($this->number).'\',
+									\''.$this->sp->db->escape($this->account).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -51,7 +55,10 @@
 			} else {
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'bookie_receipts SET
-						
+						`entry_id` = \''.$this->sp->db->escape($this->entryId).'\', 
+						`date` = \''.$this->sp->db->escape($this->date).'\', 
+						`number` = \''.$this->sp->db->escape($this->number).'\',
+						`account` = \''.$this->sp->db->escape($this->account).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -61,7 +68,7 @@
 		 *	Deletes the contact data item from the database
 		 */
 		public function delete(){
-			
+			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_receipts WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
 		}
 		 
 		 

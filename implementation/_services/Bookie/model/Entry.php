@@ -53,8 +53,16 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_entries 
-								() VALUES 
+								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`) VALUES 
 								(
+									\''.$this->sp->db->escape($this->ownerId).'\', 
+									\''.$this->sp->db->escape($this->notes).'\', 
+									\''.$this->sp->db->escape($this->brutto).'\', 
+									\''.$this->sp->db->escape($this->netto).'\', 
+									\''.$this->sp->db->escape($this->tax_type).'\', 
+									\''.$this->sp->db->escape($this->tax_value).'\', 
+									\''.$this->sp->db->escape($this->date).'\', 
+									\''.$this->sp->db->escape($this->state).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -66,7 +74,14 @@
 			} else {
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'bookie_entries SET
-						
+						`user_id` = \''.$this->sp->db->escape($this->ownerId).'\', 
+						`notes` = \''.$this->sp->db->escape($this->notes).'\', 
+						`brutto` = \''.$this->sp->db->escape($this->brutto).'\', 
+						`netto` = \''.$this->sp->db->escape($this->netto).'\', 
+						`tax_type` = \''.$this->sp->db->escape($this->tax_type).'\', 
+						`tax_value` = \''.$this->sp->db->escape($this->tax_value).'\', 
+						`date` = \''.$this->sp->db->escape($this->date).'\', 
+						`state` = \''.$this->sp->db->escape($this->state).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -76,7 +91,7 @@
 		 *	Deletes the contact data item from the database
 		 */
 		public function delete(){
-			
+			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_entries WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
 		}
 		 
 		/**

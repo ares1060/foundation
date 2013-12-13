@@ -21,7 +21,7 @@
 		 */
 	
 		public static function getPartsForInvoice($invoiceId) {
-			
+
 		}
 	
 		/**
@@ -35,8 +35,12 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_invoice_parts 
-								() VALUES 
+								(`invoice_id`, `notes`, `amount`, `date`) VALUES 
 								(
+									\''.$this->sp->db->escape($this->invoiceId).'\',
+									\''.$this->sp->db->escape($this->notes).'\',
+									\''.$this->sp->db->escape($this->amount).'\',
+									\''.$this->sp->db->escape($this->date).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -48,7 +52,10 @@
 			} else {
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'bookie_invoice_parts SET
-						
+						`invoice_id` = \''.$this->sp->db->escape($this->invoiceId).'\',
+						`notes` = \''.$this->sp->db->escape($this->notes).'\',
+						`amount` = \''.$this->sp->db->escape($this->amount).'\',
+						`date` = \''.$this->sp->db->escape($this->date).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -58,7 +65,7 @@
 		 *	Deletes the contact data item from the database
 		 */
 		public function delete(){
-			
+			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_receipts WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
 		}
 		 
 		 

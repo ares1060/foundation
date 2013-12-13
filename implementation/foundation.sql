@@ -1,18 +1,88 @@
 -- phpMyAdmin SQL Dump
--- version 3.4.5
+-- version 4.0.3
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 06. Dez 2013 um 23:40
--- Server Version: 5.5.16
--- PHP-Version: 5.3.8
+-- Erstellungszeit: 13. Dez 2013 um 16:28
+-- Server Version: 5.6.11-log
+-- PHP-Version: 5.5.0
 
-SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 --
 -- Datenbank: `foundation`
 --
+CREATE DATABASE IF NOT EXISTS `foundation` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE `foundation`;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_bookie_entries`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_bookie_entries` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `notes` text NOT NULL,
+  `brutto` decimal(10,0) NOT NULL,
+  `netto` decimal(10,0) NOT NULL,
+  `tax_type` varchar(30) NOT NULL,
+  `tax_value` decimal(10,0) NOT NULL,
+  `date` date NOT NULL,
+  `state` varchar(30) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_bookie_invoices`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_bookie_invoices` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `entry_id` int(11) NOT NULL,
+  `contact_id` int(11) NOT NULL,
+  `alt_dst_adr` varchar(200) NOT NULL,
+  `alt_src_adr` varchar(200) NOT NULL,
+  `number` varchar(100) NOT NULL,
+  `pay_date` date NOT NULL,
+  `reminder_date` datetime NOT NULL,
+  `dunnings` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_bookie_invoice_parts`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_bookie_invoice_parts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `invoice_id` int(11) NOT NULL,
+  `notes` text NOT NULL,
+  `amount` decimal(10,0) NOT NULL,
+  `date` date NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_bookie_receipts`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_bookie_receipts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `entry_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `number` varchar(100) NOT NULL,
+  `account` varchar(30) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 

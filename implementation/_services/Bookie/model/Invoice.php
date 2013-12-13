@@ -15,19 +15,35 @@
 		private $altSrcAddress;
 		private $altDstAddress;
 		private $number;
+		/**
+		 * @var DateTime
+		 */
 		private $payDate;
+		/**
+		* @var DateTime
+		*/
 		private $reminderDate;
 		private $dunnings;
 	
-		public function __construct($entryId = -1, $contactId = -1, $altSrcAddress = '', $altDstAddress = '', $number = '', $payDate = '', $reminderDate = '', $dunnings = '') {
+		/**
+		 * @param int $entryId
+		 * @param int $contactId
+		 * @param string $altSrcAddress
+		 * @param string $altDstAddress
+		 * @param string $number
+		 * @param DateTime $payDate
+		 * @param DateTime $reminderDate
+		 * @param string $dunnings
+		 */
+		public function __construct($entryId = -1, $contactId = -1, $altSrcAddress = '', $altDstAddress = '', $number = '', $payDate = null, $reminderDate = null, $dunnings = '') {
             
 			$this->entryId = $entryId;
 			$this->contactId = $contactId;
 			$this->altSrcAddress = $altSrcAddress;
 			$this->altDstAddress = $altDstAddress;
 			$this->number = $number;
-			$this->payDate = $payDate;
-			$this->reminderDate = $reminderDate;
+			$this->payDate = (!$payDate)?new DateTime():$payDate;
+			$this->reminderDate = (!$reminderDate)?new DateTime():$reminderDate;
 			$this->dunnings = $dunnings;
 			
 			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_invoices', array());
@@ -50,22 +66,43 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $invoice) {
-				$ivo = new Invoice($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum']);
+				$ivo = new Invoice($invoice['entry_id'], $invoice['contact_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
 				$ivo->setId($invoice['id']);
 				$out[] = $ivo;
 			}
 			return $out;
 		}
 		
+		/**
+		 * Fetches all invoices for a given Bookie Entry id
+		 * @param int $entryId The id of the linked Bookie Entry
+		 * @return Invoice[]
+		 */
 		public static function getInvoicesForEntry($entryId) {
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices WHERE `entry_id` = \''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
 			$out = array();
 			foreach($result as $invoice) {
-				$ivo = new Invoice($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum']);
+				$ivo = new Invoice($invoice['entry_id'], $invoice['contact_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
 				$ivo->setId($invoice['id']);
 				$out[] = $ivo;
 			}
 			return $out;
+		}
+		
+		/**
+		 * Fetches the Invoice with the given id from the database
+		 * @param int $invoiceId The id of the Invoice
+		 * @return Invoice|NULL
+		 */
+		public static function getInvoice($invoiceId) {
+			$invoice = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices WHERE id =\''.ServiceProvider::getInstance()->db->escape($invoiceId).'\';');
+			if($invoice){
+				$ivo = new Invoice($invoice['entry_id'], $invoice['contact_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
+				$ivo->setId($invoice['id']);
+				return $ivo;
+			} else {
+				return null;
+			}
 		}
 		
 		/**
@@ -86,8 +123,8 @@
 									\''.$this->sp->db->escape($this->altDstAddress).'\',
 									\''.$this->sp->db->escape($this->altSrcAddress).'\',
 									\''.$this->sp->db->escape($this->number).'\',
-									\''.$this->sp->db->escape($this->payDate).'\',
-									\''.$this->sp->db->escape($this->reminderDate).'\',
+									\''.$this->sp->db->escape($this->payDate->format('Y-m-d')).'\',
+									\''.$this->sp->db->escape($this->reminderDate->format('Y-m-d H:i:s')).'\',
 									\''.$this->sp->db->escape($this->dunnings).'\'
 								);');
 				if($succ) {
@@ -105,8 +142,8 @@
 						`alt_dst_adr` = \''.$this->sp->db->escape($this->altDstAddress).'\',
 						`alt_src_adr` = \''.$this->sp->db->escape($this->altSrcAddress).'\',
 						`number` = \''.$this->sp->db->escape($this->number).'\',
-						`pay_date` = \''.$this->sp->db->escape($this->payDate).'\',
-						`reminder_date` = \''.$this->sp->db->escape($this->reminderDate).'\',
+						`pay_date` = \''.$this->sp->db->escape($this->payDate->format('Y-m-d')).'\',
+						`reminder_date` = \''.$this->sp->db->escape($this->reminderDate->format('Y-m-d H:i:s')).'\',
 						`dunnings` = \''.$this->sp->db->escape($this->dunnings).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
@@ -120,6 +157,15 @@
 			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_invoices WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
 		}
 		 
+		/**
+		 * Adds a dunning to the list of dunnings as a date Y-m-d
+		 * @param DateTime $date
+		 */
+		public function addDunning($date=null){
+			if(!$date) $date = new DateTime();
+			if($this->dunnings != '') $this->dunnings .= ',';
+			$this->dunnings .= $date->format('Y-m-d');
+		}
 		 
 		/**
 		 * GETTER & SETTER
@@ -130,7 +176,13 @@
 		public function setAltSrcAddress($address) { $this->altSrcAddress = $adress; return $this; }
 		public function setAltDstAddress($address) { $this->altDstAddress = $adress; return $this; }
 		public function setNumber($numer) { $this->number = $number; return $this; }
+		/**
+		 * @param DateTime $date
+		 */
 		public function setPayDate($date) { $this->date = $date; return $this; }
+		/**
+		* @param DateTime $date
+		*/
 		public function setReminderDate($date) { $this->reminderDate = $date; return $this; }
 		public function setDunnings($dunnings) { $this->dunnings = $dunnings; return $this; }
 		
@@ -155,8 +207,15 @@
 		public function getAltSrcAddress(){ return $this->altSrcAddress; }
 		public function getAltDstAddress(){ return $this->dstSrcAddress; }
 		public function getNumber(){ return $this->number; }
+		/**
+		 * @return DateTime
+		 */
 		public function getPayDate(){ return $this->payDate; }
+		/**
+		* @return DateTime
+		*/
 		public function getReminderDate(){ return $this->reminderDate; }
 		public function getDunnings(){ return $this->dunnings; }
+		public function getDunningCount(){ return count(explode(',', $this->dunnings)); }
 	}
 ?>

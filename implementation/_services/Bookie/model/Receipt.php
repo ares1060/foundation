@@ -7,11 +7,20 @@
 	
 		private $entryId;
 		private $entry;
+		/**
+		 * @var DateTime
+		 */
 		private $date;
 		private $number;
 		private $account;
 	
-		public function __construct() {
+		public function __construct($entryId = -1, $date = null, $number = '', $account = '') {
+			
+			$this->entryId = $entryId;
+			$this->date = (!$date)?new DateTime():$date;
+			$this->number = $number;
+			$this->account = $account;
+			
             parent::__construct(ServiceProvider::get()->db->prefix.'bookie_receipts', array());
         }
 		
@@ -19,12 +28,34 @@
 		 * STATIC METHODS
 		 */
 		 
-		public static function getAllReceipts() {
-		
+       	/**
+       	 * Fetches all Receipts matching the parameters
+       	 * @param string $insertSQL
+       	 * @param int $from
+       	 * @param int $rows
+       	 */
+		public static function getReceipts($insertSQL = '', $from = 0, $rows = -1){
+			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
+			else $limit = '';
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_receipts '.$insertSQL.' '.$limit.';');
+			$out = array();
+			foreach($result as $receipt) {
+				$ro = new Receipt($receipt['entry_id'], $receipt['date'], $receipt['number'], $receipt['account']);
+				$ro->setId($receipt['id']);
+				$out[] = $ro;
+			}
+			return $out;
 		}
 		
 		public static function getReceiptsForEntry($entryId) {
-		
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_receipts WHERE `entry_id` = \''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
+			$out = array();
+			foreach($result as $receipt) {
+				$ro = new Receipt($receipt['entry_id'], $receipt['date'], $receipt['number'], $receipt['account']);
+				$ro->setId($receipt['id']);
+				$out[] = $ro;
+			}
+			return $out;
 		}
 	
 		/**
@@ -41,7 +72,7 @@
 								(`entry_id`, `date`, `number`, `account`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->entryId).'\',
-									\''.$this->sp->db->escape($this->date).'\',
+									\''.$this->sp->db->escape($this->date->format('Y-m-d')).'\',
 									\''.$this->sp->db->escape($this->number).'\',
 									\''.$this->sp->db->escape($this->account).'\'
 								);');
@@ -56,7 +87,7 @@
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'bookie_receipts SET
 						`entry_id` = \''.$this->sp->db->escape($this->entryId).'\', 
-						`date` = \''.$this->sp->db->escape($this->date).'\', 
+						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 						`number` = \''.$this->sp->db->escape($this->number).'\',
 						`account` = \''.$this->sp->db->escape($this->account).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
@@ -77,6 +108,9 @@
 		 */
 		private function setId($id) { $this->id = $id; return $this; }
 		public function setEntry($entryId) { $this->entryId = $entryId; $this->entry = null; return $this; }
+		/**
+		 * @param DateTime $date
+		 */
 		public function setDate($date) { $this->date = $date; return $this; }
 		public function setNumber($number) { $this->number = $number; return $this; }
 		public function setAccount($account) { $this->account = $account; return $this; }
@@ -91,6 +125,9 @@
 			return $this->entry;
 		}
 		public function getEntryId(){ return $this->entryId; }
+		/**
+		 * @return DateTime
+		 */
 		public function getDate() { return $this->date; }
 		public function getNumber() { return $this->number; }
 		public function getAccount() { return $this->account; }

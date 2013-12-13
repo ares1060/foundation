@@ -218,10 +218,21 @@
 				
 				if(isset($args['data'])){
 					$cd = $contact->getContactData();
+					$hk = array();
+					//save values
 					foreach($args['data'] as $k => $d){
 						$cdi = $cd->opt($k, $d, true);
 						$cdi->setValue($d);
 						$cdi->save();
+						$hk[] = $k;
+					}
+					
+					//remove old values
+					$keys = $cd->getKeys();
+					foreach($keys as $k){
+						if(!in_array($k, $hk)){
+							$cd->del($k);
+						}
 					}
 				}
 				

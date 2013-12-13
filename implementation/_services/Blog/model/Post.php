@@ -10,13 +10,16 @@
 		private $ownerId;
 		private $text;
 		private $title;
+		/**
+		 * @var DateTime
+		 */
 		private $date;
 	
-		public function __construct($owner = -1, $text='', $title='', $date='') {
+		public function __construct($owner = -1, $text='', $title='', $date=null) {
             $this->ownerId = $owner;
 			$this->text = $text;
 			$this->title = $title;
-			$this->date = $date;
+			$this->date = (!$date)?new DateTime():$date;
 			parent::__construct(ServiceProvider::get()->db->prefix.'blogpost', array());
         }
 		
@@ -77,6 +80,9 @@
 		public function setOwner($id) { $this->ownerId = $id; $this->ownerUser = null; return $this; }
 		public function setText($text) { $this->text = $text; return $this; }
 		public function setTitle($title) { $this->title = $title; return $this; }
+		/**
+		 * @param DateTime $date
+		 */
 		public function setDate($date) { $this->date = $date; return $this; }	
 		
 		
@@ -91,6 +97,9 @@
 		public function getOwnerId(){ return $this->ownerId; }
 		public function getText() { return $this->text; }
 		public function getTitle() { return $this->title; }
+		/**
+		 * @return DateTime
+		 */
 		public function getDate() { return $this->date; }
 	
 	}

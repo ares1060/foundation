@@ -91,6 +91,22 @@
 		}
 		
 		/**
+		 * Deletes the ContactDataItem with the given key
+		 * @param string $key
+		 */
+		public function del($key){
+			if(isset($this->data[$key])) {
+				$ok = $this->data[$key]->delete();
+				if($ok) {
+					unset($this->data[$key]);
+					unset($this->keys[array_search($key, $this->keys)]);
+				}
+				return $ok;
+			}
+			else return true;
+		}
+		
+		/**
 		 * Returns true if the contact has a ContactDataItem for the given key
 		 * @param string $key The name of the corresponding UserDataField
 		 * @return bool True if available

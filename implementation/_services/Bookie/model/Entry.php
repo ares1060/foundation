@@ -3,8 +3,8 @@
 	use at\foundation\core\User\model\User;
 	use at\foundation\core\ServiceProvider;
 	
-	require_once $GLOBALS['config']['root'].'_services/Contacts/model/Receipt.php';
-	require_once $GLOBALS['config']['root'].'_services/Contacts/model/Invoice.php';
+	require_once $GLOBALS['config']['root'].'_services/Bookie/model/Receipt.php';
+	require_once $GLOBALS['config']['root'].'_services/Bookie/model/Invoice.php';
 	
 	class Entry extends core\BaseModel {
 		
@@ -16,13 +16,15 @@
 		private $netto;
 		private $taxType;
 		private $taxValue;
+		private $contacts;
+		private $contactIds;
 		/**
 		 * @var DateTime
 		 */
 		private $date;
 		private $state;
 	
-		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '') {
+		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open') {
             $this->ownerId = $owner;
 			$this->brutto = $brutto;
 			$this->netto = $netto;
@@ -30,6 +32,7 @@
 			$this->taxValue = $taxValue;
 			$this->date = (!$date)?new DateTime():$date;
 			$this->notes = $notes;
+			$this->state = $state;
 			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_entries', array());
         }
 		
@@ -45,16 +48,26 @@
          * @return Entry[]
          */
 		public static function getEntries($insertSQL = '', $from = 0, $rows = -1){
-			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
+			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).','.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
-			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries '.$insertSQL.' '.$limit.';');
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $entry) {
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes']);
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state']);
 				$eo->setId($entry['id']);
 				$out[] = $eo;
 			}
 			return $out;
+		}
+		
+		/**
+		* Fetches the count of all matching Entries from the database
+		* @param string $insertSQL
+		* @return int
+		*/
+		public static function getEntryCount($insertSQL = ''){
+			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.';');
+			return $result['count'];
 		}
 		
 		/**
@@ -64,13 +77,24 @@
 		 */
 		public static function getEntry($entryId) {
 			$entry = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries WHERE id =\''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
-			if($contact){
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes']);
+			if($entry){
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state']);
 				$eo->setId($entry['id']);
 				return $eo;
 			} else {
 				return null;
 			}
+		}
+		
+		public static function getContactsForEntry($entryId, $onlyIds = false){
+			if(!$onlyIds) require_once $GLOBALS['config']['root'].'_services/Contacts/model/Contact.php';
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entry_contacts WHERE `entry_id` = '.ServiceProvider::getInstance()->db->escape($entryId).';');
+			$out = array();
+			foreach($result as $entry) {
+				if($onlyIds) $out[] = $result['contact_id'];
+				else $out[] = Contact::getContact($result['contact_id']);
+			}
+			return $out;
 		}
 	
 		/**
@@ -119,7 +143,7 @@
 		}
 		
 		/**
-		 *	Deletes the contact data item from the database
+		 *	Deletes the entry data item from the database
 		 */
 		public function delete(){
 			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_entries WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
@@ -130,7 +154,7 @@
 		 * @return Entry Returns a reference to this instance of Entry
 		 */
 		public function recalcNetto(){
-			$this->netto = $this->brutto / (1 + $this->taxValue);
+			$this->netto = round($this->brutto / (1 + $this->taxValue) * 100) * 0.01;
 			return $this;
 		}
 		
@@ -139,7 +163,7 @@
 		 * @return Entry Returns a reference to this instance of Entry
 		 */
 		public function recalcBrutto(){
-			$this->brutto = $this->netto * (1 + $this->taxValue);
+			$this->brutto = round($this->netto * (1 + $this->taxValue) * 100) * 0.01;
 			return $this;
 		}
 		 
@@ -176,6 +200,7 @@
 		public function getNetto() { return $this->netto; }
 		public function getTaxType() { return $this->taxType; }
 		public function getTaxValue() { return $this->taxValue; }
+		public function getTaxAmount() { return round($this->netto * $this->taxValue * 100)*0.01; }
 		public function getNotes() { return $this->notes; }
 		/**
 		 * @return DateTime
@@ -183,5 +208,19 @@
 		public function getDate() { return $this->date; }
 		public function getState() { return $this->state; }
 	
+		public function getContacts(){
+			if(!$this->contacts) {
+				$this->contacts = self::getContactsForEntry($this->id);
+			}
+			return $this->contacts;
+		}
+		
+		public function getContactIds(){
+			if(!$this->contactIds) {
+				$this->contactIds = self::getContactsForEntry($this->id, true);
+			}
+			return $this->contactIds;
+		}
+		
 	}
 ?>

@@ -84,7 +84,7 @@
 		}
 		
 		/**
-		 *	Deletes the contact data item from the database
+		 *	Deletes the invoice part data item from the database
 		 */
 		public function delete(){
 			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_receipts WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');

@@ -45,7 +45,7 @@
 			
 			$contacts = Contact::getContacts($whereSQL, $from, $rows);
 			if(isset($args['mode']) && $args['mode'] == 'short'){
-				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_short_list');
+				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_shortlist');
 				foreach($contacts as $contact){
 					$sv = $view->showSubView('row');
 					$sv->addValue('firstname', $contact->getFirstName());

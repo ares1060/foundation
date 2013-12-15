@@ -3,15 +3,13 @@
 	use at\foundation\core\User\model\User;
 	use at\foundation\core\ServiceProvider;
 	
-	require_once $GLOBALS['config']['root'].'_services/Contacts/model/InvoicePart.php';
+	require_once $GLOBALS['config']['root'].'_services/Bookie/model/InvoicePart.php';
 	
 	class Invoice extends core\BaseModel {
 	
 		private $id;
 		private $entryId;
 		private $entry;
-		private $contactId;
-		private $contact;
 		private $altSrcAddress;
 		private $altDstAddress;
 		private $number;
@@ -27,7 +25,6 @@
 	
 		/**
 		 * @param int $entryId
-		 * @param int $contactId
 		 * @param string $altSrcAddress
 		 * @param string $altDstAddress
 		 * @param string $number
@@ -35,10 +32,9 @@
 		 * @param DateTime $reminderDate
 		 * @param string $dunnings
 		 */
-		public function __construct($entryId = -1, $contactId = -1, $altSrcAddress = '', $altDstAddress = '', $number = '', $payDate = null, $reminderDate = null, $dunnings = '') {
+		public function __construct($entryId = -1, $altSrcAddress = '', $altDstAddress = '', $number = '', $payDate = null, $reminderDate = null, $dunnings = '') {
             
 			$this->entryId = $entryId;
-			$this->contactId = $contactId;
 			$this->altSrcAddress = $altSrcAddress;
 			$this->altDstAddress = $altDstAddress;
 			$this->number = $number;
@@ -66,7 +62,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $invoice) {
-				$ivo = new Invoice($invoice['entry_id'], $invoice['contact_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
+				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
 				$ivo->setId($invoice['id']);
 				$out[] = $ivo;
 			}
@@ -82,7 +78,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices WHERE `entry_id` = \''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
 			$out = array();
 			foreach($result as $invoice) {
-				$ivo = new Invoice($invoice['entry_id'], $invoice['contact_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
+				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
 				$ivo->setId($invoice['id']);
 				$out[] = $ivo;
 			}
@@ -97,7 +93,7 @@
 		public static function getInvoice($invoiceId) {
 			$invoice = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices WHERE id =\''.ServiceProvider::getInstance()->db->escape($invoiceId).'\';');
 			if($invoice){
-				$ivo = new Invoice($invoice['entry_id'], $invoice['contact_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
+				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
 				$ivo->setId($invoice['id']);
 				return $ivo;
 			} else {
@@ -116,10 +112,9 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_invoices 
-								(`entry_id`, `contact_id`, `alt_dst_adr`, `alt_src_adr`, `number`, `pay_date`, `reminder_date`, `dunnings`) VALUES 
+								(`entry_id`, `alt_dst_adr`, `alt_src_adr`, `number`, `pay_date`, `reminder_date`, `dunnings`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->entryId).'\',
-									\''.$this->sp->db->escape($this->contactId).'\',
 									\''.$this->sp->db->escape($this->altDstAddress).'\',
 									\''.$this->sp->db->escape($this->altSrcAddress).'\',
 									\''.$this->sp->db->escape($this->number).'\',
@@ -138,7 +133,6 @@
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'bookie_invoices SET
 						`entry_id` = \''.$this->sp->db->escape($this->entryId).'\',
-						`contact_id` = \''.$this->sp->db->escape($this->contactId).'\',
 						`alt_dst_adr` = \''.$this->sp->db->escape($this->altDstAddress).'\',
 						`alt_src_adr` = \''.$this->sp->db->escape($this->altSrcAddress).'\',
 						`number` = \''.$this->sp->db->escape($this->number).'\',
@@ -151,7 +145,7 @@
 		}
 		
 		/**
-		 *	Deletes the contact data item from the database
+		 *	Deletes the invoice data item from the database
 		 */
 		public function delete(){
 			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_invoices WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
@@ -172,7 +166,6 @@
 		 */
 		private function setId($id) { $this->id = $id; return $this; }
 		public function setEntry($entryId) { $this->entryId = $entryId; $this->entry = null; return $this; }
-		public function setContact($contactId) { $this->contactId = $contactId; $this->contact = null; return $this; }
 		public function setAltSrcAddress($address) { $this->altSrcAddress = $adress; return $this; }
 		public function setAltDstAddress($address) { $this->altDstAddress = $adress; return $this; }
 		public function setNumber($numer) { $this->number = $number; return $this; }
@@ -196,14 +189,6 @@
 		}
 		public function getEntryId(){ return $this->entryId; }
 		
-		/**
-		 * @return Contact
-		 */
-		public function getContact(){ 
-			if(!$this->contact == null) $this->contact = Contact::getContact($this->contactId);
-			return $this->contact;
-		}
-		public function getContactId(){ return $this->contactId; }
 		public function getAltSrcAddress(){ return $this->altSrcAddress; }
 		public function getAltDstAddress(){ return $this->dstSrcAddress; }
 		public function getNumber(){ return $this->number; }

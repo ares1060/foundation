@@ -38,7 +38,7 @@
 			if(isset($args['state']) && is_array($args['state']) && count($args['state']) > 0){
 				$values = '';
 				foreach($args['state'] as $val){
-					$values .= $this->sp->db->escape($args['state']).',';
+					$values .= '\''.$this->sp->db->escape($val).'\',';
 				}
 				$values = substr($values, 0, -1);
 				$whereSQL .= ' AND `state` IN ('.$values.')';
@@ -46,22 +46,26 @@
 			
 			if(isset($args['amount_from']) && $args['amount_from'] != ''){
 				$args['amount_from'] = $this->sp->db->escape($args['amount_from']);
-				$whereSQL .= ' AND `netto` > '.$args['amount_from'];
+				$whereSQL .= ' AND `netto` >= '.$args['amount_from'];
 			}
 			
 			if(isset($args['amount_to']) && $args['amount_to'] != ''){
 				$args['amount_to'] = $this->sp->db->escape($args['amount_to']);
-				$whereSQL .= ' AND `netto` < '.$args['amount_to'];
+				$whereSQL .= ' AND `netto` <= '.$args['amount_to'];
 			}
 			
 			if(isset($args['date_from']) && $args['date_from'] != ''){
 				$args['date_from'] = $this->sp->db->escape($args['date_from']);
-				$whereSQL .= ' AND `date` > '.$args['date_from'];
+				$whereSQL .= ' AND `date` >= \''.$args['date_from'].'\'';
 			}
 				
 			if(isset($args['date_to']) && $args['date_to'] != ''){
 				$args['date_to'] = $this->sp->db->escape($args['date_to']);
-				$whereSQL .= ' AND `date` < '.$args['date_to'];
+				$whereSQL .= ' AND `date` <= \''.$args['date_to'].'\'';
+			}
+			
+			if(isset($args['dunned'])){
+				$whereSQL .= ' AND `dunnings` != \'\'';
 			}
 			
 			$from = 0;
@@ -83,7 +87,7 @@
 				$whereSQL = 'JOIN '.$this->sp->db->prefix.'bookie_entry_contacts WHERE ) AS c ON c.entry_id = e.id '.$whereSQL;
 				$whereSQL .= ' AND `c.contact_id` IN ('.$values.') GROUP BY e.id';
 			}
-			
+						
 			$entries = Entry::getEntries($whereSQL, $from, $rows);
 
 			$view = new core\Template\ViewDescriptor('_services/Bookie/entry_list');	
@@ -98,6 +102,11 @@
 				$footer->addValue('pages', $pages);
 			}
 			
+			$totals = Entry::getEntrySums($whereSQL);
+			
+			$view->addValue('total_in', $totals['brutto_in']);
+			$view->addValue('total_out', $totals['brutto_out']);
+			$view->addValue('total', $totals['brutto_out'] + $totals['brutto_in']);
 
 			foreach($entries as $entry){
 				$sv = $view->showSubView('row');

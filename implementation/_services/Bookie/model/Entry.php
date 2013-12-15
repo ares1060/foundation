@@ -59,6 +59,17 @@
 			}
 			return $out;
 		}
+
+		/**
+		* Fetches the amount sums of all matching Entries from the database
+		* @param string $insertSQL
+		* @return array Associative array wit hfollowing fields: brutto_in, netto_in, brutto_out, netto_out
+		*/
+		public static function getEntrySums($insertSQL = ''){
+			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(CASE WHEN e.brutto > 0 THEN e.brutto ELSE 0 END) AS brutto_in, SUM(CASE WHEN e.netto > 0 THEN e.netto ELSE 0 END) AS netto_in, SUM(CASE WHEN e.brutto < 0 THEN e.brutto ELSE 0 END) AS brutto_out, SUM(CASE WHEN e.netto < 0 THEN e.netto ELSE 0 END) AS netto_out FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.';');
+			return $result;
+		}
+		
 		
 		/**
 		* Fetches the count of all matching Entries from the database

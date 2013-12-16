@@ -81,13 +81,13 @@
 			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
 				$values = '';
 				foreach($args['contact_filter'] as $val){
-					$values .= $this->sp->db->escape($args['contact_filter']).',';
+					$values .= $this->sp->db->escape($val).',';
 				}
 				$values = substr($values, 0, -1);
-				$whereSQL = 'JOIN '.$this->sp->db->prefix.'bookie_entry_contacts WHERE ) AS c ON c.entry_id = e.id '.$whereSQL;
-				$whereSQL .= ' AND `c.contact_id` IN ('.$values.') GROUP BY e.id';
+				$whereSQL = 'JOIN '.$this->sp->db->prefix.'bookie_entry_contacts AS c ON c.entry_id = e.id '.$whereSQL;
+				$whereSQL .= ' AND contact_id IN ('.$values.') GROUP BY e.id';
 			}
-						
+			
 			$entries = Entry::getEntries($whereSQL, $from, $rows);
 
 			$view = new core\Template\ViewDescriptor('_services/Bookie/entry_list');	

@@ -48,11 +48,12 @@
 				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_shortlist');
 				foreach($contacts as $contact){
 					$sv = $view->showSubView('row');
+					$sv->addValue('id', $contact->getId());
 					$sv->addValue('firstname', $contact->getFirstName());
 					$sv->addValue('lastname', $contact->getlastName());
 					$sv->addValue('email', $contact->getEmail());
 					$sv->addValue('phone', $contact->getPhone());
-					$sv->addValue('image', ($contact->getImage() == '')?'blank.png':$contact->getImage());
+					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$contact->getImage()));
 				}
 			} else {
 				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_list');	

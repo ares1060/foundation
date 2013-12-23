@@ -102,6 +102,20 @@
 		}
 		
 		/**
+		 * Counts the number of invoices between the given dates
+		 * @param DateTime $fromDate
+		 * @param DateTime $toDate
+		 */
+		public static function getInvoiceCount($fromDate, $toDate) {
+			$count = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices AS i LEFT JOIN '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e ON e.id = i.entry_id WHERE e.date >= \''.ServiceProvider::getInstance()->db->escape($fromDate->format('Y-m-d')).'\' AND e.date <= \''.ServiceProvider::getInstance()->db->escape($toDate->format('Y-m-d')).'\';');
+			if($count && isset($count['count'])){
+				return $count['count'];
+			} else {
+				return 0;
+			}
+		}
+		
+		/**
 		 * INSTANCE METHODS
  		 */
 		 
@@ -166,9 +180,9 @@
 		 */
 		private function setId($id) { $this->id = $id; return $this; }
 		public function setEntry($entryId) { $this->entryId = $entryId; $this->entry = null; return $this; }
-		public function setAltSrcAddress($address) { $this->altSrcAddress = $adress; return $this; }
-		public function setAltDstAddress($address) { $this->altDstAddress = $adress; return $this; }
-		public function setNumber($numer) { $this->number = $number; return $this; }
+		public function setAltSrcAddress($address) { $this->altSrcAddress = $address; return $this; }
+		public function setAltDstAddress($address) { $this->altDstAddress = $address; return $this; }
+		public function setNumber($number) { $this->number = $number; return $this; }
 		/**
 		 * @param DateTime $date
 		 */
@@ -184,13 +198,13 @@
 		 * @return Entry
 		 */
 		public function getEntry(){ 
-			if(!$this->entry == null) $this->entry = Entry::getEntry($this->entryId);
+			if($this->entry == null) $this->entry = Entry::getEntry($this->entryId);
 			return $this->entry;
 		}
 		public function getEntryId(){ return $this->entryId; }
 		
 		public function getAltSrcAddress(){ return $this->altSrcAddress; }
-		public function getAltDstAddress(){ return $this->dstSrcAddress; }
+		public function getAltDstAddress(){ return $this->altDstAddress; }
 		public function getNumber(){ return $this->number; }
 		/**
 		 * @return DateTime

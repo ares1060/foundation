@@ -102,8 +102,8 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entry_contacts WHERE `entry_id` = '.ServiceProvider::getInstance()->db->escape($entryId).';');
 			$out = array();
 			foreach($result as $entry) {
-				if($onlyIds) $out[] = $result['contact_id'];
-				else $out[] = Contact::getContact($result['contact_id']);
+				if($onlyIds) $out[] = $entry['contact_id'];
+				else $out[] = Contact::getContact($entry['contact_id']);
 			}
 			return $out;
 		}
@@ -125,8 +125,8 @@
 									\''.$this->sp->db->escape($this->notes).'\', 
 									\''.$this->sp->db->escape($this->brutto).'\', 
 									\''.$this->sp->db->escape($this->netto).'\', 
-									\''.$this->sp->db->escape($this->tax_type).'\', 
-									\''.$this->sp->db->escape($this->tax_value).'\', 
+									\''.$this->sp->db->escape($this->taxType).'\', 
+									\''.$this->sp->db->escape($this->taxValue).'\', 
 									\''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 									\''.$this->sp->db->escape($this->state).'\'
 								);');
@@ -144,8 +144,8 @@
 						`notes` = \''.$this->sp->db->escape($this->notes).'\', 
 						`brutto` = \''.$this->sp->db->escape($this->brutto).'\', 
 						`netto` = \''.$this->sp->db->escape($this->netto).'\', 
-						`tax_type` = \''.$this->sp->db->escape($this->tax_type).'\', 
-						`tax_value` = \''.$this->sp->db->escape($this->tax_value).'\', 
+						`tax_type` = \''.$this->sp->db->escape($this->taxType).'\', 
+						`tax_value` = \''.$this->sp->db->escape($this->taxValue).'\', 
 						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 						`state` = \''.$this->sp->db->escape($this->state).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
@@ -184,10 +184,10 @@
 		 */
 		private function setId($id) { $this->id = $id; return $this; }
 		public function setOwner($id) { $this->ownerId = $id; $this->ownerUser = null; return $this; }
-		public function setBrutto($value, $recalcNetto = false) { $this->brutto = $brutto; return (recalcNetto)?$this->recalcNetto():$this; }
-		public function setNetto($value, $recalcBrutto = false) { $this->netto = $netto; return (recalcBrutto)?$this->recalcBrutto():$this; }
+		public function setBrutto($value, $recalcNetto = false) { $this->brutto = $value; return (recalcNetto===true)?$this->recalcNetto():$this; }
+		public function setNetto($value, $recalcBrutto = false) { $this->netto = $value; return (recalcBrutto===true)?$this->recalcBrutto():$this; }
 		public function setTaxType($type) { $this->taxType = $type; return $this; }
-		public function setTaxValue($value) { $this->taxValue = $type; return $this; }
+		public function setTaxValue($value) { $this->taxValue = $value; return $this; }
 		public function setNotes($notes) { $this->notes = $notes; return $this; }
 		/**
 		 * @param DateTime $date
@@ -195,8 +195,17 @@
 		public function setDate($date) { $this->date = $date; return $this; }
 		public function setState($state) { $this->state = $state; return $this; }
 		
+		public function addContact($contactId){
+			$this->contacts = null;
+			$this->contactIds[] = $contactId;
+			return $this->sp->db->fetchBool('INSERT INTO '.ServiceProvider::get()->db->prefix.'bookie_entry_contacts (`entry_id`,`contact_id`) VALUES (\''.ServiceProvider::get()->db->escape($this->id).'\', \''.ServiceProvider::get()->db->escape($contactId).'\');');
+		}
 		
-		
+		public function removeContact($contactId){
+			$this->contacts = null;
+			$this->contactIds = null;
+			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_entry_contacts WHERE entry_id=\''.ServiceProvider::get()->db->escape($this->id).'\' AND contact_id=\''.ServiceProvider::get()->db->escape($contactId).'\';');
+		}
 		
 		public function getId(){ return $this->id; }
 		/**

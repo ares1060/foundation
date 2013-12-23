@@ -43,7 +43,7 @@
 						$image = $this->sp->fh->openFile($this->sp->fh->getPath($cacheName), 'r');
 						echo fread($image, filesize($this->sp->fh->getPath($cacheName)));
 						fclose($image);
-					} else {
+					} else if (isset($args['width']) && isset($args['height']) && $args['width'] > 0 && $args['height'] > 0) {
 						$image = $this->sp->fh->openFile($args['path'], 'r');
 						echo fread($image, filesize($this->sp->fh->getPath($args['path'])));
 						fclose($image);

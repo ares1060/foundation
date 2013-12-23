@@ -49,11 +49,13 @@
 				foreach($contacts as $contact){
 					$sv = $view->showSubView('row');
 					$sv->addValue('id', $contact->getId());
-					$sv->addValue('firstname', $contact->getFirstName());
-					$sv->addValue('lastname', $contact->getlastName());
+					$svn = $sv->showSubView('nameonly');
+					$svn->addValue('firstname', $contact->getFirstName());
+					$svn->addValue('lastname', $contact->getlastName());
 					$sv->addValue('email', $contact->getEmail());
 					$sv->addValue('phone', $contact->getPhone());
-					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$contact->getImage()));
+					$sv->addValue('action_icon', (isset($args['actionicon']))?$args['actionicon']:'glyphicon glyphicon-filter');
+					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 				}
 			} else {
 				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_list');	
@@ -94,7 +96,7 @@
 					$sv->addValue('lastname', $contact->getlastName());
 					$sv->addValue('email', $contact->getEmail());
 					$sv->addValue('phone', $contact->getPhone());
-					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$contact->getImage()));
+					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 					$colContent .= $sv->render();
 					$count++;
 				}
@@ -120,7 +122,7 @@
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
-					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$contact->getImage()));
+					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 						
 					$cd = $contact->getContactData();
 					$cdk = $cd->getKeys();
@@ -160,7 +162,7 @@
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
-					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$contact->getImage()));
+					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 		
 					$cd = $contact->getContactData();
 					$cdk = $cd->getKeys();

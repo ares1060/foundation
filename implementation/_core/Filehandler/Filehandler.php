@@ -1,9 +1,9 @@
 <?php
     
-	namespace at\foundation\core\Filehandler;
+	namespace at\foundation\core\FileHandler;
 	use at\foundation\core;
 	
-	class Filehandler extends core\AbstractService implements core\IService {
+	class FileHandler extends core\AbstractService implements core\IService {
         /**
          * protected $name;
          * protected $sp;

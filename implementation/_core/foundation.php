@@ -3,6 +3,8 @@
 	
 	use at\foundation\core;
 	
+	date_default_timezone_set('Europe/Vienna');
+	
 	//setup autoloader for core classes and core services
 	spl_autoload_register(function ($class) {
 		//$trace = debug_backtrace();

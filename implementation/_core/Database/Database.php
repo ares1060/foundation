@@ -283,6 +283,7 @@
 		public function __get($name){
 			switch($name){
 				case 'prefix': return $this->settings->prefix; break;
+				case 'mysqli': return $this->mysqli; break;
 			}
 			
 			$trace = debug_backtrace();

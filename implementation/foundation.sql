@@ -1,20 +1,51 @@
 -- phpMyAdmin SQL Dump
--- version 4.0.3
+-- version 3.4.5
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 13. Dez 2013 um 16:28
--- Server Version: 5.6.11-log
--- PHP-Version: 5.5.0
+-- Erstellungszeit: 29. Dez 2013 um 17:39
+-- Server Version: 5.5.16
+-- PHP-Version: 5.3.8
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 --
 -- Datenbank: `foundation`
 --
-CREATE DATABASE IF NOT EXISTS `foundation` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `foundation`;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_bookie_attachments`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_bookie_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `entry_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `file` varchar(300) NOT NULL,
+  `file_type` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=13 ;
+
+--
+-- Daten für Tabelle `pp_bookie_attachments`
+--
+
+INSERT INTO `pp_bookie_attachments` (`id`, `entry_id`, `date`, `file`, `file_type`) VALUES
+(1, 9, '2013-12-28', 'o_18ctlc7g11fsha5nrdguk84hg1i.jpg', ''),
+(2, 9, '2013-12-29', 'o_18ctn0gqt3tq7e710jr10na1fm71i.jpg', ''),
+(3, 9, '2013-12-29', 'o_18ctn2c9t15ve13ctdr5c90sng1i.jpg', ''),
+(4, 9, '2013-12-29', 'o_18ctn384k1hr1g82dr1baajke1i.jpg', ''),
+(5, 9, '2013-12-29', 'o_18ctnarub1nq21f9e1a5418cklnj1i.jpg', ''),
+(6, 9, '2013-12-29', 'o_18ctnbphe1i62f6ugb3o44q5j1k.jpg', ''),
+(7, 7, '2013-12-29', 'o_18ctnd6b21htneqlbf81rifplq1i.jpg', ''),
+(8, 2, '2013-12-29', 'o_18ctnde1k1q561jfqekb75ui6q5n.jpg', ''),
+(9, 8, '2013-12-29', 'o_18ctnd8vuf1iui4fnqpm2tr2s.jpg', ''),
+(10, 2, '2013-12-29', 'o_18ctnde1k1t39q15hdq139ute25o.jpg', ''),
+(11, 7, '2013-12-29', 'o_18ctne8hb1alnajcs543uokfo1i.jpg', ''),
+(12, 7, '2013-12-29', 'o_18ctng5gv17lu1l9m19cd1cc11e8f1i.jpg', '');
 
 -- --------------------------------------------------------
 
@@ -26,14 +57,56 @@ CREATE TABLE IF NOT EXISTS `pp_bookie_entries` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `notes` text NOT NULL,
-  `brutto` decimal(10,0) NOT NULL,
-  `netto` decimal(10,0) NOT NULL,
+  `brutto` decimal(10,2) NOT NULL,
+  `netto` decimal(10,2) NOT NULL,
   `tax_type` varchar(30) NOT NULL,
-  `tax_value` decimal(10,0) NOT NULL,
+  `tax_value` decimal(10,2) NOT NULL,
   `date` date NOT NULL,
   `state` varchar(30) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;
+
+--
+-- Daten für Tabelle `pp_bookie_entries`
+--
+
+INSERT INTO `pp_bookie_entries` (`id`, `user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`) VALUES
+(1, 24, 'Test', '100.00', '100.00', '', '0.00', '2013-12-15', 'payed'),
+(2, 24, 'Test 2', '-100.00', '-83.33', 'MwSt.', '0.20', '2013-12-15', 'delayed'),
+(4, 24, 'asdf', '4593.50', '3827.92', 'MwSt.', '0.20', '2013-12-17', 'dunned'),
+(5, 24, '', '208.33', '208.33', 'MwSt.', '0.20', '2013-12-12', 'payed'),
+(6, 24, '', '333.33', '333.33', 'Ust.', '0.00', '2013-12-04', 'open'),
+(7, 24, 'so ein depp', '0.00', '-400.00', 'Deppensteuer', '0.30', '2013-12-20', 'payed'),
+(8, 24, '', '500.00', '416.67', 'MwSt.', '0.20', '2013-12-19', 'open'),
+(9, 24, '', '239.00', '199.17', '', '0.20', '2013-12-23', 'open');
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_bookie_entry_contacts`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_bookie_entry_contacts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `entry_id` int(11) NOT NULL,
+  `contact_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `entry_id` (`entry_id`,`contact_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=15 ;
+
+--
+-- Daten für Tabelle `pp_bookie_entry_contacts`
+--
+
+INSERT INTO `pp_bookie_entry_contacts` (`id`, `entry_id`, `contact_id`) VALUES
+(1, 1, 5),
+(2, 1, 8),
+(14, 1, 16),
+(3, 5, 13),
+(9, 7, 11),
+(10, 8, 13),
+(11, 9, 11),
+(12, 10, 8);
 
 -- --------------------------------------------------------
 
@@ -44,7 +117,6 @@ CREATE TABLE IF NOT EXISTS `pp_bookie_entries` (
 CREATE TABLE IF NOT EXISTS `pp_bookie_invoices` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `entry_id` int(11) NOT NULL,
-  `contact_id` int(11) NOT NULL,
   `alt_dst_adr` varchar(200) NOT NULL,
   `alt_src_adr` varchar(200) NOT NULL,
   `number` varchar(100) NOT NULL,
@@ -64,7 +136,7 @@ CREATE TABLE IF NOT EXISTS `pp_bookie_invoice_parts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `invoice_id` int(11) NOT NULL,
   `notes` text NOT NULL,
-  `amount` decimal(10,0) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
   `date` date NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -87,6 +159,30 @@ CREATE TABLE IF NOT EXISTS `pp_bookie_receipts` (
 -- --------------------------------------------------------
 
 --
+-- Tabellenstruktur für Tabelle `pp_calendar_events`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_calendar_events` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime NOT NULL,
+  `text` varchar(255) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
+
+--
+-- Daten für Tabelle `pp_calendar_events`
+--
+
+INSERT INTO `pp_calendar_events` (`id`, `start_date`, `end_date`, `text`, `owner_id`) VALUES
+(2, '0000-00-00 00:00:00', '0000-00-00 00:00:00', 'blubb', 24),
+(3, '2013-12-26 16:10:00', '2013-12-26 22:05:00', 'tadamm', 24),
+(4, '2013-12-26 10:30:00', '2013-12-26 14:45:00', 'ehehehe', 24);
+
+-- --------------------------------------------------------
+
+--
 -- Tabellenstruktur für Tabelle `pp_contactdata`
 --
 
@@ -97,7 +193,17 @@ CREATE TABLE IF NOT EXISTS `pp_contactdata` (
   `value` text NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `contact_id` (`contact_id`,`key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
+
+--
+-- Daten für Tabelle `pp_contactdata`
+--
+
+INSERT INTO `pp_contactdata` (`id`, `contact_id`, `key`, `value`) VALUES
+(1, 8, 'testfeld', 'ahahahahha'),
+(4, 0, 'Nähzeugs', 'Nadel & Zwirn'),
+(5, 15, 'Nähzeugs', 'Nadel & Zwirn'),
+(6, 16, 'asdf', 'asdasd');
 
 -- --------------------------------------------------------
 
@@ -111,16 +217,35 @@ CREATE TABLE IF NOT EXISTS `pp_contacts` (
   `firstname` varchar(200) NOT NULL,
   `lastname` varchar(100) NOT NULL,
   `address` varchar(200) NOT NULL,
-  `pc` int(11) NOT NULL,
+  `pc` varchar(20) NOT NULL,
   `city` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `phone` varchar(100) NOT NULL,
   `notes` text NOT NULL,
   `last_contact` datetime NOT NULL,
-  `ssnum` int(11) NOT NULL,
+  `ssnum` varchar(20) NOT NULL,
   `image` varchar(200) NOT NULL,
+  `birthdate` date NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=17 ;
+
+--
+-- Daten für Tabelle `pp_contacts`
+--
+
+INSERT INTO `pp_contacts` (`id`, `user_id`, `firstname`, `lastname`, `address`, `pc`, `city`, `email`, `phone`, `notes`, `last_contact`, `ssnum`, `image`, `birthdate`) VALUES
+(5, 24, 'Max', 'Muster', '', '', '', 'max@muster.com', '1234566789', '', '0000-00-00 00:00:00', '', '', '1981-07-29'),
+(6, 24, 'Thomas', 'Anders', '', '1234', '', '', '', '', '0000-00-00 00:00:00', '', '', '0000-00-00'),
+(7, 24, 'Max', 'Peters', '', '', '', '', '', '', '0000-00-00 00:00:00', '', '', '0000-00-00'),
+(8, 24, 'Sabine', 'Arnautovic', 'Testingerstraße 23', '1234', 'Wien', 'sabine.a@gmail.com', '', 'asdf', '0000-00-00 00:00:00', '', 'o_18cbjracp1kghe2915131h0r157ee.jpg', '0000-00-00'),
+(9, 24, 'Thomas', 'Breuer', '', '', '', '', '0000 000 0', '', '0000-00-00 00:00:00', '', '', '0000-00-00'),
+(10, 24, 'Moritz', 'Kern', '', '', '', '', '', '', '0000-00-00 00:00:00', '', '', '0000-00-00'),
+(11, 24, 'Kevin', 'Tran', '', '', '', '', '', '', '0000-00-00 00:00:00', '', '', '0000-00-00'),
+(12, 24, 'Thomas', 'Albrecht', '', '', '', '', '', '', '0000-00-00 00:00:00', '', 'o_18cvds99g1eqd112e1rm31m7c1hp48.jpg', '2013-12-29'),
+(13, 24, 'Maxi', 'Müller', '', '1234', 'Wien', '', '', '', '0000-00-00 00:00:00', '', 'o_18cbk05ml1v9137o1aa51h1mqn10.jpg', '0000-00-00'),
+(14, 24, 'Maxi', 'Muster', '', '', '', '', '', '', '0000-00-00 00:00:00', '', '', '0000-00-00'),
+(15, 24, 'Igor', 'Igor', '', '', '', '', '', '', '0000-00-00 00:00:00', '', '', '0000-00-00'),
+(16, 24, 'Maxi', 'Müllersen', '', '', '', '', '', '', '0000-00-00 00:00:00', '', '', '0000-00-00');
 
 -- --------------------------------------------------------
 
@@ -261,8 +386,8 @@ CREATE TABLE IF NOT EXISTS `pp_user` (
 --
 
 INSERT INTO `pp_user` (`id`, `nick`, `hash`, `group`, `email`, `activate`, `reset`, `status`, `created`, `last_login`) VALUES
-(1, 'root', 'a3597971769fc171e38fb92ff3cd4cc429370b618342836ff7a2eb61fe7d6f70ead7dd6586c2044d759ab962b6fbb96d48981259e592e3c79b559d84a79fe64a#me:fpeH2cc68;p9npeQ/Qemi0UQ%Wu!g4Hweu=US4JsPUxqa-Oe', 1, 'root@apple.com', '', '', 1, 0, 1347803752),
-(24, 'tester', 'c708109949e40eb065844fad07f90e45114c1f3a5beb06b5a451855894b9f7a8aa7a72903e761d67ec9ea30269abeef15989dd4ce931d8f853a0468c12be154c#d3x,Zgv2F|;dntc5Zq_YUuucom!|R6tB5j5dj$VxmUaj8fNhAYG', 1, 'lol@test.com', '', '', 1, 1385307568, 1386364276),
+(1, 'root', 'a3597971769fc171e38fb92ff3cd4cc429370b618342836ff7a2eb61fe7d6f70ead7dd6586c2044d759ab962b6fbb96d48981259e592e3c79b559d84a79fe64a#me:fpeH2cc68;p9npeQ/Qemi0UQ%Wu!g4Hweu=US4JsPUxqa-Oe', 1, 'root@apple.com', '', '', 1, 0, 1387833730),
+(24, 'tester', 'c708109949e40eb065844fad07f90e45114c1f3a5beb06b5a451855894b9f7a8aa7a72903e761d67ec9ea30269abeef15989dd4ce931d8f853a0468c12be154c#d3x,Zgv2F|;dntc5Zq_YUuucom!|R6tB5j5dj$VxmUaj8fNhAYG', 3, 'lol@test.com', '', '', 1, 1385307568, 1388334974),
 (23, 'tester1', '671ccdec908af53b2701e800c40695fff0db7970495fa13448fb2aecb7cfefe15feb100679ea1d559ff08ae707c96fb4c36f7af12204a3d24acbc69390456778#yTlji4B7C\\!klsnm4-J3i\\X14iDsuXiA$3.NkmL$fLLddutwoZf', 1, 'lol@test.com', '', '', 1, 1385307568, -1),
 (22, 'tester2', 'a929adf5e33f76c17fbc1084b26e6ba234804b40808ba33f78c08aea044c38ee2b77ed0ed2978d3e85a479067d22a1454c8e66ca5488331b7458ab4bdd1b97a7#XjUOu@6jWEKf$ci$Ydxp:V3o52ah5&tN5hmNikzk%?q5pFeWhIg', 1, 'lol@test.com', '', '', 1, 1385307567, -1),
 (21, 'tester3', 'e34f95d898907dc4a1bebd377679ea945b3854c3879fbc0df459551690cfb4017419f665ad79b6aae3f207771962592e18ac2e24a72f78d0650c5f220b1f64f6#KwnsI1fdYQk2M5u2\\9lBlXwHzmo5|xG?,+mExwudiU%dcsh7PY$', 1, 'lol@test.com', '', '', 1, 1385307566, -1),
@@ -283,7 +408,7 @@ CREATE TABLE IF NOT EXISTS `pp_userdata` (
   `last_change` datetime NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`field_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
 
 --
 -- Daten für Tabelle `pp_userdata`
@@ -293,7 +418,9 @@ INSERT INTO `pp_userdata` (`id`, `user_id`, `field_id`, `value`, `last_change`) 
 (1, 19, 1, 'Tester', '2013-11-30 21:53:26'),
 (2, 19, 2, 'McTestinger', '2013-11-30 21:53:26'),
 (3, 20, 1, '', '2013-11-30 21:53:54'),
-(4, 20, 2, '', '2013-11-30 21:53:54');
+(4, 20, 2, '', '2013-11-30 21:53:54'),
+(5, 24, 1, 'Tester', '2013-12-23 22:22:23'),
+(6, 24, 2, 'McTest', '2013-12-23 22:22:23');
 
 -- --------------------------------------------------------
 

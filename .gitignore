@@ -2,3 +2,12 @@
 /.project
 /.settings
 /implementation/_tmp/_cache
+
+/implementation/_services/Calendar/log.txt
+/implementation/_services/Bookie/attachments
+/implementation/_services/Contacts/images
+/implementation/_templates/wingmen
+
+/implementation/_tmp/_upload
+
+/implementation/wingmen

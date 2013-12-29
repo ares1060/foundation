@@ -157,7 +157,9 @@
 		 *	Deletes the entry data item from the database
 		 */
 		public function delete(){
-			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_entries WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.'bookie_entries WHERE id=\''.$this->sp->db->escape($this->id).'\';');
+			if($ok) $this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.'bookie_entry_contacts WHERE `entry_id` = '.$this->sp->db->escape($this->id).';');
+			return $ok;
 		}
 		 
 		/**

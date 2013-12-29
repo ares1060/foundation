@@ -5,6 +5,7 @@
 	
 	class Receipt extends core\BaseModel {
 	
+		private $id;
 		private $entryId;
 		private $entry;
 		/**

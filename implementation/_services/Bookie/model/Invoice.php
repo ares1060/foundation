@@ -39,7 +39,7 @@
 			$this->altDstAddress = $altDstAddress;
 			$this->number = $number;
 			$this->payDate = (!$payDate)?new DateTime():$payDate;
-			$this->reminderDate = (!$reminderDate)?new DateTime():$reminderDate;
+			$this->reminderDate = (!$reminderDate)?new DateTime('0000-00-00 00:00:00'):$reminderDate;
 			$this->dunnings = $dunnings;
 			
 			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_invoices', array());

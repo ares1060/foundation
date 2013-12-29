@@ -3,6 +3,7 @@
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Invoice.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/InvoicePart.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Receipt.php');
+	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Attachment.php');
 
 
 	use at\foundation\core;
@@ -21,6 +22,8 @@
 				case 'view.list': return $this->handleViewList($args); break;
 				case 'view.form': return $this->handleViewForm($args); break;
 				case 'do.save': return $this->handleSave($args); break;
+				case 'do.add.attachment': return $this->handleAddAttachment($args); break;
+				case 'do.remove.attachment': return $this->handleRemoveAttachment($args); break;
 				case 'do.delete': return $this->handleDelete($args); break;
 				default: return 'mooh!'; break;
 			}
@@ -46,12 +49,12 @@
 			
 			if(isset($args['amount_from']) && $args['amount_from'] != ''){
 				$args['amount_from'] = $this->sp->db->escape($args['amount_from']);
-				$whereSQL .= ' AND `netto` >= '.$args['amount_from'];
+				$whereSQL .= ' AND `brutto` >= '.$args['amount_from'];
 			}
 			
 			if(isset($args['amount_to']) && $args['amount_to'] != ''){
 				$args['amount_to'] = $this->sp->db->escape($args['amount_to']);
-				$whereSQL .= ' AND `netto` <= '.$args['amount_to'];
+				$whereSQL .= ' AND `brutto` <= '.$args['amount_to'];
 			}
 			
 			if(isset($args['date_from']) && $args['date_from'] != ''){
@@ -84,7 +87,7 @@
 				$whereSQL .= ' AND contact_id IN ('.$values.') GROUP BY e.id';
 			}
 			
-			$whereSQL .= ' ORDER BY e.date DESC';
+			$whereSQL .= ' ORDER BY e.date DESC, e.id DESC';
 			
 			$entries = Entry::getEntries($whereSQL, $from, $rows);
 
@@ -102,9 +105,9 @@
 			
 			$totals = Entry::getEntrySums($whereSQL);
 			
-			$view->addValue('total_in', str_replace('.', ',', $totals['brutto_in']));
-			$view->addValue('total_out', str_replace('.', ',', $totals['brutto_out']));
-			$view->addValue('total', str_replace('.', ',', ($totals['brutto_out'] + $totals['brutto_in'])));
+			$view->addValue('total_in', number_format($totals['brutto_in'], 2, ',', '.'));
+			$view->addValue('total_out', number_format($totals['brutto_out'], 2, ',', '.'));
+			$view->addValue('total', number_format($totals['brutto_out'] + $totals['brutto_in'], 2, ',', '.'));
 
 			foreach($entries as $entry){
 				$sv = $view->showSubView('row');
@@ -112,14 +115,14 @@
 				$sv->addValue('id', $entry->getId());
 				$sv->addValue('date', $entry->getDate()->format('d. F Y'));
 				$sv->addValue('type', ($entry->getBrutto() <= 0)?'out':'in');
-				$sv->addValue('amount', str_replace('.', ',', $entry->getBrutto()));
+				$sv->addValue('amount', number_format($entry->getBrutto(), 2, ',', '.'));
 				$sv->addValue('state', $entry->getState());
 				$sv->addValue('notes', $entry->getNotes());
 				
 				if($entry->getTaxValue() > 0){
 					$svt = $sv->showSubView('taxinfo');
 					$svt->addValue('tax_label', $entry->getTaxType());
-					$svt->addValue('tax_amount', str_replace('.', ',', $entry->getTaxAmount()));
+					$svt->addValue('tax_amount', number_format($entry->getTaxAmount(), 2, ',', '.'));
 				}
 				
 				$contacts = $entry->getContacts();
@@ -139,6 +142,19 @@
 					$isv = $sv->showSubView('pdf');
 					$isv->addValue('id', $inv[0]->getId());
 				}
+				
+				$att = Attachment::getAttachmentsForEntry($entry->getId());
+				if(count($att) > 0){
+					$av = $sv->showSubView('attachments');
+					$av->addValue('id', $entry->getId());
+					foreach($att as $a){
+						$aiv = $av->showSubView('item');
+						
+						$aiv->addValue('url', $a->getFile());
+						$aiv->addValue('thumb', $GLOBALS['to_root'].'_templates/'.$this->sp->tpl->getTemplate().'/img/attachment_dummy.png');
+					}
+				}
+					
 			}
 			
 			return $view->render();
@@ -191,23 +207,24 @@
 						$invv->addValue('altsrcaddr', $inv->getAltSrcAddress());
 						$invv->addValue('reminder', $inv->getReminderDate()->format('d.m.Y'));
 						$invv->addValue('paydate', $inv->getPayDate()->format('d.m.Y'));
+						
+						$view->addValue('title', 'Rechnung editieren');
 					}
-					
 					
 					return $view->render();
 				} else {
 					return 'not for you';
 				}
 			} else {
-				// new form
-				
-				$view->addValue('title', 'Neuer Eintrag');
-				
+
 				if(isset($args['mode']) && $args['mode'] == 'invoice'){
+					$view->addValue('title', 'Neue Rechnung');
 					$invv = $view->showSubView('invoice');
 				
 					$invcount = Invoice::getInvoiceCount(new DateTime('01-01-'.date('Y')), new DateTime('31-12-'.date('Y'))) + 1;
-					$invv->addValue('number', 'WMR_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
+					$invv->addValue('number', 'WMR_'.date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
+				} else {
+					$view->addValue('title', 'Neuer Eintrag');
 				}
 				
 				return $view->render();
@@ -219,11 +236,11 @@
 			$user = $this->sp->user->getLoggedInUser();
 			if($user){
 				if(isset($args['id'])){
-					//get contact
+					//get entry
 					$entry = Entry::getEntry($args['id']);
 					if(!$entry || $entry->getOwnerId() != $user->getId()) return false;
 				} else {
-					//create new contact
+					//create new entry
 					$entry = new Entry();
 				}
 			
@@ -279,8 +296,80 @@
 			}
 		}
 		
+		private function handleAddAttachment($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				if(isset($args['id']) && isset($args['file'])){
+					//get entry
+					$entry = Entry::getEntry($args['id']);
+					if(!$entry || $entry->getOwnerId() != $user->getId()) return 'no right';
+					
+					if(file_exists($GLOBALS['config']['root'].$this->settings->upload_folder.$args['file'])){
+						//move file from upload folder to image folder
+						if(rename($GLOBALS['config']['root'].$this->settings->upload_folder.$args['file'], $GLOBALS['config']['root'].$this->settings->attachment_folder.$args['file'])){
+							$ao = new Attachment($entry->getId());
+							$ao->setFile($args['file']);
+							if($ao->save()){
+								return $ao->getId();
+							} else {
+								return false;
+							}
+						}
+					} 
+					
+					return false;
+										
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+		
+		private function handleRemoveAttachment($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				if(isset($args['aid'])){
+					//get attachment
+					$att = Attachment::getAttachment($args['aid']);
+					if(!$att) return true;
+					//get entry
+					$entry = $att->getEntry();
+					if(!$entry || $entry->getOwnerId() != $user->getId()) return false;
+						
+					$this->sp->fh->deleteFile($GLOBALS['config']['root'].$this->settings->attachment_folder.$att->getFile());
+					return $att->delete();
+		
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+		
+		
 		private function handleDelete($args){
-			
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				if(isset($args['id'])){
+					//get contact
+					$entry = Entry::getEntry($args['id']);
+					if(!entry) return true;
+					if($entry->getOwnerId() != $user->getId()) return false;
+					$ok = $entry->delete();
+					if($ok) {
+						$invoices = Invoice::getInvoicesForEntry($entry->getId());
+						foreach ($invoices as $inv){
+							$inv->delete();
+						}
+					}
+					
+					return $ok;
+				}
+			}
+			return false;
 		}
 		
 	}

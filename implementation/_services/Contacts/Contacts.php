@@ -122,6 +122,7 @@
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
+					$view->addValue('birthdate', ($contact->getBirthdate()->format('Y') * 1 > 0)?$contact->getBirthdate()->format('d.m.Y'):'');
 					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 						
 					$cd = $contact->getContactData();
@@ -162,6 +163,7 @@
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
+					$view->addValue('birthdate', ($contact->getBirthdate()->format('Y') * 1 > 0)?$contact->getBirthdate()->format('d.m.Y'):'');
 					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 		
 					$cd = $contact->getContactData();
@@ -210,6 +212,7 @@
 				if(isset($args['phone'])) $contact->setPhone($args['phone']);
 				if(isset($args['notes'])) $contact->setNotes($args['notes']);
 				if(isset($args['ssnum'])) $contact->setSocialSecurityNumber($args['ssnum']);
+				if(isset($args['birthdate'])) $contact->setBirthdate(new DateTime($args['birthdate']));
 				if(isset($args['image'])) {
 					if(file_exists($GLOBALS['config']['root'].$this->settings->upload_folder.$args['image'])){
 						//move file from upload folder to image folder

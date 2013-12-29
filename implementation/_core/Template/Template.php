@@ -608,6 +608,10 @@
         	}
         }
         
+        public function getTemplate(){
+        	return $this->template;
+        }
+        
         /**
          * 
          * Returnes if you can change the Template

@@ -21,6 +21,8 @@
 		private $phone;
 		private $notes;
 		private $socialSecurityNumber;
+		private $birthdate;
+		
 		/**
 		 * @var DateTime
 		 */
@@ -29,7 +31,7 @@
 		 
         private $contactData;
 			
-        public function __construct($owner  = -1, $firstName = '', $lastName = '', $address = '', $postCode = '', $city = '', $email = '', $phone = '', $notes = '', $socialSecurityNumber = '', $lastContact = null, $image = '') {
+        public function __construct($owner  = -1, $firstName = '', $lastName = '', $address = '', $postCode = '', $city = '', $email = '', $phone = '', $notes = '', $socialSecurityNumber = '', $lastContact = null, $image = '', $birthdate = null) {
 			$this->ownerId = $owner;
 			$this->firstName = $firstName;
 			$this->lastName = $lastName;
@@ -41,6 +43,7 @@
 			$this->notes = $notes;
 			$this->socialSecurityNumber = $socialSecurityNumber;
 			$this->lastContact = (!$lastContact)?new DateTime('0000-00-00 00:00:00'):$lastContact;
+			$this->birthdate = (!$birthdate)?new DateTime('0000-00-00'):$birthdate;
 			$this->image = $image;
             parent::__construct(ServiceProvider::get()->db->prefix.'contact', array());
         }
@@ -57,7 +60,7 @@
 		public static function getContact($id){
 			$contact = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts WHERE id =\''.ServiceProvider::getInstance()->db->escape($id).'\';');
 			if($contact){
-				$coo = new Contact($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum'], new DateTime($contact['last_contact']), $contact['image']);
+				$coo = new Contact($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum'], new DateTime($contact['last_contact']), $contact['image'], new DateTime($contact['birthdate']));
 				$coo->setId($contact['id']);
 				return $coo;
 			} else {
@@ -76,7 +79,7 @@
 			$contacts = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'contacts '.$insertSQL.' ORDER BY lastname ASC '.$limit.';');
 			$out = array();
 			foreach($contacts as $contact) {
-				$coo = new Contact($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum'], new DateTime($contact['last_contact']), $contact['image']);
+				$coo = new Contact($contact['user_id'], $contact['firstname'], $contact['lastname'], $contact['address'], $contact['pc'], $contact['city'], $contact['email'], $contact['phone'], $contact['notes'], $contact['ssnum'], new DateTime($contact['last_contact']), $contact['image'], new DateTime($contact['birthdate']));
 				$coo->setId($contact['id']);
 				$out[] = $coo;
 			}
@@ -107,7 +110,7 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'contacts 
-								(`user_id`, `firstname`, `lastname`, `address`, `pc`, `city`, `email`, `phone`, `notes`, `last_contact`, `ssnum`, `image`) VALUES 
+								(`user_id`, `firstname`, `lastname`, `address`, `pc`, `city`, `email`, `phone`, `notes`, `last_contact`, `ssnum`, `image`, `birthdate`) VALUES 
 								(\''.ServiceProvider::get()->db->escape($this->ownerId).'\', 
 									\''.ServiceProvider::get()->db->escape($this->firstName).'\', 
 									\''.ServiceProvider::get()->db->escape($this->lastName).'\',
@@ -119,7 +122,8 @@
 									\''.ServiceProvider::get()->db->escape($this->notes).'\',
 									\''.ServiceProvider::get()->db->escape($this->lastContact->format('Y-m-d h:i:s')).'\',
 									\''.ServiceProvider::get()->db->escape($this->socialSecurityNumber).'\',
-									\''.ServiceProvider::get()->db->escape($this->image).'\'
+									\''.ServiceProvider::get()->db->escape($this->image).'\',
+									\''.ServiceProvider::get()->db->escape($this->birthdate->format('Y-m-d')).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -142,7 +146,8 @@
 						notes = \''.ServiceProvider::get()->db->escape($this->notes).'\',
 						last_contact = \''.ServiceProvider::get()->db->escape($this->lastContact->format('Y-m-d h:i:s')).'\',
 						ssnum = \''.ServiceProvider::get()->db->escape($this->socialSecurityNumber).'\',
-						image = \''.ServiceProvider::get()->db->escape($this->image).'\'
+						image = \''.ServiceProvider::get()->db->escape($this->image).'\',
+						birthdate = \''.ServiceProvider::get()->db->escape($this->birthdate->format('Y-m-d')).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -177,6 +182,7 @@
 		 */
 		public function setLastContact($lastContact) { $this->lastContact = $lastContact; return $this; }
 		public function setImage($image) { $this->image = $image; return $this; }
+		public function setBirthdate($birthdate) { $this->birthdate = $birthdate; return $this; }
 		
 		
 		
@@ -210,6 +216,12 @@
 			return $this->contactData;
 		}
 		public function getImage(){ return $this->image; }
+		/**
+		* @return DateTime
+		*/
+		public function getBirthdate(){
+			return $this->birthdate;
+		}
 		
 	
 	}

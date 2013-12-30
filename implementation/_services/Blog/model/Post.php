@@ -33,7 +33,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, p.id as id FROM '.ServiceProvider::getInstance()->db->prefix.'blog_posts AS p '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $post) {
-				$po = new Post($post['user_id'], $post['text'], $post['title'], new DateTime($post['date']),);
+				$po = new Post($post['user_id'], $post['text'], $post['title'], new DateTime($post['date']));
 				$po->setId($post['id']);
 				$out[] = $po;
 			}
@@ -43,7 +43,7 @@
 		public static function getPost($postId) {
 			$post = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'blog_posts WHERE  id = \''.ServiceProvider::getInstance()->db->escape($postId).'\';');
 			if($post) {
-				$po = new Post($post['user_id'], $post['text'], $post['title'], new DateTime($post['date']),);
+				$po = new Post($post['user_id'], $post['text'], $post['title'], new DateTime($post['date']));
 				$po->setId($post['id']);
 				$out[] = $po;
 			}

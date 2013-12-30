@@ -24,7 +24,12 @@
 		
 		private function handleViewList($args){
 			$user = $this->sp->user->getLoggedInUser();
-			$whereSQL = 'WHERE user_id = \''.$user->getId().'\'';
+			$whereSQL = 'WHERE 1=1';
+			
+			if(isset($args['author'])){
+				$whereSQL .= ' AND user_id = \''.$this->sp->db->escape($args['author']).'\'';
+			}
+			
 			if(isset($args['search']) && strlen($args['search']) > 2){
 					$args['search'] = $this->sp->db->escape($args['search']);
 					$whereSQL .= ' AND (`title` LIKE \'%'.$args['search'].'%\' OR `text` LIKE \'%'.$args['search'].'%\')';

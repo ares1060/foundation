@@ -86,6 +86,22 @@
 			return $out;
 		}
 		
+		public static function getLinkedContacts($linkTable, $entryId = -1, $onlyIds = false){
+			if($entryId >= 0) $where = ' WHERE lt.entry_id = '.ServiceProvider::getInstance()->db->escape($entryId);
+			else $where = '';
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.ServiceProvider::getInstance()->db->escape($linkTable).' AS lt LEFT JOIN '.ServiceProvider::getInstance()->db->prefix.'contacts AS c ON c.id = lt.contact_id '.$where.';');
+			$out = array();
+			foreach($result as $entry) {
+				if($onlyIds) $out[] = $entry['contact_id'];
+				else {
+					$coo = new Contact($entry['user_id'], $entry['firstname'], $entry['lastname'], $entry['address'], $entry['pc'], $entry['city'], $entry['email'], $entry['phone'], $entry['notes'], $entry['ssnum'], new DateTime($entry['last_contact']), $entry['image'], new DateTime($entry['birthdate']));
+					$coo->setId($entry['contact_id']);
+					$out[] = $coo;
+				}
+			}
+			return $out;
+		}
+		
 		/**
 		* Fetches the number of available contacts
 		* @return int

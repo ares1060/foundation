@@ -22,6 +22,10 @@
 				case 'do.save': return $this->handleSave($args); break;
 				case 'do.delete': return $this->handleDelete($args); break;
 				case 'do.delete_contact_data': return $this->handleDeleteContactData($args); break;
+				case 'view.contact_linker': return $this->handleViewLinker($args); break;
+				case 'do.save_contact_links': return $this->handleLinks($args); break;
+				case 'do.link_contact': return $this->handleLink($args); break;
+				case 'do.delete_contact_link': return $this->handleDeleteLink($args); break;
 				default: return 'mooh!'; break;
 			}
 		}
@@ -275,6 +279,86 @@
 						return $cdi->delete();
 					}
 				}
+			}
+				
+			return false;
+		}
+		
+		private function handleViewLinker($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				//check if arguments are available
+				// - entry_id (opt)
+				// - link_table
+				if(isset($args['link_table'])){
+							
+					$view = new core\Template\ViewDescriptor('_services/Contacts/contact_linker');
+					$view->addValue('link_table', $args['link_table']);
+								
+					if(isset($args['entry_id']) && $args['entry_id'] != ''){
+						$contacts = Contact::getLinkedContacts($args['link_table'], $args['entry_id']);
+						$contactRndr = '';
+						if(count($contacts) > 0){
+							$cv = new core\Template\ViewDescriptor('_services/Contacts/contact_shortlist');
+							foreach($contacts as $contact){
+								$svc = $cv->showSubView('row');
+								$svcn = $svc->showSubView('nameonly');
+								$svcn->addValue('firstname', $contact->getFirstName());
+								$svcn->addValue('lastname', $contact->getLastName());
+								$svc->addValue('action_icon', 'glyphicon glyphicon-remove');
+								$svc->addValue('id', $contact->getId());
+								$svc->addValue('image', urlencode(($contact->getImage() == '')?$this->sp->ref('Contacts')->settings->default_image:$this->sp->ref('Contacts')->settings->image_folder.$contact->getImage()));
+								$contactRndr .= $svc->render();
+							}
+						}
+						
+						$view->addValue('contacts', $contactRndr);
+					}
+					
+					return $view->render();
+				}
+			}
+				
+			return false;
+		}
+		
+		private function handleLinks($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				//check if all arguments are available
+				// - contact_ids[]
+				// - entry_id
+				// - link_table
+				
+				//get all current links
+				
+				//cross check
+					//save new
+					//delete old
+			}
+				
+			return false;
+		}
+		
+		private function handleLink($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				//check if all arguments are available
+				// - contact_id
+				// - entry_id
+				// - link_table
+			}
+				
+			return false;
+		}
+		
+		private function handleDeleteLink($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				//check if all arguments are available
+				// - contact_id
+				// - entry_id (opt)
+				// - link_table (opt)
 			}
 				
 			return false;

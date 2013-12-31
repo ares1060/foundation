@@ -176,6 +176,7 @@
 					$view->addValue('date', $entry->getDate()->format('d.m.Y'));
 					$view->addValue('notes', $entry->getNotes());
 					$view->addValue('state_'.$entry->getState(), ' selected="selected"');
+					$view->addValue('type_'.(($entry->getBrutto() >= 0)?'in':'out').'_checked', 'checked');
 					
 					$contacts = $entry->getContacts();
 					$contactRndr = '';

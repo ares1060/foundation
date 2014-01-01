@@ -64,7 +64,7 @@
 		* @return array Associative array wit hfollowing fields: brutto_in, netto_in, brutto_out, netto_out
 		*/
 		public static function getEntrySums($insertSQL = ''){
-			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(CASE WHEN e.brutto > 0 THEN e.brutto ELSE 0 END) AS brutto_in, SUM(CASE WHEN e.netto > 0 THEN e.netto ELSE 0 END) AS netto_in, SUM(CASE WHEN e.brutto < 0 THEN e.brutto ELSE 0 END) AS brutto_out, SUM(CASE WHEN e.netto < 0 THEN e.netto ELSE 0 END) AS netto_out FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.';');
+			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(s.brutto_in) AS brutto_in, SUM(s.brutto_out) AS brutto_out, SUM(s.netto_in) AS netto_in, SUM(s.netto_out) AS netto_out FROM ( SELECT SUM(CASE WHEN e.brutto > 0 THEN e.brutto ELSE 0 END) AS brutto_in, SUM(CASE WHEN e.netto > 0 THEN e.netto ELSE 0 END) AS netto_in, SUM(CASE WHEN e.brutto < 0 THEN e.brutto ELSE 0 END) AS brutto_out, SUM(CASE WHEN e.netto < 0 THEN e.netto ELSE 0 END) AS netto_out FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.') AS s;');
 			return $result;
 		}
 		

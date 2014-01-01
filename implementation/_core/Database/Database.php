@@ -220,6 +220,22 @@
         }
         
         /**
+         * Fetches the column names of the given table and returns them in an array
+         * @param string The name of the table
+         * @return string[] An array containing the names of the columns
+         */
+        public function getTableColumns($table){
+        	$sql = 'SHOW COLUMNS FROM `'.$table.'`;';
+        	$result = $this->mysqli->query($sql, MYSQLI_USE_RESULT);
+        	$cols = array();
+        	while($column = $result->fetch_assoc()){
+        		$cols[] = $column['Field'];
+        	}
+        	$result->free();
+        	return $cols;
+        }
+        
+        /**
          * Function to lazily insert rows into a table.
          * @param string $table The name of the database table to insert into
          * @param array $data An associative array where the keys have the same name as the columns in the database table

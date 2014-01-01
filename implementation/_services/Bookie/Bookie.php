@@ -77,13 +77,14 @@
 				$rows = $this->sp->db->escape($args['rows']);
 			}
 			
+			//TODO: generalize this so that services can infuse filter criteria generically
 			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
 				$values = '';
 				foreach($args['contact_filter'] as $val){
 					$values .= $this->sp->db->escape($val).',';
 				}
 				$values = substr($values, 0, -1);
-				$whereSQL = 'JOIN '.$this->sp->db->prefix.'bookie_entry_contacts AS c ON c.entry_id = e.id '.$whereSQL;
+				$whereSQL = 'JOIN '.$this->sp->db->prefix.'bookie_entries_contacts AS c ON c.entry_id = e.id '.$whereSQL;
 				$whereSQL .= ' AND contact_id IN ('.$values.') GROUP BY e.id';
 			}
 			
@@ -123,17 +124,6 @@
 					$svt = $sv->showSubView('taxinfo');
 					$svt->addValue('tax_label', $entry->getTaxType());
 					$svt->addValue('tax_amount', number_format($entry->getTaxAmount(), 2, ',', '.'));
-				}
-				
-				$contacts = $entry->getContacts();
-				if(count($contacts) > 0){
-					foreach($contacts as $contact){
-						$svc = $sv->showSubView('contact');
-						$svc->addValue('firstname', $contact->getFirstName());
-						$svc->addValue('lastname', $contact->getLastName());
-						$svc->addValue('id', $contact->getId());
-						$svc->addValue('image', urlencode(($contact->getImage() == '')?$this->sp->ref('Contacts')->settings->default_image:$this->sp->ref('Contacts')->settings->image_folder.$contact->getImage()));
-					}
 				}
 				
 				//check if invoice
@@ -177,25 +167,6 @@
 					$view->addValue('notes', $entry->getNotes());
 					$view->addValue('state_'.$entry->getState(), ' selected="selected"');
 					$view->addValue('type_'.(($entry->getBrutto() >= 0)?'in':'out').'_checked', 'checked');
-					
-					$contacts = $entry->getContacts();
-					$contactRndr = '';
-					if(count($contacts) > 0){
-						$cv = new core\Template\ViewDescriptor('_services/Contacts/contact_shortlist');
-						foreach($contacts as $contact){
-							$svc = $cv->showSubView('row');
-							$svcn = $svc->showSubView('nameonly');
-							$svcn->addValue('firstname', $contact->getFirstName());
-							$svcn->addValue('lastname', $contact->getLastName());
-							$svc->addValue('action_icon', 'glyphicon glyphicon-remove');
-							$svc->addValue('id', $contact->getId());
-							$svc->addValue('image', urlencode(($contact->getImage() == '')?$this->sp->ref('Contacts')->settings->default_image:$this->sp->ref('Contacts')->settings->image_folder.$contact->getImage()));
-							$contactRndr .= $svc->render();
-						}
-					}
-					
-					$view->addValue('contacts', $contactRndr);
-					
 					
 					$inv = Invoice::getInvoicesForEntry($entry->getId());
 					if($inv && count($inv) > 0){
@@ -257,25 +228,6 @@
 				
 				$ok = $entry->save();
 				
-				if($ok && isset($args['contacts'])) {
-					$oldCids = $entry->getContactIds();
-					$cids = array();
-					//save values
-					foreach($args['contacts'] as $cid){
-						if(!in_array($cid, $oldCids)){
-							$entry->addContact($cid);
-						}
-						$cids[] = $cid;
-					}
-						
-					//remove old values
-					foreach($oldCids as $cid){
-						if(!in_array($cid, $cids)){
-							$entry->removeContact($cid);
-						}
-					}
-				}
-				
 				if($ok && isset($args['type']) && $args['type'] == 'invoice'){
 					// save invoice stuff
 					$inv = Invoice::getInvoicesForEntry($entry->getId());
@@ -291,7 +243,8 @@
 					$inv->save();
 				}
 				
-				return $ok;
+				if($ok) return $entry->getId();
+				else return false;
 			} else {
 				return false;
 			}

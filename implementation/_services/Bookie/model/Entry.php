@@ -16,8 +16,6 @@
 		private $netto;
 		private $taxType;
 		private $taxValue;
-		private $contacts;
-		private $contactIds;
 		/**
 		 * @var DateTime
 		 */
@@ -96,17 +94,6 @@
 				return null;
 			}
 		}
-		
-		public static function getContactsForEntry($entryId, $onlyIds = false){
-			if(!$onlyIds) require_once $GLOBALS['config']['root'].'_services/Contacts/model/Contact.php';
-			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entry_contacts WHERE `entry_id` = '.ServiceProvider::getInstance()->db->escape($entryId).';');
-			$out = array();
-			foreach($result as $entry) {
-				if($onlyIds) $out[] = $entry['contact_id'];
-				else $out[] = Contact::getContact($entry['contact_id']);
-			}
-			return $out;
-		}
 	
 		/**
 		 * INSTANCE METHODS
@@ -158,7 +145,6 @@
 		 */
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.'bookie_entries WHERE id=\''.$this->sp->db->escape($this->id).'\';');
-			if($ok) $this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.'bookie_entry_contacts WHERE `entry_id` = '.$this->sp->db->escape($this->id).';');
 			return $ok;
 		}
 		 
@@ -197,18 +183,6 @@
 		public function setDate($date) { $this->date = $date; return $this; }
 		public function setState($state) { $this->state = $state; return $this; }
 		
-		public function addContact($contactId){
-			$this->contacts = null;
-			$this->contactIds[] = $contactId;
-			return $this->sp->db->fetchBool('INSERT INTO '.ServiceProvider::get()->db->prefix.'bookie_entry_contacts (`entry_id`,`contact_id`) VALUES (\''.ServiceProvider::get()->db->escape($this->id).'\', \''.ServiceProvider::get()->db->escape($contactId).'\');');
-		}
-		
-		public function removeContact($contactId){
-			$this->contacts = null;
-			$this->contactIds = null;
-			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_entry_contacts WHERE entry_id=\''.ServiceProvider::get()->db->escape($this->id).'\' AND contact_id=\''.ServiceProvider::get()->db->escape($contactId).'\';');
-		}
-		
 		public function getId(){ return $this->id; }
 		/**
 		 * @return at/foundation/_core/User/model/User
@@ -229,20 +203,6 @@
 		 */
 		public function getDate() { return $this->date; }
 		public function getState() { return $this->state; }
-	
-		public function getContacts(){
-			if(!$this->contacts) {
-				$this->contacts = self::getContactsForEntry($this->id);
-			}
-			return $this->contacts;
-		}
-		
-		public function getContactIds(){
-			if(!$this->contactIds) {
-				$this->contactIds = self::getContactsForEntry($this->id, true);
-			}
-			return $this->contactIds;
-		}
 		
 	}
 ?>

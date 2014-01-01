@@ -17,6 +17,7 @@
 			if(isset($args['action'])) $action = $args['action'];
 			switch($action){
 				case 'view.list': return $this->handleViewList($args); break;
+				case 'view.links': return $this->handleViewLinks($args); break;
 				case 'view.detail': return $this->handleViewDetail($args); break;
 				case 'view.form': return $this->handleViewForm($args); break;
 				case 'do.save': return $this->handleSave($args); break;
@@ -108,6 +109,40 @@
 			if(isset($col)) $col->addValue('content', $colContent);
 			
 			return $view->render();
+		}
+		
+		private function handleViewLinks($args){
+			$user = $this->sp->user->getLoggedInUser();
+			$view = new core\Template\ViewDescriptor('_services/Contacts/contact_links');
+			if($user && isset($args['entry_id']) && isset($args['link_table'])){
+				if($this->checkLinkingAuth($args['link_table'], $args['entry_id'])){
+					$contacts = Contact::getLinkedContacts($args['link_table'], $args['entry_id']);
+					if(count($contacts) > 0){
+						foreach($contacts as $contact){
+							$svc = $view->showSubView('row');
+							$svc->addValue('firstname', $contact->getFirstName());
+							$svc->addValue('lastname', $contact->getLastName());
+							$svc->addValue('id', $contact->getId());
+							$svc->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
+						}
+					}
+				}
+			}
+			
+			return $view->render();
+			
+		}
+		
+		private function checkLinkingAuth($linkTable, $entryId){
+			$user = $this->sp->user->getLoggedInUser();
+			$entry = $this->sp->db->fetchRow('SELECT * FROM '.$this->sp->db->prefix.$this->sp->db->escape($linkTable).' WHERE id = \''.$entryId.'\';');
+			if((isset($entry['owner_id']) || isset($entry['author_id']) || isset($entry['user_id'])) && $user){
+				if(isset($entry['owner_id']) && $entry['owner_id'] == $user->getId()) return true;
+				else if(isset($entry['author_id']) && $entry['author_id'] == $user->getId()) return true;
+				else if(isset($entry['user_id']) && $entry['user_id'] == $user->getId()) return true;
+				else return false;
+			}
+			else return true;
 		}
 		
 		private function handleViewDetail($args){
@@ -325,19 +360,37 @@
 		private function handleLinks($args){
 			$user = $this->sp->user->getLoggedInUser();
 			if($user){
-				//check if all arguments are available
-				// - contact_ids[]
-				// - entry_id
-				// - link_table
-				
-				//get all current links
-				
-				//cross check
-					//save new
-					//delete old
+				if(isset($args['entry_id']) && isset($args['link_table'])){
+					return $this->saveLinks(isset($args['contact_ids'])?$args['contact_ids']:array(), $args['link_table'], $args['entry_id']);
+				}
 			}
 				
 			return false;
+		}
+		
+		public function saveLinks($contactIds, $linkTable, $entryId){
+			$user = $this->sp->user->getLoggedInUser();
+			if(!$user) return false;
+			if(!$this->checkLinkingAuth($linkTable, $entryId)) return false;
+			$oldCids = Contact::getLinkedContacts($linkTable, $entryId, true);
+			$cids = array();
+			//save values
+			foreach($contactIds as $cid){
+				if(!in_array($cid, $oldCids)){
+					$co = Contact::getContact($cid);
+					if($co && $co->getOwnerId() == $user->getId()) $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.$this->sp->db->escape($linkTable).'_contacts (`entry_id`,`contact_id`) VALUES (\''.$this->sp->db->escape($entryId).'\', \''.$this->sp->db->escape($cid).'\');');
+				}
+				$cids[] = $cid;
+			}
+				
+			//remove old values
+			foreach($oldCids as $cid){
+				if(!in_array($cid, $cids)){
+					$this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.$this->sp->db->escape($linkTable).'_contacts WHERE entry_id=\''.$this->sp->db->escape($entryId).'\' AND contact_id=\''.$this->sp->db->escape($cid).'\';');
+				}
+			}
+			
+			return true;
 		}
 		
 		private function handleLink($args){

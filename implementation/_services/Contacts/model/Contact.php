@@ -89,7 +89,7 @@
 		public static function getLinkedContacts($linkTable, $entryId = -1, $onlyIds = false){
 			if($entryId >= 0) $where = ' WHERE lt.entry_id = '.ServiceProvider::getInstance()->db->escape($entryId);
 			else $where = '';
-			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.ServiceProvider::getInstance()->db->escape($linkTable).' AS lt LEFT JOIN '.ServiceProvider::getInstance()->db->prefix.'contacts AS c ON c.id = lt.contact_id '.$where.';');
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.ServiceProvider::getInstance()->db->escape($linkTable).'_contacts AS lt LEFT JOIN '.ServiceProvider::getInstance()->db->prefix.'contacts AS c ON c.id = lt.contact_id '.$where.';');
 			$out = array();
 			foreach($result as $entry) {
 				if($onlyIds) $out[] = $entry['contact_id'];

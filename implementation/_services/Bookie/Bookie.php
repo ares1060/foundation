@@ -141,7 +141,7 @@
 						$aiv = $av->showSubView('item');
 						
 						$aiv->addValue('url', $a->getFile());
-						$aiv->addValue('thumb', $GLOBALS['to_root'].'_templates/'.$this->sp->tpl->getTemplate().'/img/attachment_dummy.png');
+						$aiv->addValue('thumb', $GLOBALS['to_root'].$this->sp->tpl->getTemplateDir().'/img/attachment_dummy.png');
 					}
 				}
 					

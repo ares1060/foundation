@@ -48,8 +48,8 @@
                                         'root'=>(isset($GLOBALS['connector_to_root'])) ? $GLOBALS['connector_to_root']: $GLOBALS['to_root'], // connector gets new root if needen because of template rendering from other folder
             							'abs_root'=>$GLOBALS['abs_root'],
 //             							'working_dir'=>$GLOBALS['working_dir'],
-                                        'tpl_root_folder'=>'_templates/'.$this->settings->tpl_base_template,
-                                        'tpl_folder'=>'_templates/'.$this->template.'/',
+                                        'tpl_root_folder' => '_templates/'.$this->settings->tpl_base_template,
+                                        'tpl_folder' => $this->getTemplateDir(),
             							'service_folder' => '_services',
                                         'user_id'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getId() : '',
                                         'user_group'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getGroup()->getName() : '',
@@ -157,7 +157,7 @@
         private function renderCss($array) {
             $return = '';
             foreach($array as $row) {
-            	$file = $GLOBALS['abs_root'].'_templates/'.$this->template.'/css/'.$row;
+            	$file = $GLOBALS['abs_root'].$this->getTemplateDir().'css/'.$row;
             	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_templates/'.$this->settings->tpl_base_template.'/css/'.$row;
                 $return .= '<link rel="stylesheet" type="text/css" href="'.$file.'" />'."\n";
             }
@@ -165,7 +165,7 @@
         }
         
         public function getCssPath($css_file){
-        	$file = '_templates/'.$this->template.'/css/'.$css_file;
+        	$file = $this->getTemplateDir().'css/'.$css_file;
         	if(!$this->checkIfExtFileExists($GLOBALS['abs_root'].$file)) $file = '_templates/'.$this->settings->tpl_base_template.'/css/'.$css_file;
         	return $file;
         }
@@ -173,7 +173,7 @@
         private function renderJs($array) {
             $return = '';
             foreach($array as $row) {
-            	$file = $GLOBALS['abs_root'].'_templates/'.$this->template.'/js/'.$row;
+            	$file = $this->getTemplateDir().'js/'.$row;
             	if(!$this->checkIfExtFileExists($file)) $file = $GLOBALS['abs_root'].'_templates/'.$this->settings->tpl_base_template.'/js/'.$row;
                 $return .= '<script type="text/javascript" src="'.$file.'"></script>'."\n";
             }
@@ -238,7 +238,7 @@
 			if(isset($this->rawTemplateCache[$this->template.'::'.$tID])){
 				$tpl = $this->rawTemplateCache[$this->template.'::'.$tID];
 			} else {
-				$file = $GLOBALS['config']['root'].'_templates/'.$this->template.'/'.$tID.'.html';
+				$file = $GLOBALS['config']['root'].$this->getTemplateDir().$tID.'.html';
 				if(!is_file($file)) $file = $GLOBALS['config']['root'].'_templates/'.$this->settings->tpl_base_template.'/'.$tID.'.html';
 				//echo $file.'<br />';
 				//print_r($this->config);
@@ -603,9 +603,13 @@
         public function setTemplate($tpl_name){
         	if($this->isAllowedToChangeTemplate()){
         		$this->template = $tpl_name;
-        		$this->baseReplaces['tpl_folder'] = '_templates/'.$this->template.'/';
+        		$this->baseReplaces['tpl_folder'] = $this->getTemplateDir();
         		$GLOBALS['tpl']['activeTemplate'] = $tpl_name;
         	}
+        }
+        
+        public function getTemplateDir(){
+        	return ($this->settings->tpl_path_mode == 0)?'_templates/'.$this->template.'/':$this->template.'/_template/';
         }
         
         public function getTemplate(){

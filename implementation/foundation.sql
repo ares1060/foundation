@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 29. Dez 2013 um 17:39
+-- Erstellungszeit: 03. Jan 2014 um 23:38
 -- Server Version: 5.5.16
 -- PHP-Version: 5.3.8
 
@@ -13,6 +13,28 @@ SET time_zone = "+00:00";
 --
 -- Datenbank: `foundation`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_bookie_accounts`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_bookie_accounts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `notes` text NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+
+--
+-- Daten für Tabelle `pp_bookie_accounts`
+--
+
+INSERT INTO `pp_bookie_accounts` (`id`, `user_id`, `name`, `notes`) VALUES
+(1, -1, 'Überweisung', 'Geldverkehr auf Bankkonten'),
+(2, -1, 'Bar', 'Geldverkehr über Kassa bzw. Bar');
 
 -- --------------------------------------------------------
 
@@ -50,6 +72,27 @@ INSERT INTO `pp_bookie_attachments` (`id`, `entry_id`, `date`, `file`, `file_typ
 -- --------------------------------------------------------
 
 --
+-- Tabellenstruktur für Tabelle `pp_bookie_categories`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_bookie_categories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) NOT NULL,
+  `taxid` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+
+--
+-- Daten für Tabelle `pp_bookie_categories`
+--
+
+INSERT INTO `pp_bookie_categories` (`id`, `name`, `taxid`) VALUES
+(1, 'PKW', '123'),
+(2, 'LKW', '124');
+
+-- --------------------------------------------------------
+
+--
 -- Tabellenstruktur für Tabelle `pp_bookie_entries`
 --
 
@@ -63,42 +106,45 @@ CREATE TABLE IF NOT EXISTS `pp_bookie_entries` (
   `tax_value` decimal(10,2) NOT NULL,
   `date` date NOT NULL,
   `state` varchar(30) NOT NULL,
+  `account_id` int(11) NOT NULL,
+  `category_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=11 ;
 
 --
 -- Daten für Tabelle `pp_bookie_entries`
 --
 
-INSERT INTO `pp_bookie_entries` (`id`, `user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`) VALUES
-(1, 24, 'Test', '100.00', '100.00', '', '0.00', '2013-12-15', 'payed'),
-(2, 24, 'Test 2', '-100.00', '-83.33', 'MwSt.', '0.20', '2013-12-15', 'delayed'),
-(4, 24, 'asdf', '4593.50', '3827.92', 'MwSt.', '0.20', '2013-12-17', 'dunned'),
-(5, 24, '', '208.33', '208.33', 'MwSt.', '0.20', '2013-12-12', 'payed'),
-(6, 24, '', '333.33', '333.33', 'Ust.', '0.00', '2013-12-04', 'open'),
-(7, 24, 'so ein depp', '0.00', '-400.00', 'Deppensteuer', '0.30', '2013-12-20', 'payed'),
-(8, 24, '', '500.00', '416.67', 'MwSt.', '0.20', '2013-12-19', 'open'),
-(9, 24, '', '239.00', '199.17', '', '0.20', '2013-12-23', 'open');
+INSERT INTO `pp_bookie_entries` (`id`, `user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`, `account_id`, `category_id`) VALUES
+(1, 24, 'Test', '100.00', '100.00', '', '0.00', '2013-12-15', 'payed', 0, 0),
+(2, 24, 'Test 2', '-100.00', '-83.33', 'MwSt.', '0.20', '2013-12-15', 'delayed', 0, 0),
+(4, 24, 'asdf', '4593.50', '3827.92', 'MwSt.', '0.20', '2013-12-17', 'dunned', 0, 0),
+(5, 24, '', '208.33', '208.33', 'MwSt.', '0.20', '2013-12-12', 'payed', 0, 0),
+(6, 24, '', '333.33', '333.33', 'Ust.', '0.00', '2013-12-04', 'open', 0, 0),
+(7, 24, 'so ein depp', '0.00', '-400.00', 'Deppensteuer', '0.30', '2013-12-20', 'payed', 0, 0),
+(8, 24, '', '500.00', '416.67', 'MwSt.', '0.20', '2013-12-19', 'open', 0, 0),
+(9, 24, '', '255.00', '212.50', '', '0.20', '2013-12-23', 'open', 0, 0),
+(10, 24, '', '200.00', '200.00', '', '0.00', '2014-01-29', 'open', 2, 1);
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `pp_bookie_entry_contacts`
+-- Tabellenstruktur für Tabelle `pp_bookie_entries_contacts`
 --
 
-CREATE TABLE IF NOT EXISTS `pp_bookie_entry_contacts` (
+CREATE TABLE IF NOT EXISTS `pp_bookie_entries_contacts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `entry_id` int(11) NOT NULL,
   `contact_id` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `entry_id` (`entry_id`,`contact_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=15 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=17 ;
 
 --
--- Daten für Tabelle `pp_bookie_entry_contacts`
+-- Daten für Tabelle `pp_bookie_entries_contacts`
 --
 
-INSERT INTO `pp_bookie_entry_contacts` (`id`, `entry_id`, `contact_id`) VALUES
+INSERT INTO `pp_bookie_entries_contacts` (`id`, `entry_id`, `contact_id`) VALUES
 (1, 1, 5),
 (2, 1, 8),
 (14, 1, 16),
@@ -106,7 +152,8 @@ INSERT INTO `pp_bookie_entry_contacts` (`id`, `entry_id`, `contact_id`) VALUES
 (9, 7, 11),
 (10, 8, 13),
 (11, 9, 11),
-(12, 10, 8);
+(15, 9, 13),
+(16, 10, 13);
 
 -- --------------------------------------------------------
 
@@ -343,6 +390,7 @@ CREATE TABLE IF NOT EXISTS `pp_right_user` (
 
 CREATE TABLE IF NOT EXISTS `pp_tags` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `webname` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
@@ -356,6 +404,7 @@ CREATE TABLE IF NOT EXISTS `pp_tags` (
 
 CREATE TABLE IF NOT EXISTS `pp_tag_links` (
   `id` int(11) NOT NULL,
+  `tag_id` int(11) NOT NULL,
   `service` varchar(100) NOT NULL,
   `param` varchar(100) NOT NULL,
   UNIQUE KEY `id` (`id`,`service`,`param`)
@@ -387,7 +436,7 @@ CREATE TABLE IF NOT EXISTS `pp_user` (
 
 INSERT INTO `pp_user` (`id`, `nick`, `hash`, `group`, `email`, `activate`, `reset`, `status`, `created`, `last_login`) VALUES
 (1, 'root', 'a3597971769fc171e38fb92ff3cd4cc429370b618342836ff7a2eb61fe7d6f70ead7dd6586c2044d759ab962b6fbb96d48981259e592e3c79b559d84a79fe64a#me:fpeH2cc68;p9npeQ/Qemi0UQ%Wu!g4Hweu=US4JsPUxqa-Oe', 1, 'root@apple.com', '', '', 1, 0, 1387833730),
-(24, 'tester', 'c708109949e40eb065844fad07f90e45114c1f3a5beb06b5a451855894b9f7a8aa7a72903e761d67ec9ea30269abeef15989dd4ce931d8f853a0468c12be154c#d3x,Zgv2F|;dntc5Zq_YUuucom!|R6tB5j5dj$VxmUaj8fNhAYG', 3, 'lol@test.com', '', '', 1, 1385307568, 1388334974),
+(24, 'tester', 'c708109949e40eb065844fad07f90e45114c1f3a5beb06b5a451855894b9f7a8aa7a72903e761d67ec9ea30269abeef15989dd4ce931d8f853a0468c12be154c#d3x,Zgv2F|;dntc5Zq_YUuucom!|R6tB5j5dj$VxmUaj8fNhAYG', 3, 'lol@test.com', '', '', 1, 1385307568, 1388788624),
 (23, 'tester1', '671ccdec908af53b2701e800c40695fff0db7970495fa13448fb2aecb7cfefe15feb100679ea1d559ff08ae707c96fb4c36f7af12204a3d24acbc69390456778#yTlji4B7C\\!klsnm4-J3i\\X14iDsuXiA$3.NkmL$fLLddutwoZf', 1, 'lol@test.com', '', '', 1, 1385307568, -1),
 (22, 'tester2', 'a929adf5e33f76c17fbc1084b26e6ba234804b40808ba33f78c08aea044c38ee2b77ed0ed2978d3e85a479067d22a1454c8e66ca5488331b7458ab4bdd1b97a7#XjUOu@6jWEKf$ci$Ydxp:V3o52ah5&tN5hmNikzk%?q5pFeWhIg', 1, 'lol@test.com', '', '', 1, 1385307567, -1),
 (21, 'tester3', 'e34f95d898907dc4a1bebd377679ea945b3854c3879fbc0df459551690cfb4017419f665ad79b6aae3f207771962592e18ac2e24a72f78d0650c5f220b1f64f6#KwnsI1fdYQk2M5u2\\9lBlXwHzmo5|xG?,+mExwudiU%dcsh7PY$', 1, 'lol@test.com', '', '', 1, 1385307566, -1),

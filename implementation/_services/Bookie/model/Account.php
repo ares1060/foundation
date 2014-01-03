@@ -43,6 +43,18 @@
 		}
 		
 		/**
+		* Fetches all matching Accounts from the database and returns them in an array
+		* @param int $userId
+		* @param int $from
+		* @param int $rows
+		* @return Account[]
+		*/
+		public static function getAccountsForUser($userId = -1, $from = 0, $rows = -1){
+			if($userId >= 0) return self::getAccounts('WHERE (a.user_id = \'-1\' OR a.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\')', $from, $rows);
+			else return self::getAccounts('WHERE a.user_id = \'-1\'', $from, $rows);
+		}
+		
+		/**
 		 * Fetches the Account with the given ID from the database
 		 * @param int $accountId The id of the Account to be fetched
 		 * @return Account|NULL
@@ -69,11 +81,11 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_accounts
-								(`user_id`, `notes`, `name`) VALUES 
+								(`user_id`, `name`, `notes`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->ownerId).'\', 
-									\''.$this->sp->db->escape($this->notes).'\', 
-									\''.$this->sp->db->escape($this->name).'\'
+									\''.$this->sp->db->escape($this->name).'\', 
+									\''.$this->sp->db->escape($this->notes).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();

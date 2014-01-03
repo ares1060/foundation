@@ -208,6 +208,37 @@
 		}
 		
 		/**
+		* Overriding the BaseModel save to do proper save
+		*/
+		public function save(){
+			if($this->id == ''){
+				//insert
+				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'tags
+										(`user_id`, `name`, `webname`) VALUES 
+										(
+											\''.$this->sp->db->escape($this->ownerId).'\', 
+											\''.$this->sp->db->escape($this->name).'\', 
+											\''.$this->sp->db->escape($this->webname).'\'
+										);');
+				if($succ) {
+					$this->id = $this->sp->db->getInsertedID();
+					return true;
+				} else {
+					return false;
+				}
+		
+			} else {
+				//update
+				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'tags SET
+								`user_id` = \''.$this->sp->db->escape($this->ownerId).'\', 
+								`webname` = \''.$this->sp->db->escape($this->webname).'\', 
+								`name` = \''.$this->sp->db->escape($this->name).'\'
+							WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
+			}
+			return true;
+		}
+		
+		/**
 		 *	Deletes the tag data item from the database
 		 */
 		public function delete(){

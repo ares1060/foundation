@@ -4,6 +4,7 @@
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/InvoicePart.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Receipt.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Attachment.php');
+	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Category.php');
 
 
 	use at\foundation\core;
@@ -183,6 +184,26 @@
 						$view->addValue('title', 'Rechnung editieren');
 					}
 					
+					$accs = Account::getAccountsForUser($user->getId());
+					if($accs){
+						foreach($accs as $acc){
+							$av = $view->showSubView('account_option');
+							$av->addValue('id', $acc->getId());
+							$av->addValue('name', $acc->getName());
+							if($acc->getId() == $entry->getAccountId()) $av->addValue('selected', ' selected="selected"');
+						}
+					}
+					
+					$cats = Category::getCategories();
+					if($cats){
+						foreach($cats as $cat){
+							$cv = $view->showSubView('category_option');
+							$cv->addValue('id', $cat->getId());
+							$cv->addValue('name', $cat->getName());
+							if($cat->getId() == $entry->getCategoryId()) $cv->addValue('selected', ' selected="selected"');
+						}
+					}
+					
 					return $view->render();
 				} else {
 					return 'not for you';
@@ -197,6 +218,24 @@
 					$invv->addValue('number', 'WMR_'.date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
 				} else {
 					$view->addValue('title', 'Neuer Eintrag');
+				}
+				
+				$accs = Account::getAccountsForUser($user->getId());
+				if($accs){
+					foreach($accs as $acc){
+						$av = $view->showSubView('account_option');
+						$av->addValue('id', $acc->getId());
+						$av->addValue('name', $acc->getName());
+					}
+				}
+				
+				$cats = Category::getCategories();
+				if($cats){
+					foreach($cats as $cat){
+						$cv = $view->showSubView('category_option');
+						$cv->addValue('id', $cat->getId());
+						$cv->addValue('name', $cat->getName());
+					}
 				}
 				
 				return $view->render();
@@ -223,8 +262,9 @@
 				if(isset($args['brutto'])) $entry->setBrutto($args['brutto']);
 				if(isset($args['netto'])) $entry->setNetto($args['netto']);
 				if(isset($args['date'])) $entry->setDate(new DateTime($args['date']));
+				if(isset($args['category'])) $entry->setCategory($args['category']);
 				if(isset($args['account'])){
-					$acc = Account:getAccount($args['account']);
+					$acc = Account::getAccount($args['account']);
 					if($acc->getOwnerID() == -1 || $acc->getOwnerID() == $user->getId()) $entry->setAccount($args['account']);
 				}
 				

@@ -144,7 +144,7 @@
 						`tax_value` = \''.$this->sp->db->escape($this->taxValue).'\', 
 						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 						`state` = \''.$this->sp->db->escape($this->state).'\',
-						`account_id` = \''.$this->sp->db->escape($this->accountId).'\'
+						`account_id` = \''.$this->sp->db->escape($this->accountId).'\',
 						`category_id` = \''.$this->sp->db->escape($this->categoryId).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}

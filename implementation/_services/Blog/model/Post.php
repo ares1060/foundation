@@ -93,7 +93,7 @@
 		}
 		
 		/**
-		 *	Deletes the contact data item from the database
+		 *	Deletes the post data item from the database
 		 */
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.'blog_posts WHERE id=\''.$this->sp->db->escape($this->id).'\';');

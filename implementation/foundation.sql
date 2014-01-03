@@ -351,10 +351,10 @@ CREATE TABLE IF NOT EXISTS `pp_tags` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `pp_tags_link`
+-- Tabellenstruktur für Tabelle `pp_tag_links`
 --
 
-CREATE TABLE IF NOT EXISTS `pp_tags_link` (
+CREATE TABLE IF NOT EXISTS `pp_tag_links` (
   `id` int(11) NOT NULL,
   `service` varchar(100) NOT NULL,
   `param` varchar(100) NOT NULL,

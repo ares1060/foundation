@@ -5,6 +5,7 @@
 	
 	require_once $GLOBALS['config']['root'].'_services/Bookie/model/Receipt.php';
 	require_once $GLOBALS['config']['root'].'_services/Bookie/model/Invoice.php';
+	require_once $GLOBALS['config']['root'].'_services/Bookie/model/Account.php';
 	
 	class Entry extends core\BaseModel {
 		
@@ -21,8 +22,10 @@
 		 */
 		private $date;
 		private $state;
+		private $accountId;
+		private $account;
 	
-		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open') {
+		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open', $account = -1) {
             $this->ownerId = $owner;
 			$this->brutto = $brutto;
 			$this->netto = $netto;
@@ -31,6 +34,7 @@
 			$this->date = (!$date)?new DateTime():$date;
 			$this->notes = $notes;
 			$this->state = $state;
+			$this->accountId = $account;
 			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_entries', array());
         }
 		
@@ -51,7 +55,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, e.id as id FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $entry) {
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state']);
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account']);
 				$eo->setId($entry['id']);
 				$out[] = $eo;
 			}
@@ -87,7 +91,7 @@
 		public static function getEntry($entryId) {
 			$entry = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries WHERE id =\''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
 			if($entry){
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state']);
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account']);
 				$eo->setId($entry['id']);
 				return $eo;
 			} else {
@@ -106,7 +110,7 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_entries 
-								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`) VALUES 
+								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`, `account`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->ownerId).'\', 
 									\''.$this->sp->db->escape($this->notes).'\', 
@@ -115,7 +119,8 @@
 									\''.$this->sp->db->escape($this->taxType).'\', 
 									\''.$this->sp->db->escape($this->taxValue).'\', 
 									\''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
-									\''.$this->sp->db->escape($this->state).'\'
+									\''.$this->sp->db->escape($this->state).'\',
+									\''.$this->sp->db->escape($this->accountId).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -134,7 +139,8 @@
 						`tax_type` = \''.$this->sp->db->escape($this->taxType).'\', 
 						`tax_value` = \''.$this->sp->db->escape($this->taxValue).'\', 
 						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
-						`state` = \''.$this->sp->db->escape($this->state).'\'
+						`state` = \''.$this->sp->db->escape($this->state).'\',
+						`account` = \''.$this->sp->db->escape($this->accountId).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -182,6 +188,7 @@
 		 */
 		public function setDate($date) { $this->date = $date; return $this; }
 		public function setState($state) { $this->state = $state; return $this; }
+		public function setAccount($account) { $this->accountId = $account; $this->account = null; return $this; }
 		
 		public function getId(){ return $this->id; }
 		/**
@@ -203,6 +210,14 @@
 		 */
 		public function getDate() { return $this->date; }
 		public function getState() { return $this->state; }
+		/**
+		 * @return at/foundation/_core/User/model/User
+		 */
+		public function getAccount(){ 
+			if(!$this->account == null) $this->account = Account::getAccount($this->accountId);
+			return $this->account;
+		}
+		public function getAccountId(){ return $this->accountId; }
 		
 	}
 ?>

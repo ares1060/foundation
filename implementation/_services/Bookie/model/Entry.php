@@ -24,8 +24,10 @@
 		private $state;
 		private $accountId;
 		private $account;
+		private $categoryId;
+		private $category;
 	
-		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open', $account = -1) {
+		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open', $account = -1, $category = -1) {
             $this->ownerId = $owner;
 			$this->brutto = $brutto;
 			$this->netto = $netto;
@@ -35,6 +37,7 @@
 			$this->notes = $notes;
 			$this->state = $state;
 			$this->accountId = $account;
+			$this->categoryId = $category;
 			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_entries', array());
         }
 		
@@ -55,7 +58,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, e.id as id FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $entry) {
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account']);
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id']);
 				$eo->setId($entry['id']);
 				$out[] = $eo;
 			}
@@ -91,7 +94,7 @@
 		public static function getEntry($entryId) {
 			$entry = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries WHERE id =\''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
 			if($entry){
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account']);
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id']);
 				$eo->setId($entry['id']);
 				return $eo;
 			} else {
@@ -110,7 +113,7 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_entries 
-								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`, `account`) VALUES 
+								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`, `account_id`, `category_id`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->ownerId).'\', 
 									\''.$this->sp->db->escape($this->notes).'\', 
@@ -120,7 +123,8 @@
 									\''.$this->sp->db->escape($this->taxValue).'\', 
 									\''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 									\''.$this->sp->db->escape($this->state).'\',
-									\''.$this->sp->db->escape($this->accountId).'\'
+									\''.$this->sp->db->escape($this->accountId).'\',
+									\''.$this->sp->db->escape($this->categoryId).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -140,7 +144,8 @@
 						`tax_value` = \''.$this->sp->db->escape($this->taxValue).'\', 
 						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 						`state` = \''.$this->sp->db->escape($this->state).'\',
-						`account` = \''.$this->sp->db->escape($this->accountId).'\'
+						`account_id` = \''.$this->sp->db->escape($this->accountId).'\'
+						`category_id` = \''.$this->sp->db->escape($this->categoryId).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -189,6 +194,7 @@
 		public function setDate($date) { $this->date = $date; return $this; }
 		public function setState($state) { $this->state = $state; return $this; }
 		public function setAccount($account) { $this->accountId = $account; $this->account = null; return $this; }
+		public function setCategory($category) { $this->categoryId = $category; $this->category = null; return $this; }
 		
 		public function getId(){ return $this->id; }
 		/**
@@ -211,13 +217,21 @@
 		public function getDate() { return $this->date; }
 		public function getState() { return $this->state; }
 		/**
-		 * @return at/foundation/_core/User/model/User
+		 * @return Account
 		 */
 		public function getAccount(){ 
 			if(!$this->account == null) $this->account = Account::getAccount($this->accountId);
 			return $this->account;
 		}
 		public function getAccountId(){ return $this->accountId; }
+		/**
+		 * @return Category
+		 */
+		public function getCategory(){ 
+			if(!$this->category == null) $this->category = Category::getCategory($this->categoryId);
+			return $this->category;
+		}
+		public function getCategoryId(){ return $this->categoryId; }
 		
 	}
 ?>

@@ -223,6 +223,10 @@
 				if(isset($args['brutto'])) $entry->setBrutto($args['brutto']);
 				if(isset($args['netto'])) $entry->setNetto($args['netto']);
 				if(isset($args['date'])) $entry->setDate(new DateTime($args['date']));
+				if(isset($args['account'])){
+					$acc = Account:getAccount($args['account']);
+					if($acc->getOwnerID() == -1 || $acc->getOwnerID() == $user->getId()) $entry->setAccount($args['account']);
+				}
 				
 				if($entry->getOwnerId() < 0) $entry->setOwner($user->getId());
 				

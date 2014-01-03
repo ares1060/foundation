@@ -35,7 +35,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, a.id as id FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_accounts AS a '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $acc) {
-				$ao = new Account($acc['user_id'], $acc['notes'], $entry['name']);
+				$ao = new Account($acc['user_id'], $acc['notes'], $acc['name']);
 				$ao->setId($acc['id']);
 				$out[] = $ao;
 			}
@@ -50,9 +50,9 @@
 		public static function getAccount($accountId) {
 			$acc = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_accounts WHERE id =\''.ServiceProvider::getInstance()->db->escape($accountId).'\';');
 			if($acc){
-				$ao = new Account($acc['user_id'], $acc['notes'], $entry['name']);
+				$ao = new Account($acc['user_id'], $acc['notes'], $acc['name']);
 				$ao->setId($acc['id']);
-				return $eo;
+				return $ao;
 			} else {
 				return null;
 			}
@@ -94,7 +94,7 @@
 		}
 		
 		/**
-		 *	Deletes the entry data item from the database
+		 *	Deletes the account data item from the database
 		 */
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.'bookie_accounts WHERE id=\''.$this->sp->db->escape($this->id).'\';');

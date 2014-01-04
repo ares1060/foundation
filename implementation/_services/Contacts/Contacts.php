@@ -35,8 +35,9 @@
 			$user = $this->sp->user->getLoggedInUser();
 			$whereSQL = 'WHERE user_id = \''.$user->getId().'\'';
 			if(isset($args['search']) && strlen($args['search']) > 2){
-					$args['search'] = $this->sp->db->escape($args['search']);
-					$whereSQL .= ' AND (`firstname` LIKE \'%'.$args['search'].'%\' OR `lastname` LIKE \'%'.$args['search'].'%\')';
+					$args['search'] = trim($args['search']);
+					$lastSpace = strrpos($args['search'], ' ');
+					$whereSQL .= ' AND (`firstname` LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], 0, $lastSpace):$args['search']).'%\' '.(($lastSpace !== False)?'AND':'OR').' `lastname` LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], $lastSpace+1):$args['search']).'%\')';
 			}
 			$from = 0;
 			if(isset($args['from']) && $args['from'] > 0) {

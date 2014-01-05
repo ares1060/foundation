@@ -62,6 +62,50 @@
         	}
         }
         
+        public function fixDateLoc($datestring){
+        	return str_replace(array(
+        		'Sunday',
+        		'Monday',
+        		'Tuesday',
+        		'Wednesday',
+        		'Thursday',
+        		'Friday',
+        		'Saturday',
+        		'January',
+        		'February',
+        		'March',
+        		'April',
+        		'May',
+        		'June',
+        		'July',
+        		'August',
+        		'September',
+        		'October',
+        		'November',
+        		'December'
+        	), array(
+	        	'Sonntag',
+				'Montag',
+	        	'Dienstag',
+	       		'Mittwoch',
+	       		'Donnerstag',
+	        	'Freitag',
+	      		'Samstag',
+	        	'Jänner',
+	        	'Februar',
+				'März',
+				'April',
+				'Mai',
+				'Juni',
+				'Juli',
+				'August',
+				'September',
+				'Oktober',
+				'November',
+				'Dezember'
+        	), $datestring);
+        }
+        
         public function string2Web($string){
         	$string = str_replace(
         		array(' ', '&auml;', '&Auml;', 

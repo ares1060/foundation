@@ -136,7 +136,7 @@
 									\''.ServiceProvider::get()->db->escape($this->email).'\',
 									\''.ServiceProvider::get()->db->escape($this->phone).'\',
 									\''.ServiceProvider::get()->db->escape($this->notes).'\',
-									\''.ServiceProvider::get()->db->escape($this->lastContact->format('Y-m-d h:i:s')).'\',
+									\''.ServiceProvider::get()->db->escape($this->lastContact->format('Y-m-d H:i:s')).'\',
 									\''.ServiceProvider::get()->db->escape($this->socialSecurityNumber).'\',
 									\''.ServiceProvider::get()->db->escape($this->image).'\',
 									\''.ServiceProvider::get()->db->escape($this->birthdate->format('Y-m-d')).'\'
@@ -160,7 +160,7 @@
 						email = \''.ServiceProvider::get()->db->escape($this->email).'\',
 						phone = \''.ServiceProvider::get()->db->escape($this->phone).'\',
 						notes = \''.ServiceProvider::get()->db->escape($this->notes).'\',
-						last_contact = \''.ServiceProvider::get()->db->escape($this->lastContact->format('Y-m-d h:i:s')).'\',
+						last_contact = \''.ServiceProvider::get()->db->escape($this->lastContact->format('Y-m-d H:i:s')).'\',
 						ssnum = \''.ServiceProvider::get()->db->escape($this->socialSecurityNumber).'\',
 						image = \''.ServiceProvider::get()->db->escape($this->image).'\',
 						birthdate = \''.ServiceProvider::get()->db->escape($this->birthdate->format('Y-m-d')).'\'

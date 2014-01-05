@@ -115,11 +115,11 @@
 				$sv = $view->showSubView('row');
 
 				$sv->addValue('id', $entry->getId());
-				$sv->addValue('date', $entry->getDate()->format('d. F Y'));
+				$sv->addValue('date', $this->sp->txtfun->fixDateLoc($entry->getDate()->format('d. F Y')));
 				$sv->addValue('type', ($entry->getBrutto() <= 0)?'out':'in');
 				$sv->addValue('amount', number_format($entry->getBrutto(), 2, ',', '.'));
 				$sv->addValue('state', $entry->getState());
-				$sv->addValue('notes', $entry->getNotes());
+				$sv->addValue('notes', nl2br($entry->getNotes()));
 				
 				if($entry->getTaxValue() > 0){
 					$svt = $sv->showSubView('taxinfo');

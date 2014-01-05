@@ -41,11 +41,11 @@
 		}
 		
 		public static function getPost($postId) {
-			$post = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'blog_posts WHERE  id = \''.ServiceProvider::getInstance()->db->escape($postId).'\';');
+			$post = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'blog_posts WHERE id = \''.ServiceProvider::getInstance()->db->escape($postId).'\';');
 			if($post) {
 				$po = new Post($post['user_id'], $post['text'], $post['title'], new DateTime($post['date']));
 				$po->setId($post['id']);
-				$out[] = $po;
+				return $po;
 			}
 			return null;
 		}
@@ -69,7 +69,7 @@
 								(`user_id`, `date`, `title`, `text`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->authorId).'\',
-									\''.$this->sp->db->escape($this->date->format('Y-m-d h:i:s')).'\',
+									\''.$this->sp->db->escape($this->date->format('Y-m-d H:i:s')).'\',
 									\''.$this->sp->db->escape($this->title).'\',
 									\''.$this->sp->db->escape($this->text).'\'
 								);');
@@ -84,7 +84,7 @@
 				//update
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'blog_posts SET
 						`user_id` = \''.$this->sp->db->escape($this->authorId).'\',
-						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d h:i:s')).'\',
+						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d H:i:s')).'\',
 						`title` = \''.$this->sp->db->escape($this->title).'\',
 						`text` = \''.$this->sp->db->escape($this->text).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');

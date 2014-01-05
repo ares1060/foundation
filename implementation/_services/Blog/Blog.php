@@ -26,7 +26,10 @@
 			$user = $this->sp->user->getLoggedInUser();
 			$whereSQL = 'WHERE 1=1';
 			
-			if(isset($args['author'])){
+			if($this->settings->journal_mode == "private"){
+				if(!$user) return '';
+				$whereSQL .= ' AND user_id = \''.$this->sp->db->escape($user->getId()).'\'';
+			} else if(isset($args['author'])){
 				$whereSQL .= ' AND user_id = \''.$this->sp->db->escape($args['author']).'\'';
 			}
 			
@@ -34,6 +37,16 @@
 					$args['search'] = $this->sp->db->escape($args['search']);
 					$whereSQL .= ' AND (`title` LIKE \'%'.$args['search'].'%\' OR `text` LIKE \'%'.$args['search'].'%\')';
 					//TODO tagging
+			}
+			
+			if(isset($args['date_from']) && $args['date_from'] != ''){
+				$args['date_from'] = $this->sp->db->escape($args['date_from']);
+				$whereSQL .= ' AND p.date >= \''.$args['date_from'].'\'';
+			}
+				
+			if(isset($args['date_to']) && $args['date_to'] != ''){
+				$args['date_to'] = $this->sp->db->escape($args['date_to']);
+				$whereSQL .= ' AND p.date <= \''.$args['date_to'].'\'';
 			}
 			
 			
@@ -45,6 +58,17 @@
 			$rows = -1;
 			if(isset($args['rows']) && $args['rows'] >= 0){
 				$rows = $this->sp->db->escape($args['rows']);
+			}
+			
+			//TODO: generalize this so that services can infuse filter criteria generically
+			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
+				$values = '';
+				foreach($args['contact_filter'] as $val){
+					$values .= $this->sp->db->escape($val).',';
+				}
+				$values = substr($values, 0, -1);
+				$whereSQL = 'JOIN '.$this->sp->db->prefix.'blog_posts_contacts AS c ON c.entry_id = p.id '.$whereSQL;
+				$whereSQL .= ' AND c.contact_id IN ('.$values.') GROUP BY p.id';
 			}
 			
 			$whereSQL .= ' ORDER BY p.date DESC, p.id DESC';
@@ -67,9 +91,9 @@
 				$sv = $view->showSubView('row');
 
 				$sv->addValue('id', $post->getId());
-				$sv->addValue('date', $post->getDate()->format('d. F Y, h:i'));
+				$sv->addValue('date', $this->sp->txtfun->fixDateLoc($post->getDate()->format('d. F Y, H:i')));
 				$sv->addValue('title', $post->getTitle());
-				$sv->addValue('text', $post->getText());
+				$sv->addValue('text', nl2br($post->getText()));
 					
 			}
 			
@@ -85,11 +109,10 @@
 				if($post && $post->getAuthorId() == $user->getId()){
 					$view->addValue('form_title', 'Eintrag bearbeiten');
 
+					$view->addValue('id', $post->getId());
 					$view->addValue('title', $post->getTitle());
 					$view->addValue('text', $post->getText());
-					$view->addValue('date', $post->getDate()->format('d.m.Y h:i:s'));
-					
-					//TODO contacts linking
+					$view->addValue('date', $post->getDate()->format('d.m.Y H:i'));
 					
 					return $view->render();
 				} else {
@@ -110,7 +133,7 @@
 				if(isset($args['id'])){
 					//get post
 					$post = Post::getPost($args['id']);
-					if(!$post || $post->getOwnerId() != $user->getId()) return false;
+					if(!$post || $post->getAuthorId() != $user->getId()) return false;
 				} else {
 					//create new post
 					$post = new Post();
@@ -124,27 +147,11 @@
 				
 				$ok = $post->save();
 				
-				if($ok && isset($args['contacts'])) {
-					/*$oldCids = $entry->getContactIds();
-					$cids = array();
-					//save values
-					foreach($args['contacts'] as $cid){
-						if(!in_array($cid, $oldCids)){
-							$entry->addContact($cid);
-						}
-						$cids[] = $cid;
-					}
-						
-					//remove old values
-					foreach($oldCids as $cid){
-						if(!in_array($cid, $cids)){
-							$entry->removeContact($cid);
-						}
-					}*/
-					//TODO implement generic contact linking
+				if($ok){
+					return $post->getId();
+				} else {
+					return false;
 				}
-				
-				return $ok;
 			} else {
 				return false;
 			}

@@ -82,7 +82,7 @@
 		* @return int
 		*/
 		public static function getEntryCount($insertSQL = ''){
-			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.';');
+			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(count) AS count FROM (SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.');');
 			return $result['count'];
 		}
 		

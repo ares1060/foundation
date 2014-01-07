@@ -10,12 +10,14 @@
 		private $webname;
 		private $ownerId;
 		private $ownerUser;
+		private $scope;
 
-		function __construct($name = '', $webname = '', $userId = -1){
+		function __construct($name = '', $webname = '', $userId = -1, $scope = ''){
 			$this->name = $name;
-			$this->webname = $this->sp->txtfun->string2Web($webname);
 			$this->ownerId = $userId;
+			$this->scope = $this->parseScope($scope);
 			parent::__construct(ServiceProvider::get()->db->prefix.'tags', array());
+			$this->webname = $this->sp->txtfun->string2Web($webname);
 		}	
 		
 		/**
@@ -65,7 +67,7 @@
 		 */
 		public static function getTagByName($name, $userId = -1){
 			if($name != ''){
-				$a = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags` WHERE `name`="'.ServiceProvider::getInstance()->db->escape($name).' AND (t.user_id = \'-1\''.(($userId >= 0)?' OR t.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'':'').');"');
+				$a = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags` t WHERE `name`=\''.ServiceProvider::getInstance()->db->escape($name).'\' AND (t.user_id = \'-1\''.(($userId >= 0)?' OR t.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'':'').');');
 				if($a != ''){
 					$t = new Tag($a['name'], $a['webname'], $a['user_id']);
 					$t->setId($a['id']);
@@ -82,7 +84,7 @@
 		 */
 		public static function getTagByWebname($webname, $userId = -1){
 			if($webname != ''){
-				$a = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags` WHERE `webname`="'.ServiceProvider::getInstance()->db->escape($webname).'" AND (t.user_id = \'-1\''.(($userId >= 0)?' OR t.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'':'').');');
+				$a = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags` t WHERE `webname`=\''.ServiceProvider::getInstance()->db->escape($webname).'\' AND (t.user_id = \'-1\''.(($userId >= 0)?' OR t.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'':'').');');
 				if($a != ''){
 					$t = new Tag($a['name'], $a['webname'], $a['user_id']);
 					$t->setId($a['id']);
@@ -105,6 +107,34 @@
 				return $return;
 			} else return array();
 		}
+
+		/**
+		* returnes Tags
+		*
+		* @param string $service
+		* @param string $param
+		* @param int $userId
+		* @param boolean $doQuery If false the sql statment is returend instead of the result.
+		*/
+		public static function getTags($service='', $name = '', $userId = -1, $doQuery = true){
+			$service = ($service != '') ? ' AND t.scope LIKE "%:'.ServiceProvider::getInstance()->db->escape($service).':%"' : '';
+			$name = ($name != '') ? ' AND t.name LIKE "%'.ServiceProvider::getInstance()->db->escape($name).'%"' : '';
+			$sql = 'SELECT '.((!$doQuery)?'t.id AS id':'*').' FROM `'.ServiceProvider::getInstance()->db->prefix.'tags` t
+												WHERE (t.user_id = \'-1\''.(($userId >= 0)?' OR t.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'':'').') '.$service.$name;
+			if(!$doQuery) return $sql;
+			$a = ServiceProvider::getInstance()->db->fetchAll($sql);
+			if($a != ''){
+				$out = array();
+				foreach($a as $tag){
+					$t = new Tag($tag['name'], $tag['webname'], $tag['user_id']);
+					$t->setId($tag['id']);
+					$out[] = $t;
+				}
+				return $out;
+			} else {
+				return array();
+			}
+		}
 		
 		/**
 		 * returnes Tags
@@ -114,12 +144,13 @@
 		 * @param int $userId
 		 * @param boolean $doQuery If false the sql statment is returend instead of the result.
 		 */
-		public static function getTags($service='', $param='', $userId = -1, $doQuery = true){
+		public static function getLinkedTags($service='', $param='', $userId = -1, $doQuery = true){
 			$param = ($param != '') ? ' AND tl.param="'.ServiceProvider::getInstance()->db->escape($param).'"' : '';
 			$service = ($service != '') ? ' AND tl.service="'.ServiceProvider::getInstance()->db->escape($service).'"' : '';
-			$sql = 'SELECT '.(($doQuery)?'t.id AS id':'*').' FROM `'.ServiceProvider::getInstance()->db->prefix.'tag_links` tl
+			$sql = 'SELECT '.((!$doQuery)?'t.id AS id':'*').' FROM `'.ServiceProvider::getInstance()->db->prefix.'tag_links` tl
 										LEFT JOIN `'.ServiceProvider::getInstance()->db->prefix.'tags` t ON tl.tag_id = t.id 
 										WHERE (t.user_id = \'-1\''.(($userId >= 0)?' OR t.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'':'').') '.$service.$param;
+
 			if(!$doQuery) return $sql;
 			$a = ServiceProvider::getInstance()->db->fetchAll($sql);
 			if($a != ''){
@@ -150,7 +181,7 @@
 		 * @param int $tagId
 		 * @param string $service
 		 */
-		public static function getTagCount($tagId, $service='', $userID = -1){
+		public static function getLinkCount($tagId, $service='', $userID = -1){
 			$service = ($service == '') ? '' : ' AND service="'.ServiceProvider::getInstance()->db->escape($service).'" ';
 			$a = ServiceProvider::getInstance()->db->fetchAll('SELECT COUNT(*) AS count FROM `'.ServiceProvider::getInstance()->db->prefix.'tag_links` WHERE tag_id="'.ServiceProvider::getInstance()->db->escape($tag_id).'"'.$service);
 			if($a != '' && isset($a['count'])){
@@ -158,6 +189,14 @@
 			} else return 0;
 		}
 		
+		public static function getLinkCountByName($name, $service='', $param = '', $userID = -1, $exact = true){
+			$service = ($service == '') ? '' : ' AND service="'.ServiceProvider::getInstance()->db->escape($service).'" ';
+			$param = ($param == '') ? '' : ' AND param="'.ServiceProvider::getInstance()->db->escape($param).'" ';
+			$a = ServiceProvider::getInstance()->db->fetchAll('SELECT COUNT(*) AS count FROM `'.ServiceProvider::getInstance()->db->prefix.'tag_links` tl LEFT JOIN '.ServiceProvider::getInstance()->db->prefix.'tags t ON tl.tag_id = t.id WHERE t.name LIKE "'.ServiceProvider::getInstance()->db->escape($name).((exact)?'':'%').'"'.$service.$param);
+			if($a != '' && isset($a['count'])){
+				return $a['count'];
+			} else return 0;
+		}
 		
 		/** 
 		 * INSTANCE METHODS
@@ -207,6 +246,13 @@
 			//TODO implement merging
 		}
 		
+		private function parseScope($scope){
+			if(strlen($scope) == 0) return array();
+			$scope = trim($scope, ':');
+			$parts = explode(':', $scope);
+			return $parts;
+		}
+		
 		/**
 		* Overriding the BaseModel save to do proper save
 		*/
@@ -214,11 +260,12 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'tags
-										(`user_id`, `name`, `webname`) VALUES 
+										(`user_id`, `name`, `webname`, `scope`) VALUES 
 										(
 											\''.$this->sp->db->escape($this->ownerId).'\', 
 											\''.$this->sp->db->escape($this->name).'\', 
-											\''.$this->sp->db->escape($this->webname).'\'
+											\''.$this->sp->db->escape($this->webname).'\',
+											\''.$this->sp->db->escape(':'.implode(':', $this->scope).':').'\'
 										);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -233,6 +280,7 @@
 								`user_id` = \''.$this->sp->db->escape($this->ownerId).'\', 
 								`webname` = \''.$this->sp->db->escape($this->webname).'\', 
 								`name` = \''.$this->sp->db->escape($this->name).'\'
+								`scope` = \''.$this->sp->db->escape(':'.implode(':', $this->scope).':').'\'
 							WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -244,6 +292,20 @@
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.'tags WHERE id=\''.$this->sp->db->escape($this->id).'\';');
 			return $ok;
+		}
+		
+		public function addScope($scope){
+			if(!in_array($scope, $this->scope)) $this->scope[] = $scope;
+			return this;
+		}
+		
+		public function removeScope($scope){
+			if(in_array($scope, $this->scope)) unset($this->scope[array_search($scope, $this->scope)]);
+			return this;
+		}
+		
+		public function hasScope($scope){
+			return in_array($scope, $this->scope);
 		}
 		
 		
@@ -259,13 +321,14 @@
 			return $this->ownerUser;
 		}
 		public function getOwnerId(){ return $this->ownerId; }
-		
+		public function getScope(){ return $this->scope; }
 		
 		/* setters */
-		private function setId($id) { $this->id = $id; return this;}
+		private function setId($id) { $this->id = $id; return $this;}
 		public function setName($name) { $this->name = $name; return $this; }
 		public function setWebname($webname) { $this->webname = $this->sp->txtfun->string2Web($webname); return $this; }
 		public function setOwner($id) { $this->ownerId = $id; $this->ownerUser = null; return $this; }
+		public function setScope($scope) { $this->scope = (is_array($scope))?$scope:$this->parseScope($scope); return $this; }
 		
 	}
 ?>

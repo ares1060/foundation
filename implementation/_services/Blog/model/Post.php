@@ -30,6 +30,7 @@
 		public static function getPosts($insertSQL = '', $from = 0, $rows = -1) {
 			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).','.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
+			
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, p.id as id FROM '.ServiceProvider::getInstance()->db->prefix.'blog_posts AS p '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $post) {
@@ -51,7 +52,7 @@
 		}
 		
 		public static function getPostCount($insertSQL = ''){
-			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_posts AS p '.$insertSQL.';');
+			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(count) AS count FROM (SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_posts AS p '.$insertSQL.');');
 			return $result['count'];
 		}
 	

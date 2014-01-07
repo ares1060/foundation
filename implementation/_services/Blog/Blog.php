@@ -25,18 +25,23 @@
 		private function handleViewList($args){
 			$user = $this->sp->user->getLoggedInUser();
 			$whereSQL = 'WHERE 1=1';
+			$tags = false;
+			$contacts = false;
 			
 			if($this->settings->journal_mode == "private"){
 				if(!$user) return '';
-				$whereSQL .= ' AND user_id = \''.$this->sp->db->escape($user->getId()).'\'';
+				$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($user->getId()).'\'';
 			} else if(isset($args['author'])){
-				$whereSQL .= ' AND user_id = \''.$this->sp->db->escape($args['author']).'\'';
+				$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($args['author']).'\'';
 			}
 			
 			if(isset($args['search']) && strlen($args['search']) > 2){
-					$args['search'] = $this->sp->db->escape($args['search']);
-					$whereSQL .= ' AND (`title` LIKE \'%'.$args['search'].'%\' OR `text` LIKE \'%'.$args['search'].'%\')';
-					//TODO tagging
+				$args['search'] = $this->sp->db->escape($args['search']);
+				
+				//TODO tagging still hacky
+				$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON p.id = tl.param LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
+				$whereSQL .= ' AND (`title` LIKE \'%'.$args['search'].'%\' OR `text` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\')';
+				$tags = true;
 			}
 			
 			if(isset($args['date_from']) && $args['date_from'] != ''){
@@ -68,8 +73,11 @@
 				}
 				$values = substr($values, 0, -1);
 				$whereSQL = 'JOIN '.$this->sp->db->prefix.'blog_posts_contacts AS c ON c.entry_id = p.id '.$whereSQL;
-				$whereSQL .= ' AND c.contact_id IN ('.$values.') GROUP BY p.id';
+				$whereSQL .= ' AND c.contact_id IN ('.$values.')';
+				$contacts = true;
 			}
+			
+			if($tags || $contacts) $whereSQL.= 'GROUP BY p.id';
 			
 			$whereSQL .= ' ORDER BY p.date DESC, p.id DESC';
 			
@@ -83,7 +91,7 @@
 				$view->showSubView('header');
 				$footer = $view->showSubView('footer');
 				$footer->addValue('current_page', '0');
-				$footer->addValue('entries_per_page', $rows);
+				$footer->addValue('posts_per_page', $rows);
 				$footer->addValue('pages', $pages);
 			}
 			

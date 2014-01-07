@@ -1,7 +1,7 @@
 <?php
-	require_once 'model/TagsHelper.php';
-	require_once 'model/Tag.php';
-	require_once 'view/TagsView.php';
+	require_once $GLOBALS['config']['root'].'_services/Tags/model/Tag.php';
+	
+	use at\foundation\core;
 	
 	/**
      * Description
@@ -11,7 +11,7 @@
      * 
      * @requires: Services required
      */
-    class Tags extends AbstractService implements IService {
+    class Tags extends core\AbstractService implements core\IService {
 
     	
         function __construct(){
@@ -32,6 +32,9 @@
         		case 'view.cloud':
         			return $this->handleViewCloud($args);
         			break;
+				case 'view.linker':
+					return $this->handleViewLinker($args);
+					break;
 				case 'do.save_tags':
         			return $this->handleSaveTags($args);
         			break;
@@ -48,21 +51,43 @@
 		private function handleViewList($args){
 			$service = (isset($args['service']))?$args['service']:'';
 			$param = (isset($args['param']))?$args['param']:'';
+			$name = (isset($args['name']))?$args['name']:'';
 			
-			$tags = Tag::getTagsByService($service, $param);
-        	$tpl = new core\Template\ViewDescriptor($this->settings->tpl_service_tags);
-        	
-        	foreach($tags as $tag){
-        		$t = $tpl->showSubView('tag');
+			$user = $this->sp->user->getLoggedInUser();
+			
+			if(!isset($args['param'])) $tags = Tag::getTags($service, $name, ($user)?$user->getId():-1);
+			else $tags = Tag::getLinkedTags($service, $param, ($user)?$user->getId():-1);
+
+        	if(isset($args['mode']) && $args['mode'] == 'json'){
+        		$out = array();
         		
-        		$t->addValue('id', $tag->getId());
-        		$t->addValue('service', $service);
-        		$t->addValue('name', $tag->getName());
-        		$t->addValue('webname', $tag->getWebname());
+        		foreach($tags as $tag){
+        			$oi = array(
+        				'id' => $tag->getId(),
+        				'name' => $tag->getName()
+        			);
+        			$out[] = $oi;
+        		}
         		
-        		unset($t);
+        		return $out;
+        	} else {
+        		$tpl = new core\Template\ViewDescriptor('_services/Tags/tag_list');
+        		
+        		foreach($tags as $tag){
+        			$t = $tpl->showSubView('tag');
+        		
+        			$t->addValue('id', $tag->getId());
+        			$t->addValue('service', $service);
+        			$t->addValue('name', $tag->getName());
+        			$t->addValue('webname', $tag->getWebname());
+        			
+        			if($tag !== end($tags)){
+        				$t->showSubView('delim');
+        			}
+        		}
+        		
+        		return $tpl->render();
         	}
-        	return $tpl->render();
 		}
 		
 		private function handleViewCloud($args){
@@ -97,43 +122,91 @@
         	return $tpl->render();
 		}
 		
-		private function handleSaveTags($args){
-			if($this->checkRight('administer_tags', $args['service'])) {
+		private function handleViewLinker($args){
+			$service = (isset($args['service']))?$args['service']:'';
+			$param = (isset($args['param']))?$args['param']:'';
+			$name = (isset($args['name']))?$args['name']:'';
 				
+			$user = $this->sp->user->getLoggedInUser();
+
+			$tpl = new core\Template\ViewDescriptor('_services/Tags/tag_linker');
+			
+			if($param != ''){
+				$tags = Tag::getLinkedTags($service, $param, ($user)?$user->getId():-1);
+			
+				$t = array();
+				
+				foreach($tags as $tag){
+					$t[] = $tag->getName();
+				}
+				
+				$tpl->addValue('tags', implode(',', $t));
 			}
+			
+			return $tpl->render();
+		}
+		
+		private function handleSaveTags($args){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user) {
+				//get all currently linked tags
+				$tags = Tag::getLinkedTags($args['service'], $args['param'], $user->getId());
+				$newTags = explode(',', $args['tags']);
+				$tagIds = array();
+				
+				//for each new tag
+				foreach($newTags as $tagName){
+					$tag = Tag::getTagByName($tagName, $user->getId());
+					//check if tag already exists
+					if($tag){
+						$tag->addScope($args['service']);
+					} else {
+						//else create new tag
+						$tag = new Tag($tagName, $tagName, $user->getId(), $args['service']);
+						$tag->setScope($args['service']);
+						$tag->save();
+					}
+					
+					$tag->link($args['service'], $args['param']);
+					$tagIds[] = $tag->getId();
+				}
+					
+				//unlink old tags
+				foreach($tags as $tag){
+					if(!in_array($tag->getId(), $tagIds)){
+						$tag->unlink($args['service'], $args['param']);
+					}
+				}
+				
+				return true;
+			}
+			
+			return false;
 		}
 		
 		private function handleLinkTag($args){
 			if(!isset($args['service']) || !isset($args['name'])) return false;
-			if($this->checkRight('administer_tags', $args['service'])) {
-				$tag = Tag::getTagByName($args['name']);
-				if($tag == null) {
-					$tag = new Tag($args['name'], (isset($args['webname']))?$args['webname']:$args['name']);
-					$tag->save();
-				}
-				
-				return $tag->link($args['service'], $args['param']);
-
-			} else {
-				$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
-        		return false;
+			
+			$tag = Tag::getTagByName($args['name']);
+			if($tag == null) {
+				$tag = new Tag($args['name'], (isset($args['webname']))?$args['webname']:$args['name']);
+				$tag->save();
 			}
+			
+			return $tag->link($args['service'], $args['param']);
+
 		}
 		
 		private function handleUnlinkTag($args){
 			if(!isset($args['service']) || !isset($args['name'])) return false;
-			if($this->checkRight('administer_tags', $args['service'])) {
-				$tags = Tag::getTagsByService($args['service'], (isset($args['param']))?$args['service']:'');
-				
-				foreach($tags as $tag){
-					$tag->unlink($service, $param);
-				}
-				
-				return true;
-			} else {
-				$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
-        		return array();
+			
+			$tags = Tag::getTagsByService($args['service'], (isset($args['param']))?$args['service']:'');
+			
+			foreach($tags as $tag){
+				$tag->unlink($service, $param);
 			}
+			
+			return true;
 		}
         
 		/**

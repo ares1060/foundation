@@ -39,7 +39,7 @@
 				$args['search'] = $this->sp->db->escape($args['search']);
 				
 				//TODO tagging still hacky
-				$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON p.id = tl.param LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
+				$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON p.id = tl.param AND tl.service = \'Blog\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
 				$whereSQL .= ' AND (`title` LIKE \'%'.$args['search'].'%\' OR `text` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\')';
 				$tags = true;
 			}
@@ -77,7 +77,7 @@
 				$contacts = true;
 			}
 			
-			if($tags || $contacts) $whereSQL.= 'GROUP BY p.id';
+			if($tags || $contacts) $whereSQL.= ' GROUP BY p.id';
 			
 			$whereSQL .= ' ORDER BY p.date DESC, p.id DESC';
 			

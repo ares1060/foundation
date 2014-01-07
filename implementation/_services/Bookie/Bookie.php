@@ -32,11 +32,17 @@
 		
 		private function handleViewList($args){
 			$user = $this->sp->user->getLoggedInUser();
-			$whereSQL = 'WHERE user_id = \''.$user->getId().'\'';
+			$whereSQL = 'WHERE e.user_id = \''.$user->getId().'\'';
+			$tags = false;
+			$contacts = false;
+			
 			if(isset($args['search']) && strlen($args['search']) > 2){
-					$args['search'] = $this->sp->db->escape($args['search']);
-					$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\')';
-					//TODO tagging
+				$args['search'] = $this->sp->db->escape($args['search']);
+				
+				//TODO tagging still hacky
+				$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Bookie\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
+				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\')';
+				$tags = true;
 			}
 			
 			if(isset($args['state']) && is_array($args['state']) && count($args['state']) > 0){
@@ -86,8 +92,11 @@
 				}
 				$values = substr($values, 0, -1);
 				$whereSQL = 'JOIN '.$this->sp->db->prefix.'bookie_entries_contacts AS c ON c.entry_id = e.id '.$whereSQL;
-				$whereSQL .= ' AND contact_id IN ('.$values.') GROUP BY e.id';
+				$whereSQL .= ' AND contact_id IN ('.$values.')';
+				$contacts = true;
 			}
+			
+			if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
 			
 			$whereSQL .= ' ORDER BY e.date DESC, e.id DESC';
 			

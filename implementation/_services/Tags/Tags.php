@@ -143,6 +143,9 @@
 				$tpl->addValue('tags', implode(',', $t));
 			}
 			
+			$tpl->addValue('service', $service);
+			$tpl->addValue('param', $param);
+			
 			return $tpl->render();
 		}
 		
@@ -164,8 +167,8 @@
 						//else create new tag
 						$tag = new Tag($tagName, $tagName, $user->getId(), $args['service']);
 						$tag->setScope($args['service']);
-						$tag->save();
 					}
+					$tag->save();
 					
 					$tag->link($args['service'], $args['param']);
 					$tagIds[] = $tag->getId();

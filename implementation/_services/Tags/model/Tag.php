@@ -52,7 +52,7 @@
 			if($id > 0){
 				$a = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags` WHERE id="'.ServiceProvider::getInstance()->db->escape($id).'"');
 				if($a != ''){
-					$t = new Tag($a['name'], $a['webname'], $a['user_id']);
+					$t = new Tag($a['name'], $a['webname'], $a['user_id'], $a['scope']);
 					$t->setId($a['id']);
 					return $t;
 				} else return null;
@@ -69,7 +69,7 @@
 			if($name != ''){
 				$a = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags` t WHERE `name`=\''.ServiceProvider::getInstance()->db->escape($name).'\' AND (t.user_id = \'-1\''.(($userId >= 0)?' OR t.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'':'').');');
 				if($a != ''){
-					$t = new Tag($a['name'], $a['webname'], $a['user_id']);
+					$t = new Tag($a['name'], $a['webname'], $a['user_id'], $a['scope']);
 					$t->setId($a['id']);
 					return $t;
 				} else return null;
@@ -86,7 +86,7 @@
 			if($webname != ''){
 				$a = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM `'.ServiceProvider::getInstance()->db->prefix.'tags` t WHERE `webname`=\''.ServiceProvider::getInstance()->db->escape($webname).'\' AND (t.user_id = \'-1\''.(($userId >= 0)?' OR t.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'':'').');');
 				if($a != ''){
-					$t = new Tag($a['name'], $a['webname'], $a['user_id']);
+					$t = new Tag($a['name'], $a['webname'], $a['user_id'], $a['scope']);
 					$t->setId($a['id']);
 					return $t;
 				} else return null;
@@ -126,7 +126,7 @@
 			if($a != ''){
 				$out = array();
 				foreach($a as $tag){
-					$t = new Tag($tag['name'], $tag['webname'], $tag['user_id']);
+					$t = new Tag($tag['name'], $tag['webname'], $tag['user_id'], $tag['scope']);
 					$t->setId($tag['id']);
 					$out[] = $t;
 				}
@@ -156,7 +156,7 @@
 			if($a != ''){
 				$out = array();
 				foreach($a as $tag){
-					$t = new Tag($tag['name'], $tag['webname'], $tag['user_id']);
+					$t = new Tag($tag['name'], $tag['webname'], $tag['user_id'], $tag['scope']);
 					$t->setId($tag['id']);
 					$out[] = $t;
 				}
@@ -279,7 +279,7 @@
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'tags SET
 								`user_id` = \''.$this->sp->db->escape($this->ownerId).'\', 
 								`webname` = \''.$this->sp->db->escape($this->webname).'\', 
-								`name` = \''.$this->sp->db->escape($this->name).'\'
+								`name` = \''.$this->sp->db->escape($this->name).'\',
 								`scope` = \''.$this->sp->db->escape(':'.implode(':', $this->scope).':').'\'
 							WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}

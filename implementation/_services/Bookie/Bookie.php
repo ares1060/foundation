@@ -172,7 +172,9 @@
 						$aiv = $av->showSubView('item');
 						
 						$aiv->addValue('url', $a->getFile());
-						$aiv->addValue('thumb', $GLOBALS['to_root'].$this->sp->tpl->getTemplateDir().'/img/attachment_dummy.png');
+						$ext = explode('.', $a->getFile());
+						$ext = array_pop($ext);
+						$aiv->addValue('thumb', urlencode(($ext == 'jpg' || $ext == 'png' || $ext == 'gif')?'_services/Bookie/attachments/'.$a->getFile():$this->sp->tpl->getTemplateDir().'/img/attachment_dummy.png'));
 					}
 				}
 					

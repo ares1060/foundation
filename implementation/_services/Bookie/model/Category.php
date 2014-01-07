@@ -45,8 +45,8 @@
 		 * @return Category|NULL
 		 */
 		public static function getCategory($categoryId) {
-			$acc = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_categories WHERE id =\''.ServiceProvider::getInstance()->db->escape($categoryId).'\';');
-			if($acc){
+			$cat = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_categories WHERE id =\''.ServiceProvider::getInstance()->db->escape($categoryId).'\';');
+			if($cat){
 				$co = new Category($cat['name'], $cat['taxid']);
 				$co->setId($cat['id']);
 				return $co;

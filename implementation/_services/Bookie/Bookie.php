@@ -41,7 +41,8 @@
 				
 				//TODO tagging still hacky
 				$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Bookie\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
-				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\')';
+				//$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'bookie_categories c ON e.category_id = c.id '.$whereSQL;
+				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\' OR c.name LIKE \''.$args['search'].'%\')';
 				$tags = true;
 			}
 			
@@ -52,6 +53,10 @@
 				}
 				$values = substr($values, 0, -1);
 				$whereSQL .= ' AND `state` IN ('.$values.')';
+			}
+			
+			if(isset($args['category'])){
+				$whereSQL .= ' AND `category_id` = \''.$this->sp->db->escape($args['category']).'\'';
 			}
 			
 			if(isset($args['amount_from']) && $args['amount_from'] != ''){
@@ -107,7 +112,18 @@
 			$pages =  ceil(Entry::getEntryCount($whereSQL) / $rows);
 			$view->addValue('pages', $pages);
 			if(isset($args['mode']) && $args['mode'] == 'wrapped'){
-				$view->showSubView('header');
+				$header = $view->showSubView('header');
+				
+				$cats = Category::getCategories();
+				if($cats){
+					foreach($cats as $cat){
+						$cv = $header->showSubView('category_option');
+						$cv->addValue('id', $cat->getId());
+						$cv->addValue('name', $cat->getName());
+					}
+				}
+				
+				
 				$footer = $view->showSubView('footer');
 				$footer->addValue('current_page', '0');
 				$footer->addValue('entries_per_page', $rows);
@@ -134,6 +150,11 @@
 					$svt = $sv->showSubView('taxinfo');
 					$svt->addValue('tax_label', $entry->getTaxType());
 					$svt->addValue('tax_amount', number_format($entry->getTaxAmount(), 2, ',', '.'));
+				}
+				
+				if($entry->getBrutto() <= 0 && $entry->getCategoryId() != 0){
+					$csv = $sv->showSubView('category');
+					$csv->addValue('category', $entry->getCategory()->getName());
 				}
 				
 				//check if invoice

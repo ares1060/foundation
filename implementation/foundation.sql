@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Erstellungszeit: 03. Jan 2014 um 23:38
+-- Erstellungszeit: 07. Jan 2014 um 20:35
 -- Server Version: 5.5.16
 -- PHP-Version: 5.3.8
 
@@ -13,6 +13,51 @@ SET time_zone = "+00:00";
 --
 -- Datenbank: `foundation`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_blog_posts`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_blog_posts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `date` datetime NOT NULL,
+  `text` text NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
+
+--
+-- Daten für Tabelle `pp_blog_posts`
+--
+
+INSERT INTO `pp_blog_posts` (`id`, `user_id`, `title`, `date`, `text`) VALUES
+(2, 24, 'moin', '2014-01-05 17:35:00', 'asdf'),
+(3, 24, 'test', '2014-01-05 17:40:00', '30x Situps'),
+(5, 24, 'Old stuff', '2013-12-11 20:18:00', 'lol');
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `pp_blog_posts_contacts`
+--
+
+CREATE TABLE IF NOT EXISTS `pp_blog_posts_contacts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `entry_id` int(11) NOT NULL,
+  `contact_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `entry_id` (`entry_id`,`contact_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+
+--
+-- Daten für Tabelle `pp_blog_posts_contacts`
+--
+
+INSERT INTO `pp_blog_posts_contacts` (`id`, `entry_id`, `contact_id`) VALUES
+(2, 3, 13);
 
 -- --------------------------------------------------------
 
@@ -124,7 +169,7 @@ INSERT INTO `pp_bookie_entries` (`id`, `user_id`, `notes`, `brutto`, `netto`, `t
 (7, 24, 'so ein depp', '0.00', '-400.00', 'Deppensteuer', '0.30', '2013-12-20', 'payed', 0, 0),
 (8, 24, '', '500.00', '416.67', 'MwSt.', '0.20', '2013-12-19', 'open', 0, 0),
 (9, 24, '', '255.00', '212.50', '', '0.20', '2013-12-23', 'open', 0, 0),
-(10, 24, '', '200.00', '200.00', '', '0.00', '2014-01-29', 'open', 2, 1);
+(10, 24, '', '-200.00', '-200.00', '', '0.00', '2014-01-29', 'open', 2, 1);
 
 -- --------------------------------------------------------
 
@@ -224,8 +269,8 @@ CREATE TABLE IF NOT EXISTS `pp_calendar_events` (
 
 INSERT INTO `pp_calendar_events` (`id`, `start_date`, `end_date`, `text`, `owner_id`) VALUES
 (2, '0000-00-00 00:00:00', '0000-00-00 00:00:00', 'blubb', 24),
-(3, '2013-12-26 16:10:00', '2013-12-26 22:05:00', 'tadamm', 24),
-(4, '2013-12-26 10:30:00', '2013-12-26 14:45:00', 'ehehehe', 24);
+(3, '2014-01-01 00:00:00', '2014-01-10 00:00:00', 'Neuer Termin', 24),
+(4, '2014-01-01 06:10:00', '2014-01-01 11:45:00', 'Neuer Termin', 24);
 
 -- --------------------------------------------------------
 
@@ -393,8 +438,19 @@ CREATE TABLE IF NOT EXISTS `pp_tags` (
   `user_id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `webname` varchar(100) NOT NULL,
+  `scope` varchar(200) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
+
+--
+-- Daten für Tabelle `pp_tags`
+--
+
+INSERT INTO `pp_tags` (`id`, `user_id`, `name`, `webname`, `scope`) VALUES
+(1, -1, 'Laufen', 'laufen', ':Blog:'),
+(3, 24, 'Springen', 'springen', ':Blog:'),
+(4, 24, 'Bauch', 'bauch', ':Blog:'),
+(5, 24, 'Benzin', 'benzin', ':Bookie:Blog:');
 
 -- --------------------------------------------------------
 
@@ -403,12 +459,24 @@ CREATE TABLE IF NOT EXISTS `pp_tags` (
 --
 
 CREATE TABLE IF NOT EXISTS `pp_tag_links` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `tag_id` int(11) NOT NULL,
   `service` varchar(100) NOT NULL,
   `param` varchar(100) NOT NULL,
-  UNIQUE KEY `id` (`id`,`service`,`param`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tag_id` (`tag_id`,`service`,`param`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=49 ;
+
+--
+-- Daten für Tabelle `pp_tag_links`
+--
+
+INSERT INTO `pp_tag_links` (`id`, `tag_id`, `service`, `param`) VALUES
+(6, 1, 'Blog', '3'),
+(20, 3, 'Blog', '2'),
+(9, 3, 'Blog', '3'),
+(47, 5, 'Blog', '3'),
+(21, 5, 'Bookie', '10');
 
 -- --------------------------------------------------------
 
@@ -436,7 +504,7 @@ CREATE TABLE IF NOT EXISTS `pp_user` (
 
 INSERT INTO `pp_user` (`id`, `nick`, `hash`, `group`, `email`, `activate`, `reset`, `status`, `created`, `last_login`) VALUES
 (1, 'root', 'a3597971769fc171e38fb92ff3cd4cc429370b618342836ff7a2eb61fe7d6f70ead7dd6586c2044d759ab962b6fbb96d48981259e592e3c79b559d84a79fe64a#me:fpeH2cc68;p9npeQ/Qemi0UQ%Wu!g4Hweu=US4JsPUxqa-Oe', 1, 'root@apple.com', '', '', 1, 0, 1387833730),
-(24, 'tester', 'c708109949e40eb065844fad07f90e45114c1f3a5beb06b5a451855894b9f7a8aa7a72903e761d67ec9ea30269abeef15989dd4ce931d8f853a0468c12be154c#d3x,Zgv2F|;dntc5Zq_YUuucom!|R6tB5j5dj$VxmUaj8fNhAYG', 3, 'lol@test.com', '', '', 1, 1385307568, 1388788624),
+(24, 'tester', 'c708109949e40eb065844fad07f90e45114c1f3a5beb06b5a451855894b9f7a8aa7a72903e761d67ec9ea30269abeef15989dd4ce931d8f853a0468c12be154c#d3x,Zgv2F|;dntc5Zq_YUuucom!|R6tB5j5dj$VxmUaj8fNhAYG', 3, 'lol@test.com', '', '', 1, 1385307568, 1389123257),
 (23, 'tester1', '671ccdec908af53b2701e800c40695fff0db7970495fa13448fb2aecb7cfefe15feb100679ea1d559ff08ae707c96fb4c36f7af12204a3d24acbc69390456778#yTlji4B7C\\!klsnm4-J3i\\X14iDsuXiA$3.NkmL$fLLddutwoZf', 1, 'lol@test.com', '', '', 1, 1385307568, -1),
 (22, 'tester2', 'a929adf5e33f76c17fbc1084b26e6ba234804b40808ba33f78c08aea044c38ee2b77ed0ed2978d3e85a479067d22a1454c8e66ca5488331b7458ab4bdd1b97a7#XjUOu@6jWEKf$ci$Ydxp:V3o52ah5&tN5hmNikzk%?q5pFeWhIg', 1, 'lol@test.com', '', '', 1, 1385307567, -1),
 (21, 'tester3', 'e34f95d898907dc4a1bebd377679ea945b3854c3879fbc0df459551690cfb4017419f665ad79b6aae3f207771962592e18ac2e24a72f78d0650c5f220b1f64f6#KwnsI1fdYQk2M5u2\\9lBlXwHzmo5|xG?,+mExwudiU%dcsh7PY$', 1, 'lol@test.com', '', '', 1, 1385307566, -1),

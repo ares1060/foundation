@@ -220,7 +220,7 @@
 		 * @return Account
 		 */
 		public function getAccount(){ 
-			if(!$this->account == null) $this->account = Account::getAccount($this->accountId);
+			if($this->account == null) $this->account = Account::getAccount($this->accountId);
 			return $this->account;
 		}
 		public function getAccountId(){ return $this->accountId; }
@@ -228,7 +228,7 @@
 		 * @return Category
 		 */
 		public function getCategory(){ 
-			if(!$this->category == null) $this->category = Category::getCategory($this->categoryId);
+			if($this->category == null) $this->category = Category::getCategory($this->categoryId);
 			return $this->category;
 		}
 		public function getCategoryId(){ return $this->categoryId; }

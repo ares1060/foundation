@@ -55,6 +55,15 @@
 				$whereSQL .= ' AND `state` IN ('.$values.')';
 			}
 			
+			if(isset($args['account']) && is_array($args['account']) && count($args['account']) > 0){
+				$values = '';
+				foreach($args['account'] as $val){
+					$values .= '\''.$this->sp->db->escape($val).'\',';
+				}
+				$values = substr($values, 0, -1);
+				$whereSQL .= ' AND `account_id` IN ('.$values.')';
+			}
+			
 			if(isset($args['category'])){
 				$whereSQL .= ' AND `category_id` = \''.$this->sp->db->escape($args['category']).'\'';
 			}
@@ -113,6 +122,7 @@
 			$view->addValue('pages', $pages);
 			if(isset($args['mode']) && $args['mode'] == 'wrapped'){
 				$header = $view->showSubView('header');
+				if($contacts) $header->showSubView('filter_contacts');
 				
 				$cats = Category::getCategories();
 				if($cats){

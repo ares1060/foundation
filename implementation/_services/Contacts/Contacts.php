@@ -39,6 +39,15 @@
 					$lastSpace = strrpos($args['search'], ' ');
 					$whereSQL .= ' AND (`firstname` LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], 0, $lastSpace):$args['search']).'%\' '.(($lastSpace !== False)?'AND':'OR').' `lastname` LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], $lastSpace+1):$args['search']).'%\')';
 			}
+			
+			if(isset($args['ids']) && $args['ids'] != '' && is_array($args['ids']) && count($args['ids']) > 0){
+				$ids = array();
+				foreach($args['ids'] as $id){
+					$ids[] = $this->sp->db->escape($id);
+				}
+				$whereSQL .= ' AND id IN ('.implode(',', $ids).')';
+			}
+			
 			$from = 0;
 			if(isset($args['from']) && $args['from'] > 0) {
 				$from = $this->sp->db->escape($args['from']);
@@ -54,6 +63,7 @@
 				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_shortlist');
 				foreach($contacts as $contact){
 					$sv = $view->showSubView('row');
+					if(isset($args['css_class'])) $sv->addValue('class', $args['css_class']);
 					$sv->addValue('id', $contact->getId());
 					$svn = $sv->showSubView('nameonly');
 					$svn->addValue('firstname', $contact->getFirstName());

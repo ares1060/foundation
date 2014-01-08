@@ -88,7 +88,9 @@
 			$pages =  ceil(Post::getPostCount($whereSQL) / $rows);
 			$view->addValue('pages', $pages);
 			if(isset($args['mode']) && $args['mode'] == 'wrapped'){
-				$view->showSubView('header');
+				$header = $view->showSubView('header');
+				if($contacts) $header->showSubView('filter_contacts');
+				
 				$footer = $view->showSubView('footer');
 				$footer->addValue('current_page', '0');
 				$footer->addValue('posts_per_page', $rows);

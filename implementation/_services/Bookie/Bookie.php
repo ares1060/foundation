@@ -209,7 +209,6 @@
 					$view->addValue('date', $entry->getDate()->format('d.m.Y'));
 					$view->addValue('notes', $entry->getNotes());
 					$view->addValue('state_'.$entry->getState(), ' selected="selected"');
-					$view->addValue('type_'.(($entry->getBrutto() >= 0)?'in':'out').'_checked', 'checked');
 					
 					$inv = Invoice::getInvoicesForEntry($entry->getId());
 					if($inv && count($inv) > 0){
@@ -220,10 +219,32 @@
 						$invv->addValue('number', $inv->getNumber());
 						$invv->addValue('altdstaddr', $inv->getAltDstAddress());
 						$invv->addValue('altsrcaddr', $inv->getAltSrcAddress());
-						$invv->addValue('reminder', $inv->getReminderDate()->format('d.m.Y'));
+						if($inv->getReminderDate()) $invv->addValue('reminder', $inv->getReminderDate()->format('d.m.Y H:i'));
 						$invv->addValue('paydate', $inv->getPayDate()->format('d.m.Y'));
 						
 						$view->addValue('title', 'Rechnung editieren');
+						
+						//handle invoice parts
+						$parts = InvoicePart::getPartsForInvoice($inv->getId());
+						$num = 0;
+						foreach($parts as $part){
+							$siv = $view->showSubView('invoice_item');
+							$siv->addValue('amount', str_replace('.', ',', $part->getAmount()));
+							$siv->addValue('notes', $part->getNotes());
+							$siv->addValue('dom_id', 'invoice_item_'.$part->getid());
+							$siv->addValue('number', ++$num);
+						}
+						
+						$view->showSubView('entry_type_in');
+						
+						$view->showSubView('add_invoice_item');
+						
+						$iviv = $view->showSubView('invoice_item');
+						$iviv->addValue('dom_id', 'empty_invoice_item');
+						
+					} else {
+						$sel = $view->showSubView('entry_type_selection');
+						$sel->addValue('type_'.(($entry->getBrutto() >= 0)?'in':'out').'_checked', 'checked');
 					}
 					
 					$accs = Account::getAccountsForUser($user->getId());
@@ -258,8 +279,15 @@
 				
 					$invcount = Invoice::getInvoiceCount(new DateTime('01-01-'.date('Y')), new DateTime('31-12-'.date('Y'))) + 1;
 					$invv->addValue('number', 'WMR_'.date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
+					
+					$view->showSubView('add_invoice_item');
+					$iviv = $view->showSubView('invoice_item');
+					$iviv->addValue('dom_id', 'empty_invoice_item');
+					
+					$view->showSubView('entry_type_in');
 				} else {
 					$view->addValue('title', 'Neuer Eintrag');
+					$view->showSubView('entry_type_selection');
 				}
 				
 				$accs = Account::getAccountsForUser($user->getId());
@@ -322,11 +350,24 @@
 					
 					if(isset($args['altdstaddr'])) $inv->setAltDstAddress($args['altdstaddr']);
 					if(isset($args['altsrcaddr'])) $inv->setAltSrcAddress($args['altsrcaddr']);
-					if(isset($args['reminder'])) $inv->setReminderDate(new DateTime($args['reminder']));
+					if(isset($args['reminder'])) $inv->setReminderDate(new DateTime(($args['reminder'] == '')?'00-00-0000 00:00:00':$args['reminder']));
 					if(isset($args['paydate'])) $inv->setPayDate(new DateTime($args['paydate']));
 					if(isset($args['number'])) $inv->setNumber($args['number']);
 					
 					$inv->save();
+					
+					//handle invoice parts
+					if(isset($args['parts'])){
+						$oldParts = InvoicePart::getPartsForInvoice($inv->getId());
+						foreach($args['parts'] as $part){
+							$ip = new InvoicePart($inv->getId(), null, $part['notes'], $part['amount']);
+							$ip->save();
+						}
+						
+						foreach($oldParts as $opart){
+							$opart->delete();
+						}
+					}
 				}
 				
 				if($ok) return $entry->getId();

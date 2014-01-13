@@ -35,7 +35,7 @@
 		 * @return UserDataItem[]
 		 */
 		public static function getUserDataItemByUserAndName($id, $name){
-			$row = ServiceProvider::get()->db->fetchRow('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata` AS ud 
+			$row = ServiceProvider::get()->db->fetchRow('SELECT *, ud.id AS id FROM `'.ServiceProvider::get()->db->prefix.'userdata` AS ud 
 															LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdatafield` AS udf 
 																ON ud.field_id = udf.id; 
 															WHERE ud.user_id = \''.ServiceProvider::get()->db->escape($id).'\' AND udf.name = \''.ServiceProvider::get()->db->escape($name).'\' LIMIT 0,1;');
@@ -73,6 +73,7 @@
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
+					$this->changed = false;
 					return true;
 				} else {
 					return false;
@@ -80,12 +81,14 @@
 				
 			} else if($this->changed) {
 				//update
-				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'userdata SET
+				$ok = $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'userdata SET
 						field_id = \''.ServiceProvider::get()->db->escape($this->fieldId).'\',
 						user_id = \''.ServiceProvider::get()->db->escape($this->userId).'\',
 						value = \''.ServiceProvider::get()->db->escape($this->value).'\',
 						last_change = NOW()
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
+				$this->changed = !$ok;
+				return $ok;
 			}
 			return true;
 		}

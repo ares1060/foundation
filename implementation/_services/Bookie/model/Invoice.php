@@ -39,7 +39,7 @@
 			$this->altDstAddress = $altDstAddress;
 			$this->number = $number;
 			$this->payDate = (!$payDate)?new DateTime():$payDate;
-			$this->reminderDate = (!$reminderDate)?new DateTime('0000-00-00 00:00:00'):$reminderDate;
+			$this->reminderDate = (!$reminderDate)?null:$reminderDate;
 			$this->dunnings = $dunnings;
 			
 			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_invoices', array());
@@ -62,7 +62,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $invoice) {
-				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
+				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), ($invoice['reminder_date'] == '0000-00-00 00:00:00')?null:new DateTime($invoice['reminder_date']), $invoice['dunnings']);
 				$ivo->setId($invoice['id']);
 				$out[] = $ivo;
 			}
@@ -78,7 +78,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices WHERE `entry_id` = \''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
 			$out = array();
 			foreach($result as $invoice) {
-				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
+				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), ($invoice['reminder_date'] == '0000-00-00 00:00:00')?null:new DateTime($invoice['reminder_date']), $invoice['dunnings']);
 				$ivo->setId($invoice['id']);
 				$out[] = $ivo;
 			}
@@ -93,7 +93,7 @@
 		public static function getInvoice($invoiceId) {
 			$invoice = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices WHERE id =\''.ServiceProvider::getInstance()->db->escape($invoiceId).'\';');
 			if($invoice){
-				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), new DateTime($invoice['reminder_date']), $invoice['dunnings']);
+				$ivo = new Invoice($invoice['entry_id'], $invoice['alt_src_adr'], $invoice['alt_dst_adr'], $invoice['number'], new DateTime($invoice['pay_date']), ($invoice['reminder_date'] == '0000-00-00 00:00:00')?null:new DateTime($invoice['reminder_date']), $invoice['dunnings']);
 				$ivo->setId($invoice['id']);
 				return $ivo;
 			} else {
@@ -133,7 +133,7 @@
 									\''.$this->sp->db->escape($this->altSrcAddress).'\',
 									\''.$this->sp->db->escape($this->number).'\',
 									\''.$this->sp->db->escape($this->payDate->format('Y-m-d')).'\',
-									\''.$this->sp->db->escape($this->reminderDate->format('Y-m-d H:i:s')).'\',
+									\''.$this->sp->db->escape(($this->reminderDate)?$this->reminderDate->format('Y-m-d H:i:s'):'0000-00-00 00:00:00').'\',
 									\''.$this->sp->db->escape($this->dunnings).'\'
 								);');
 				if($succ) {
@@ -151,7 +151,7 @@
 						`alt_src_adr` = \''.$this->sp->db->escape($this->altSrcAddress).'\',
 						`number` = \''.$this->sp->db->escape($this->number).'\',
 						`pay_date` = \''.$this->sp->db->escape($this->payDate->format('Y-m-d')).'\',
-						`reminder_date` = \''.$this->sp->db->escape($this->reminderDate->format('Y-m-d H:i:s')).'\',
+						`reminder_date` = \''.$this->sp->db->escape(($this->reminderDate)?$this->reminderDate->format('Y-m-d H:i:s'):'0000-00-00 00:00:00').'\',
 						`dunnings` = \''.$this->sp->db->escape($this->dunnings).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}

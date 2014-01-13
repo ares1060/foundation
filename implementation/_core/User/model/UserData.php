@@ -22,7 +22,7 @@
 		function __construct($userId){
 			$this->userId = $userId;
 			
-			$qry = ServiceProvider::get()->db->fetchAll('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'userdata` AS ud 
+			$qry = ServiceProvider::get()->db->fetchAll('SELECT *, ud.id AS id FROM `'.ServiceProvider::get()->db->prefix.'userdata` AS ud 
 															LEFT JOIN `'.ServiceProvider::get()->db->prefix.'userdatafield` AS udf 
 																ON ud.field_id = udf.id 
 															WHERE ud.user_id = \''.ServiceProvider::get()->db->escape($userId).'\';');

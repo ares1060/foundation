@@ -42,7 +42,7 @@
 				//TODO tagging still hacky
 				$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Bookie\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
 				//$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'bookie_categories c ON e.category_id = c.id '.$whereSQL;
-				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\' OR c.name LIKE \''.$args['search'].'%\')';
+				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\' )';
 				$tags = true;
 			}
 			
@@ -162,7 +162,7 @@
 					$svt->addValue('tax_amount', number_format($entry->getTaxAmount(), 2, ',', '.'));
 				}
 				
-				if($entry->getBrutto() <= 0 && $entry->getCategoryId() != 0){
+				if($entry->getBrutto() <= 0 && $entry->getCategoryId() > 0){
 					$csv = $sv->showSubView('category');
 					$csv->addValue('category', $entry->getCategory()->getName());
 				}

@@ -52,7 +52,7 @@
 		}
 		
 		public static function getPostCount($insertSQL = ''){
-			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(count) AS count FROM (SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_posts AS p '.$insertSQL.');');
+			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(s.count) AS count FROM (SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_posts AS p '.$insertSQL.') AS s:');
 			return $result['count'];
 		}
 	

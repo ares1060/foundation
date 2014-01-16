@@ -49,7 +49,7 @@
        	 * @param string $param
        	 */
 		public static function getAttachments($service = '', $param = ''){
-			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'attachments WHERE service = \''.ServiceProvider::getInstance()->db->escape($param).'\' AND param = \''.ServiceProvider::getInstance()->db->escape($param).'\';');
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'attachments WHERE service = \''.ServiceProvider::getInstance()->db->escape($service).'\' AND param = \''.ServiceProvider::getInstance()->db->escape($param).'\';');
 			$out = array();
 			foreach($result as $a) {
 				$ao = new Attachment($a['service'], $a['param'], $a['date'], $a['file'], $a['file_type']);

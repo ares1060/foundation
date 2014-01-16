@@ -187,5 +187,14 @@
 			return false;
 		}
 		
+		public function checkAttachmentAuth($param){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				$post = Post::getPost($param);
+				if($post && $post->getAuthorId() == $user->getId()) return true;
+			}
+			return false;
+		}
+		
 	}
 ?>

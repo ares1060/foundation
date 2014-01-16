@@ -1,5 +1,5 @@
 <?php
-	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Attachment.php');
+	require_once($GLOBALS['config']['root'].'_services/Attachments/model/Attachment.php');
 
 	use at\foundation\core;
 	
@@ -24,29 +24,45 @@
 			}
 		}
 		
+		private function checkAuth($service='', $param=''){
+			if($service != ''){
+				$serv = $this->sp->ref($service);
+				if($serv && method_exists($serv, 'checkAttachmentAuth')){
+					return $serv->checkAttachmentAuth($param);
+				} else {
+					return true;
+				}
+			} else {
+				return true;
+			}
+		}
+		
 		private function handleViewCount($args){
 			$user = $this->sp->user->getLoggedInUser();
 							
-			//TODO: get auth
-			return Attachment::getAttachmentCount($args['service'], $args['param']);
+			if($this->checkAuth($args['service'], $args['param'])){
+				return Attachment::getAttachmentCount($args['service'], $args['param']);
+			} else {
+				return 0;
+			}
 		}
 		
-		private function handleViewList($args){
-			$user = $this->sp->user->getLoggedInUser();
-							
-			//TODO: get auth
-			$att = Attachment::getAttachments($args['service'], $args['param']);
-			if(count($att) > 0){
-				foreach($att as $a){
-					$aiv = $view->showSubView('item');
-					
-					$aiv->addValue('url', $a->getFile());
-					$ext = explode('.', $a->getFile());
-					$ext = array_pop($ext);
-					$aiv->addValue('thumb', urlencode(($ext == 'jpg' || $ext == 'png' || $ext == 'gif')?$GLOBALS['config']['root'].$this->settings->attachment_folder.(($this->settings->service_subdir == 1)?$att->getService().'/':'').$a->getFile():$this->sp->tpl->getTemplateDir().'/img/attachment_dummy.png'));
+		private function handleViewList($args){				
+			$view = new core\Template\ViewDescriptor('_services/Attachments/attachment_list');
+			$view->addValue('param', $args['param']);
+			if($this->checkAuth($args['service'], $args['param'])){
+				$att = Attachment::getAttachments($args['service'], $args['param']);
+				if(count($att) > 0){
+					foreach($att as $a){
+						$aiv = $view->showSubView('item');
+						
+						$aiv->addValue('url', $a->getFile());
+						$ext = explode('.', $a->getFile());
+						$ext = array_pop($ext);
+						$aiv->addValue('thumb', urlencode(($ext == 'jpg' || $ext == 'png' || $ext == 'gif')?$this->settings->attachment_folder.(($this->settings->service_subdir == 1)?$att->getService().'/':'').$a->getFile():$this->sp->tpl->getTemplateDir().'/img/attachment_dummy.png'));
+					}
 				}
 			}
-			
 			return $view->render();
 		}
 		
@@ -57,8 +73,7 @@
 		}
 		
 		private function handleSave($args){
-			$user = $this->sp->user->getLoggedInUser();
-			if($user){
+			if($this->checkAuth($args['service'], $args['param'])){
 				
 				
 				
@@ -68,12 +83,8 @@
 		}
 		
 		private function handleAddAttachment($args){
-			$user = $this->sp->user->getLoggedInUser();
-			if($user){
-				if(isset($args['service']) && isset($args['param']) && isset($args['file'])){
-					
-					//TODO: get auth
-					
+			if(isset($args['service']) && isset($args['param']) && isset($args['file'])){
+				if($this->checkAuth($args['service'], $args['param'])){
 					if(file_exists($GLOBALS['config']['root'].$this->settings->upload_folder.$args['file'])){
 						//move file from upload folder to image folder
 						if(rename($GLOBALS['config']['root'].$this->settings->upload_folder.$args['file'], $GLOBALS['config']['root'].$this->settings->attachment_folder.(($this->settings->service_subdir == 1)?$att->getService().'/':'').$args['file'])){
@@ -81,41 +92,32 @@
 							$ao->setFile($args['file']);
 							if($ao->save()){
 								return $ao->getId();
-							} else {
-								return false;
 							}
 						}
 					} 
-					
-					return false;
-										
-				} else {
-					return false;
 				}
+				
+				return false;
+									
 			} else {
 				return false;
 			}
 		}
 		
 		private function handleRemoveAttachment($args){
-			$user = $this->sp->user->getLoggedInUser();
-			if($user){
-				if(isset($args['aid'])){
-					//get attachment
-					$att = Attachment::getAttachment($args['aid']);
-					if(!$att) return true;
-					
-					//TODO: check auth
-						
+			if(isset($args['aid'])){
+				//get attachment
+				$att = Attachment::getAttachment($args['aid']);
+				if(!$att) return true;
+				
+				if($this->checkAuth($att->getService(), $att->getParam())){
 					$this->sp->fh->deleteFile($GLOBALS['config']['root'].$this->settings->attachment_folder.(($this->settings->service_subdir == 1)?$att->getService().'/':'').$att->getFile());
 					return $att->delete();
-		
-				} else {
-					return false;
 				}
-			} else {
-				return false;
+	
 			}
+			
+			return false;
 		}
 		
 	}

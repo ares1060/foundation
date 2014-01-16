@@ -3,7 +3,6 @@
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Invoice.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/InvoicePart.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Receipt.php');
-	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Attachment.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Category.php');
 
 
@@ -172,20 +171,6 @@
 				if($inv && count($inv) > 0){
 					$isv = $sv->showSubView('pdf');
 					$isv->addValue('id', $inv[0]->getId());
-				}
-				
-				$att = Attachment::getAttachmentsForEntry($entry->getId());
-				if(count($att) > 0){
-					$av = $sv->showSubView('attachments');
-					$av->addValue('id', $entry->getId());
-					foreach($att as $a){
-						$aiv = $av->showSubView('item');
-						
-						$aiv->addValue('url', $a->getFile());
-						$ext = explode('.', $a->getFile());
-						$ext = array_pop($ext);
-						$aiv->addValue('thumb', urlencode(($ext == 'jpg' || $ext == 'png' || $ext == 'gif')?'_services/Bookie/attachments/'.$a->getFile():$this->sp->tpl->getTemplateDir().'/img/attachment_dummy.png'));
-					}
 				}
 					
 			}
@@ -457,6 +442,15 @@
 					
 					return $ok;
 				}
+			}
+			return false;
+		}
+		
+		public function checkAttachmentAuth($param){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				$entry = Entry::getEntry($param);
+				if($entry && $entry->getOwnerId() == $user->getId()) return true;
 			}
 			return false;
 		}

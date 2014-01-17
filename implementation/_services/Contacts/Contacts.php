@@ -428,5 +428,14 @@
 			return false;
 		}
 		
+		public function checkAttachmentAuth($param){
+			$user = $this->sp->user->getLoggedInUser();
+			if($user){
+				$contact = Contact::getContact($param);
+				if($contact && $contact->getOwnerId() == $user->getId()) return true;
+			}
+			return false;
+		}
+		
 	}
 ?>

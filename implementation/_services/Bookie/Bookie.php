@@ -22,8 +22,6 @@
 				case 'view.list': return $this->handleViewList($args); break;
 				case 'view.form': return $this->handleViewForm($args); break;
 				case 'do.save': return $this->handleSave($args); break;
-				case 'do.add.attachment': return $this->handleAddAttachment($args); break;
-				case 'do.remove.attachment': return $this->handleRemoveAttachment($args); break;
 				case 'do.delete': return $this->handleDelete($args); break;
 				default: return 'mooh!'; break;
 			}
@@ -227,9 +225,19 @@
 						$iviv = $view->showSubView('invoice_item');
 						$iviv->addValue('dom_id', 'empty_invoice_item');
 						
+						if($user->getData()->opt('set.taxes', '0')->getValue() == '1') $tax = $view->showSubView('taxes_input');
+						
 					} else {
 						$sel = $view->showSubView('entry_type_selection');
 						$sel->addValue('type_'.(($entry->getBrutto() >= 0)?'in':'out').'_checked', 'checked');
+						
+						$tax = $view->showSubView('taxes_input');
+					}
+					
+					if($tax){
+						$tax->addValue('netto', str_replace('.', ',',$entry->getNetto()));
+						$tax->addValue('tax_type', $entry->getTaxType());
+						$tax->addValue('tax_value', $entry->getTaxValue()*100);
 					}
 					
 					$accs = Account::getAccountsForUser($user->getId());
@@ -263,16 +271,18 @@
 					$invv = $view->showSubView('invoice');
 				
 					$invcount = Invoice::getInvoiceCount(new DateTime('01-01-'.date('Y')), new DateTime('31-12-'.date('Y'))) + 1;
-					$invv->addValue('number', 'WMR_'.date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
+					$invv->addValue('number', $user->getData()->opt('set.invoice_prefix', 'WMR_')->getValue().date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
 					
 					$view->showSubView('add_invoice_item');
 					$iviv = $view->showSubView('invoice_item');
 					$iviv->addValue('dom_id', 'empty_invoice_item');
 					
 					$view->showSubView('entry_type_in');
+					if($user->getData()->opt('set.taxes', '0')->getValue() == '1') $view->showSubView('taxes_input');
 				} else {
 					$view->addValue('title', 'Neuer Eintrag');
 					$view->showSubView('entry_type_selection');
+					$view->showSubView('taxes_input');
 				}
 				
 				$accs = Account::getAccountsForUser($user->getId());
@@ -281,6 +291,7 @@
 						$av = $view->showSubView('account_option');
 						$av->addValue('id', $acc->getId());
 						$av->addValue('name', $acc->getName());
+						if($acc->getId() == $user->getData()->opt('set.default_account','1')->getValue()) $av->addValue('selected', ' selected="selected"');
 					}
 				}
 				
@@ -361,60 +372,6 @@
 				return false;
 			}
 		}
-		
-		private function handleAddAttachment($args){
-			$user = $this->sp->user->getLoggedInUser();
-			if($user){
-				if(isset($args['id']) && isset($args['file'])){
-					//get entry
-					$entry = Entry::getEntry($args['id']);
-					if(!$entry || $entry->getOwnerId() != $user->getId()) return 'no right';
-					
-					if(file_exists($GLOBALS['config']['root'].$this->settings->upload_folder.$args['file'])){
-						//move file from upload folder to image folder
-						if(rename($GLOBALS['config']['root'].$this->settings->upload_folder.$args['file'], $GLOBALS['config']['root'].$this->settings->attachment_folder.$args['file'])){
-							$ao = new Attachment($entry->getId());
-							$ao->setFile($args['file']);
-							if($ao->save()){
-								return $ao->getId();
-							} else {
-								return false;
-							}
-						}
-					} 
-					
-					return false;
-										
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
-		}
-		
-		private function handleRemoveAttachment($args){
-			$user = $this->sp->user->getLoggedInUser();
-			if($user){
-				if(isset($args['aid'])){
-					//get attachment
-					$att = Attachment::getAttachment($args['aid']);
-					if(!$att) return true;
-					//get entry
-					$entry = $att->getEntry();
-					if(!$entry || $entry->getOwnerId() != $user->getId()) return false;
-						
-					$this->sp->fh->deleteFile($GLOBALS['config']['root'].$this->settings->attachment_folder.$att->getFile());
-					return $att->delete();
-		
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
-		}
-		
 		
 		private function handleDelete($args){
 			$user = $this->sp->user->getLoggedInUser();

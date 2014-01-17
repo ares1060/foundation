@@ -188,6 +188,8 @@
 						}
 					}
 					
+					$view->showSubView('attachments');
+					
 					return $view->render();
 				} else {
 					return 'not for you';
@@ -229,6 +231,7 @@
 						}
 					}
 						
+					$view->showSubView('attachments');
 					
 				} else {
 					$view->addValue('image', urlencode($this->settings->default_image));

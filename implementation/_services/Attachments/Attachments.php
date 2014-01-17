@@ -63,6 +63,15 @@
 					}
 				}
 			}
+			if(isset($args['mode']) && $args['mode'] == 'full') {
+				$header = $view->showSubView('header');
+				$header->addValue('service', $args['service']);
+				$header->addValue('param', $args['param']);
+				
+				$footer = $view->showSubView('footer');
+				$footer->addValue('service', $args['service']);
+				$footer->addValue('param', $args['param']);
+			}
 			return $view->render();
 		}
 		

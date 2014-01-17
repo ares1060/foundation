@@ -25,6 +25,7 @@
 			if($user && $user->getId() > 0){
 				$view = new core\Template\ViewDescriptor('_services/Calendar/calendar_overview');
 				$view->addValue('uid', $user->getId());
+				$view->addValue('contact_id', (isset($args['contact_filter'])?$args['contact_filter']:''));
 				return $view->render();
 			} else {
 				return '';

@@ -26,17 +26,19 @@ if($user && $user->getId() > 0){
 	$whereSQL = 'WHERE e.owner_id = \''.$user->getId().'\'';
 	
 	//TODO: generalize this so that services can infuse filter criteria generically
-	if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
+	if(isset($_REQUEST['contact_filter']) && $_REQUEST['contact_filter'] != ''){
 		$values = '';
-		foreach($args['contact_filter'] as $val){
-			$values .= $this->sp->db->escape($val).',';
+		$cf = explode(',', $_REQUEST['contact_filter']);
+		foreach($cf as $val){
+			$values .= $sp->db->escape($val).',';
 		}
 		$values = substr($values, 0, -1);
-		$whereSQL = 'JOIN '.$this->sp->db->prefix.'bookie_entries_contacts AS c ON c.entry_id = e.id '.$whereSQL;
+		$whereSQL = 'JOIN '.$sp->db->prefix.'calendar_events_contacts AS c ON c.entry_id = e.id '.$whereSQL;
 		$whereSQL .= ' AND contact_id IN ('.$values.')';
 	}
 	
-	$conn->render_sql('SELECT * FROM '.$sp->db->prefix.'calendar_events e '.$whereSQL,"id","start_date,end_date,text,owner_id");
+	
+	$conn->render_sql('SELECT *, e.id AS id FROM '.$sp->db->prefix.'calendar_events e '.$whereSQL,"id","start_date,end_date,text,owner_id");
 }
 
 ?>

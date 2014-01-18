@@ -215,6 +215,6 @@
 		*/
 		public function getReminderDate(){ return $this->reminderDate; }
 		public function getDunnings(){ return $this->dunnings; }
-		public function getDunningCount(){ return count(explode(',', $this->dunnings)); }
+		public function getDunningCount(){ return ($this->dunnings == '')?0:count(explode(',', $this->dunnings)); }
 	}
 ?>

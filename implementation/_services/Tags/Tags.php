@@ -71,19 +71,20 @@
         		
         		return $out;
         	} else {
-        		$tpl = new core\Template\ViewDescriptor('_services/Tags/tag_list');
-        		
+        		if(isset($args['template'])) $tpl = new core\Template\ViewDescriptor('_services/Tags/'.$args['template']);
+        		else $tpl = new core\Template\ViewDescriptor('_services/Tags/tag_list');
+        		        		
         		foreach($tags as $tag){
+        			if(($this->settings->hide_square_brackets == '1' || isset($args['hide_square_brackets']) && $args['hide_square_brackets']=='1') && substr($tag->getName(), 0, 1) == '[' && substr($tag->getName(), -1) == ']') continue;
+        			
+        			if(isset($t) && $t) $t->showSubView('delim');
         			$t = $tpl->showSubView('tag');
-        		
+        			
         			$t->addValue('id', $tag->getId());
         			$t->addValue('service', $service);
         			$t->addValue('name', $tag->getName());
         			$t->addValue('webname', $tag->getWebname());
-        			
-        			if($tag !== end($tags)){
-        				$t->showSubView('delim');
-        			}
+
         		}
         		
         		return $tpl->render();

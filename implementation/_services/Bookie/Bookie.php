@@ -167,8 +167,32 @@
 				//check if invoice
 				$inv = Invoice::getInvoicesForEntry($entry->getId());
 				if($inv && count($inv) > 0){
+					$inv = $inv[0];
 					$isv = $sv->showSubView('pdf');
-					$isv->addValue('id', $inv[0]->getId());
+					$isv->addValue('id', $inv->getId());
+					
+					//check for dunnings
+					if($entry->getState() != 'payed'){
+						$now = new DateTime();
+						$diff = $now->diff($entry->getDate())->days;
+						if($diff > $user->getUserData()->opt('set.dunning_interval', 14)->getValue()){
+							$dc = floor($diff / $user->getUserData()->opt('set.dunning_interval', 14)->getValue());
+							if($inv->getDunningCount() < $dc){
+								//its a new dunning
+								$dv = $sv->showSubView('dunning');
+								$dv->addValue('id', $inv->getId());
+								$dv->addValue('count', $inv->getDunningCount() + 1);
+								$sv->addValue('state', 'delayed');
+								$entry->setState('delayed');
+								$entry->save();
+							} else {
+								$dv = $sv->showSubView('dunning_small');
+								$dv->addValue('id', $inv->getId());
+								$dv->addValue('count', $inv->getDunningCount());
+							}
+						}
+					}
+					
 				}
 					
 			}

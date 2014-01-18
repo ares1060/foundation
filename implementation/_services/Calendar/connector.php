@@ -23,7 +23,7 @@ if($user && $user->getId() > 0){
 	
 	$conn->event->attach("beforeProcessing","setOwner");
 	
-	$whereSQL = 'WHERE e.owner_id = \''.$user->getId().'\'';
+	$whereSQL = 'WHERE '.$sp->db->prefix.'calendar_events.owner_id = \''.$user->getId().'\'';
 	
 	//TODO: generalize this so that services can infuse filter criteria generically
 	if(isset($_REQUEST['contact_filter']) && $_REQUEST['contact_filter'] != ''){
@@ -33,12 +33,12 @@ if($user && $user->getId() > 0){
 			$values .= $sp->db->escape($val).',';
 		}
 		$values = substr($values, 0, -1);
-		$whereSQL = 'JOIN '.$sp->db->prefix.'calendar_events_contacts AS c ON c.entry_id = e.id '.$whereSQL;
+		$whereSQL = 'JOIN '.$sp->db->prefix.'calendar_events_contacts AS c ON c.entry_id = '.$sp->db->prefix.'calendar_events.id '.$whereSQL;
 		$whereSQL .= ' AND contact_id IN ('.$values.')';
 	}
 	
 	
-	$conn->render_sql('SELECT *, e.id AS id FROM '.$sp->db->prefix.'calendar_events e '.$whereSQL,"id","start_date,end_date,text,owner_id");
+	$conn->render_sql('SELECT *, '.$sp->db->prefix.'calendar_events.id AS id FROM '.$sp->db->prefix.'calendar_events '.$whereSQL,"id","start_date,end_date,text,owner_id");
 }
 
 ?>

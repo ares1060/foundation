@@ -124,7 +124,7 @@
 						$tpl = $this->replaceDynamics($tpl, array(), $tID);
 						$tpl = $this->parseServiceTags($tpl);
 						/*fwrite($ca, '<?php $this->phpTemplateCache[\''.$tID.'\'] = create_function(\'$values, $blocks\', \'return \\\''.addcslashes($tpl, '\'\\').'\\\';\');?>');*/
-						fwrite($ca, '<?php $this->phpTemplateCache[\''.$tID.'\'] = \'render_'.str_replace('/', '_', $tID).'\'; function render_'.str_replace('/', '_', $tID).'($values, $blocks){ return \''.$tpl.'\';}?>');
+						fwrite($ca, '<?php use at\foundation\core; $this->phpTemplateCache[\''.$tID.'\'] = \'render_'.str_replace('/', '_', $tID).'\'; function render_'.str_replace('/', '_', $tID).'($values, $blocks){ return \''.$tpl.'\';}?>');
 						fclose($ca);
 					}
 					require_once($cacheName);				
@@ -210,7 +210,7 @@
 						$dyn = $this->replaceDynamics($dyn, array(), $tID);
 						$dyn = $this->parseServiceTags($dyn);
 						/*fwrite($ca, '<?php $this->phpDynamicCache[\''.$tID.'\'][\''.$dID.'\'] = create_function(\'$values, $blocks\', \'return \\\''.addcslashes($dyn, '\'\\').'\\\';\');?>');*/
-						fwrite($ca, '<?php $this->phpDynamicCache[\''.$tID.'\'][\''.$dID.'\'] = \'render_'.str_replace('/', '_', $tID.'_'.$dID).'\'; function render_'.str_replace('/', '_', $tID.'_'.$dID).'($values, $blocks){ return \''.$dyn.'\';}?>');
+						fwrite($ca, '<?php use at\foundation\core; $this->phpDynamicCache[\''.$tID.'\'][\''.$dID.'\'] = \'render_'.str_replace('/', '_', $tID.'_'.$dID).'\'; function render_'.str_replace('/', '_', $tID.'_'.$dID).'($values, $blocks){ return \''.$dyn.'\';}?>');
 						fclose($ca);
 					}
 					require_once($cacheName);
@@ -506,7 +506,7 @@
 							}
 							unset($arg);
 							//get the service result 
-							if($this->settings->render_cache_level == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
+							if($this->settings->render_cache_level == 1) $result = '\'.core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
 							else $result = $this->sp->render(substr($parts[0], 0, $pos), $args);
 							$chunk = $result.$parts[1];
 						}
@@ -529,7 +529,7 @@
 							if(substr($jsonObj, -1) != '}') $jsonObj = $jsonObj.'}';
 							
 							//get the service result
-							if($this->settings->render_cache_level == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
+							if($this->settings->render_cache_level == 1) $result = '\'.core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
 							else $result = $this->sp->render(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
 							$chunk = $result.$parts[1];
 						}
@@ -555,7 +555,7 @@
 								if(substr($jsonObj, -1) != '}') $jsonObj = $jsonObj.'}';
 								
 								//get the service result
-								if($this->settings->render_cache_level == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
+								if($this->settings->render_cache_level == 1) $result = '\'.core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.$jsonObj.'\', true)).\'';
 								else $result = $this->sp->render(substr($parts[0], 0, $pos), json_decode($jsonObj, true));
 								$chunk = $result.$parts[1];
 							} else {
@@ -572,7 +572,7 @@
 								}
 								unset($arg);
 								//get the service result 
-								if($this->settings->render_cache_level == 1) $result = '\'core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
+								if($this->settings->render_cache_level == 1) $result = '\'.core\ServiceProvider::getInstance()->render(\''.substr($parts[0], 0, $pos).'\', json_decode(\''.json_encode($args).'\', true)).\'';
 								else $result = $this->sp->render(substr($parts[0], 0, $pos), $args);
 								$chunk = $result.$parts[1];
 							}

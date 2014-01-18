@@ -97,14 +97,14 @@
 			else {
 				$f = UserDataField::getUserDataFieldByName($name);
 				if(!$f) return null;
+
+				$udi = new UserDataItem($this->userId, $f->getId(), $default);
 				if($create) {
-					$udi = new UserDataItem($this->userId, $f->getId(), $default);
 					$this->data[$name] = $udi;
 					$this->keys[] = $name;
-					return $udi;
-				} else {
-					return null;
+					//$udi->save();
 				}
+				return $udi;
 			}
 		}
 		

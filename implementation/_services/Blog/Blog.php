@@ -30,7 +30,11 @@
 			
 			if($this->settings->journal_mode == "private"){
 				if(!$user) return '';
-				$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($user->getId()).'\'';
+				if(isset($args['author']) && in_array($args['author'], explode(',', $this->settings->public_authors))){
+					$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($args['author']).'\'';
+				} else {
+					$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($user->getId()).'\'';
+				}
 			} else if(isset($args['author'])){
 				$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($args['author']).'\'';
 			}
@@ -84,7 +88,7 @@
 			$posts = Post::getPosts($whereSQL, $from, $rows);
 
 			$view = new core\Template\ViewDescriptor('_services/Blog/post_list');	
-			if($rows < 0) $rows = count($posts);
+			if($rows < 0) $rows = max(1, count($posts));
 			$pages =  ceil(Post::getPostCount($whereSQL) / $rows);
 			$view->addValue('pages', $pages);
 			if(isset($args['mode']) && $args['mode'] == 'wrapped'){
@@ -104,7 +108,13 @@
 				$sv->addValue('date', $this->sp->txtfun->fixDateLoc($post->getDate()->format('d. F Y, H:i')));
 				$sv->addValue('title', $post->getTitle());
 				$sv->addValue('text', nl2br($post->getText()));
-					
+
+				if($user && $post->getAuthorId() == $user->getId()){
+					$asv = $sv->showSubView('actions');
+					$asv->addValue('id', $post->getId());
+				}
+				
+				if(isset($args['hide_square_brackets'])) $sv->addValue('hide_square_brackets', $args['hide_square_brackets']);
 			}
 			
 			return $view->render();

@@ -56,6 +56,7 @@
 					foreach($att as $a){
 						$aiv = $view->showSubView('item');
 						
+						$aiv->addValue('id', $a->getId());
 						$aiv->addValue('url', $a->getFile());
 						$ext = explode('.', $a->getFile());
 						$ext = array_pop($ext);

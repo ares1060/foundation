@@ -124,12 +124,17 @@
 		
 		private function handleViewLinks($args){
 			$user = $this->sp->user->getLoggedInUser();
-			$view = new core\Template\ViewDescriptor('_services/Contacts/contact_links');
+			$sm = (isset($args['mode']) && $args['mode'] == 'simple');
+			if($sm) $view = new core\Template\ViewDescriptor('_services/Contacts/contact_simplelinks');
+			else $view = new core\Template\ViewDescriptor('_services/Contacts/contact_links');
+
 			if($user && isset($args['entry_id']) && isset($args['link_table'])){
 				if($this->checkLinkingAuth($args['link_table'], $args['entry_id'])){
 					$contacts = Contact::getLinkedContacts($args['link_table'], $args['entry_id']);
 					if(count($contacts) > 0){
+						if($sm) $view->showSubView('header');
 						foreach($contacts as $contact){
+							if(isset($svc) && $svc) $svc->showSubView('divider');
 							$svc = $view->showSubView('row');
 							$svc->addValue('firstname', $contact->getFirstName());
 							$svc->addValue('lastname', $contact->getLastName());

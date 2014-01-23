@@ -154,8 +154,8 @@
         	return ($ref != null) ? $ref->render($args) : '';
        	}
 
-        private function _($str, $service='core'){ return $this->data('Localization', array('str'=>$str, 'service'=>$service));}
-        private function __($str, $type=Messages\Messages::DEBUG_ERROR, $service='core'){ $this->msg->run(array('message'=>$str, 'type'=>$type));}
+        public function _($str, $service='core'){ return $this->render('Localization', array('str'=>$str, 'service'=>$service));}
+        public function __($str, $type=Messages\Messages::DEBUG_ERROR, $service='core'){ $this->msg->render(array('message'=>$str, 'type'=>$type));}
         
         /**
          * Setup function for creating necessary tables, folders and files

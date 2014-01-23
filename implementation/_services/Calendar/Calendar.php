@@ -27,7 +27,7 @@
 				$view = new core\Template\ViewDescriptor('_services/Calendar/calendar_overview');
 				$view->addValue('uid', $user->getId());
 				$view->addValue('contact_id', (isset($args['contact_filter'])?$args['contact_filter']:''));
-				$view->addValue('start_view', $user->getUserData()->opt('set.calendar_start_view', 'month')->getValue());
+				$view->addValue('start_view', (isset($args['tab']))?$args['tab']:$user->getUserData()->opt('set.calendar_start_view', 'month')->getValue());
 				$view->addValue('first_hour', $user->getUserData()->opt('set.first_hour', '6')->getValue());
 				return $view->render();
 			} else {
@@ -40,9 +40,13 @@
 				
 			if($user && $user->getId() > 0){
 				$view = new core\Template\ViewDescriptor('_services/Calendar/calendar_agenda');
+				$tags = false;
+				$contacts = false;
+				$whereSQL = 'WHERE e.owner_id = \''.$this->sp->db->escape($user->getId()).'\'';
 				
-				$days = 3;
-				if(isset($args['days'])) $days = $args['days'];
+				
+				$days = 4;
+				if(isset($args['days'])) $days = $args['days']+1;
 				
 				$now = new DateTime();
 				$now->setTime(0, 0, 0);
@@ -50,9 +54,75 @@
 				
 				$to = new DateTime();
 				$to->setTime(0, 0, 0);
-				$to->sub(new DateInterval('P'.$days.'D'));
+				$to->add(new DateInterval('P'.$days.'D'));
 				
-				$events = $this->sp->db->fetchAll('SELECT * FROM '.$this->sp->db->prefix.'calendar_events WHERE start_date >= \''.$now->format('Y-m-d').'\' AND start_date >= \''.$to->format('Y-m-d').'\' ORDER BY start_date;');
+				if(isset($args['search']) && strlen($args['search']) > 2){
+					$args['search'] = $this->sp->db->escape($args['search']);
+				
+					//TODO tagging still hacky
+					$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Calendar\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
+					$whereSQL .= ' AND (e.text LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\')';
+					$tags = true;
+				}
+				
+				if(isset($args['date_from']) && $args['date_from'] != ''){
+					$args['date_from'] = $this->sp->db->escape($args['date_from']);
+					$whereSQL .= ' AND e.start_date >= \''.$args['date_from'].'\'';
+				} else {
+					$whereSQL .= ' AND e.start_date >= \''.$now->format('Y-m-d').'\'';
+				}
+				
+				if(isset($args['date_to']) && $args['date_to'] != ''){
+					$args['date_to'] = $this->sp->db->escape($args['date_to']);
+					$whereSQL .= ' AND e.start_date <= \''.$args['date_to'].'\'';
+				} else if(isset($args['days'])){
+					$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').'\'';
+				}
+				
+				$from = 0;
+				if(isset($args['from']) && $args['from'] > 0) {
+					$from = $this->sp->db->escape($args['from']);
+				}
+					
+				$rows = -1;
+				if(isset($args['rows']) && $args['rows'] >= 0){
+					$rows = $this->sp->db->escape($args['rows']);
+				}		
+				
+				if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.$this->sp->db->escape($from).','.$this->sp->db->escape($rows);
+				else $limit = '';		
+				
+				//TODO: generalize this so that services can infuse filter criteria generically
+				if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
+					$values = '';
+					foreach($args['contact_filter'] as $val){
+						$values .= $this->sp->db->escape($val).',';
+					}
+					$values = substr($values, 0, -1);
+					$whereSQL = 'JOIN '.$this->sp->db->prefix.'calendar_events_contacts AS c ON c.entry_id = e.id '.$whereSQL;
+					$whereSQL .= ' AND c.contact_id IN ('.$values.')';
+					$contacts = true;
+				}
+				
+				if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
+				
+				$events = $this->sp->db->fetchAll('SELECT *, e.id AS id FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.' ORDER BY e.start_date'.$limit);
+				$count = $this->sp->db->fetchRow('SELECT SUM(tc.count) AS count FROM (SELECT COUNT(*) AS count FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.') AS tc;');
+				
+				
+				if($rows < 0) $rows = max(1, count($events));
+				$pages = ceil($count['count'] / $rows);
+				
+				$view->addValue('pages', $pages);
+				if(isset($args['mode']) && $args['mode'] == 'wrapped'){
+					$header = $view->showSubView('header');
+					if($contacts) $header->showSubView('filter_contacts');
+					
+					$footer = $view->showSubView('footer');
+					$footer->addValue('current_page', '0');
+					$footer->addValue('events_per_page', $rows);
+					$footer->addValue('pages', $pages);
+				}
 				
 				$day = '';
 				$dayView = null;

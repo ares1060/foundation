@@ -155,11 +155,13 @@
 			if($user) {
 				//get all currently linked tags
 				$tags = Tag::getLinkedTags($args['service'], $args['param'], $user->getId());
-				$newTags = explode(',', $args['tags']);
+				if(isset($args['tags'])) $newTags = explode(',', $args['tags']);
+				else $newTags = array();
 				$tagIds = array();
 				
 				//for each new tag
 				foreach($newTags as $tagName){
+					if($tagName == '') continue;
 					$tag = Tag::getTagByName($tagName, $user->getId());
 					//check if tag already exists
 					if($tag){

@@ -411,14 +411,6 @@
 						foreach ($invoices as $inv){
 							$inv->delete();
 						}
-						
-						$att = Attachment::getAttachmentsForEntry($entry->getId());
-						if(count($att) > 0){
-							foreach($att as $a){
-								$this->sp->fh->deleteFile($GLOBALS['config']['root'].$this->settings->attachment_folder.$a->getFile());
-								$a->delete();
-							}
-						}
 					}
 					
 					return $ok;
@@ -432,6 +424,7 @@
 			if($user){
 				$entry = Entry::getEntry($param);
 				if($entry && $entry->getOwnerId() == $user->getId()) return true;
+				else if(!$entry) return true;
 			}
 			return false;
 		}

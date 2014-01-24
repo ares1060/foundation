@@ -20,6 +20,7 @@
 				case 'do.save_attachments': return $this->handleSave($args); break;
 				case 'do.add_attachment': return $this->handleAddAttachment($args); break;
 				case 'do.remove_attachment': return $this->handleRemoveAttachment($args); break;
+				case 'do.remove_all_attachments': return $this->handleRemoveAllAttachments($args); break;
 				default: return 'mooh!'; break;
 			}
 		}
@@ -127,6 +128,26 @@
 	
 			}
 			
+			return false;
+		}
+		
+		private function handleRemoveAllAttachments($args){
+			if(isset($args['service']) && isset($args['param'])){
+				if($this->checkAuth($args['service'], $args['param'])){
+					$atts = Attachment::getAttachments($args['service'], $args['param']);
+					if(!$atts || count($atts) == 0) return true;
+					
+					$ok = true;
+					foreach ($atts as $att){
+						$this->sp->fh->deleteFile($GLOBALS['config']['root'].$this->settings->attachment_folder.(($this->settings->service_subdir == 1)?$att->getService().'/':'').$att->getFile());
+						$ok &= $att->delete();
+					}
+					
+					return $ok;
+				}
+				return false;
+			}
+				
 			return false;
 		}
 		

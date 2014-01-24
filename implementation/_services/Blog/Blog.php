@@ -202,6 +202,7 @@
 			if($user){
 				$post = Post::getPost($param);
 				if($post && $post->getAuthorId() == $user->getId()) return true;
+				if(!$post) return true;
 			}
 			return false;
 		}

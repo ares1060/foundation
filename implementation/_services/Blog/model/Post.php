@@ -31,7 +31,7 @@
 			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).','.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
 			
-			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, p.id as id FROM '.ServiceProvider::getInstance()->db->prefix.'blog_posts AS p '.$insertSQL.' '.$limit.';');
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, p.id as id, p.user_id AS user_id FROM '.ServiceProvider::getInstance()->db->prefix.'blog_posts AS p '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $post) {
 				$po = new Post($post['user_id'], $post['text'], $post['title'], new DateTime($post['date']));

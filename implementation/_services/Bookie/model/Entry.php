@@ -55,7 +55,7 @@
 		public static function getEntries($insertSQL = '', $from = 0, $rows = -1){
 			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).','.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
-			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, e.id as id FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.' '.$limit.';');
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, e.id as id, e.user_id as user_id FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $entry) {
 				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id']);

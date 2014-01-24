@@ -316,7 +316,16 @@
 				if(isset($args['id'])){
 					$contact = Contact::getContact($args['id']);
 					if($contact && $contact->getOwnerId() == $user->getId()) {
-						return $contact->delete();
+						
+						$ok = $contact->delete();
+						
+						if($ok && isset($args['linktables'])){
+							foreach($args['linktables'] as $lt){
+								$this->sp->db->fetchBool('DELETE FROM '.$this->sp->db->prefix.$this->sp->db->escape($lt).'_contacts WHERE contact_id=\''.$this->sp->db->escape($args['id']).'\';');
+							}
+						}
+						
+						return $ok;
 					}
 				}
 			}
@@ -441,6 +450,7 @@
 			if($user){
 				$contact = Contact::getContact($param);
 				if($contact && $contact->getOwnerId() == $user->getId()) return true;
+				else if(!$contact) return true;
 			}
 			return false;
 		}

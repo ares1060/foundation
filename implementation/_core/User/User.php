@@ -50,19 +50,21 @@
         	$this->ini_file = $GLOBALS['to_root'].'_core/User/User.ini';
             parent::__construct();
             
-            $this->viewAdmin = new UserAdminView($this->settings, $this);
+			$this->viewAdmin = new UserAdminView($this->settings, $this);
             $this->viewFront = new UserFrontView($this->settings,  $this);
            	           	
             //$this->debugVar($_SESSION['User'] == null);
-            //$this->debugVar($_SESSION['User']['loggedInUser'] == null);
+            //$this->debugVar($_SESSION['User']['loggedInUser'] == null);            	
             
             //load User Data From Session if available
             if(isset($_SESSION['User']) && isset($_SESSION['User']['loggedInUser'])){
+            	 
             	$_SESSION['User']['viewingUser'] = $this->fixObject($_SESSION['User']['viewingUser']);
             	$_SESSION['User']['loggedInUser'] = $this->fixObject($_SESSION['User']['loggedInUser']);
             	
+            	            	
             	if(get_class($_SESSION['User']['loggedInUser']) != 'model\User') $this->debugVar('fixObject ERROR');
-            	
+            	            	
             	$this->loggedInUser = $_SESSION['User']['loggedInUser'];
             	
             	if(isset($_SESSION['User']['viewingUser'])) $this->viewingUser = $_SESSION['User']['viewingUser'];
@@ -70,8 +72,12 @@
             	
             } else $this->loggedInUser = null;
             
+            	
+            
         }
          
+        
+        //TODO this is super slow, fix it
         private function fixObject (&$object) {
   			if (!is_object ($object) && gettype ($object) == 'object')
     			return ($object = unserialize (serialize ($object)));

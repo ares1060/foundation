@@ -141,7 +141,9 @@
 			
 			$view->addValue('total_in', number_format($totals['brutto_in'], 2, ',', '.'));
 			$view->addValue('total_out', number_format($totals['brutto_out'], 2, ',', '.'));
-			$view->addValue('total', number_format($totals['brutto_out'] + $totals['brutto_in'], 2, ',', '.'));
+			$tv = $totals['brutto_out'] + $totals['brutto_in'];
+			$view->addValue('total_class', ($tv < 0)?'out':'in');
+			$view->addValue('total', number_format($tv, 2, ',', '.'));
 
 			foreach($entries as $entry){
 				$sv = $view->showSubView('row');
@@ -255,13 +257,17 @@
 						$sel = $view->showSubView('entry_type_selection');
 						$sel->addValue('type_'.(($entry->getBrutto() >= 0)?'in':'out').'_checked', 'checked');
 						
+						//if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1') $tax = $view->showSubView('tax_input');
 						$tax = $view->showSubView('tax_input');
+						
+						if($entry->getProjectedDisposal()) $view->addValue('projected_disposal', $entry->getDate()->diff($entry->getProjectedDisposal())->y);
 					}
 					
 					if($tax){
 						$tax->addValue('netto', str_replace('.', ',',$entry->getNetto()));
 						$tax->addValue('tax_type', $entry->getTaxType());
 						$tax->addValue('tax_value', $entry->getTaxValue()*100);
+						$tax->addValue('tax_country_'.$entry->getTaxCountry(), ' selected="selected"');
 					}
 					
 					$accs = Account::getAccountsForUser($user->getId());
@@ -306,6 +312,8 @@
 				} else {
 					$view->addValue('title', 'Neuer Eintrag');
 					$view->showSubView('entry_type_selection');
+					
+					//if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1') $view->showSubView('tax_input');
 					$view->showSubView('tax_input');
 				}
 				
@@ -349,6 +357,7 @@
 				if(isset($args['state'])) $entry->setState($args['state']);
 				if(isset($args['tax_type'])) $entry->setTaxType($args['tax_type']);
 				if(isset($args['tax_value'])) $entry->setTaxValue($args['tax_value']);
+				if(isset($args['tax_country'])) $entry->setTaxCountry($args['tax_country']);
 				if(isset($args['brutto'])) $entry->setBrutto($args['brutto']);
 				if(isset($args['netto'])) $entry->setNetto($args['netto']);
 				if(isset($args['date'])) $entry->setDate(new DateTime($args['date']));
@@ -357,6 +366,12 @@
 					$acc = Account::getAccount($args['account']);
 					if($acc->getOwnerID() == -1 || $acc->getOwnerID() == $user->getId()) $entry->setAccount($args['account']);
 				}
+				if(isset($args['projected_disposal'])) {
+					$years = $args['projected_disposal'];
+					$pd = new DateTime($args['date']);
+					$entry->setProjectedDisposal($pd->add(new DateInterval('P'.$years.'Y')));
+				}
+				if(isset($args['disposal'])) $entry->setDisposal(new DateTime($args['date']));
 				
 				if($entry->getOwnerId() < 0) $entry->setOwner($user->getId());
 				

@@ -26,8 +26,19 @@
 		private $account;
 		private $categoryId;
 		private $category;
+		private $taxCountry;
+		private $include;
+		/**
+		* @var DateTime
+		*/
+		private $disposal;
+		/**
+		* @var DateTime
+		*/
+		private $projectedDisposal;
+		
 	
-		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open', $account = -1, $category = -1) {
+		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open', $account = -1, $category = -1, $taxCountry = 0, $include = true, $disposal = null, $projectedDisposal = null) {
             $this->ownerId = $owner;
 			$this->brutto = $brutto;
 			$this->netto = $netto;
@@ -38,6 +49,10 @@
 			$this->state = $state;
 			$this->accountId = $account;
 			$this->categoryId = $category;
+			$this->taxCountry = $taxCountry;
+			$this->include = $include;
+			$this->disposal = $disposal;
+			$this->projectedDisposal = $projectedDisposal;
 			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_entries', array());
         }
 		
@@ -58,7 +73,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, e.id as id, e.user_id as user_id FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $entry) {
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id']);
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id'], $entry['tax_country'], $entry['include'], ($entry['disposal'] == '0000-00-00')?null:new DateTime($entry['disposal']), ($entry['projected_disposal'] == '0000-00-00')?null:new DateTime($entry['projected_disposal']));
 				$eo->setId($entry['id']);
 				$out[] = $eo;
 			}
@@ -71,6 +86,8 @@
 		* @return array Associative array wit hfollowing fields: brutto_in, netto_in, brutto_out, netto_out
 		*/
 		public static function getEntrySums($insertSQL = ''){
+			if(!$insertSQL || trim($insertSQL) == '') $insertSQL = 'WHERE e.include = \'1\'';
+			else $insertSQL = str_replace('WHERE ', 'WHERE e.include = \'1\' AND ', $insertSQL);
 			$result = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(s.brutto_in) AS brutto_in, SUM(s.brutto_out) AS brutto_out, SUM(s.netto_in) AS netto_in, SUM(s.netto_out) AS netto_out FROM ( SELECT SUM(CASE WHEN e.brutto > 0 THEN e.brutto ELSE 0 END) AS brutto_in, SUM(CASE WHEN e.netto > 0 THEN e.netto ELSE 0 END) AS netto_in, SUM(CASE WHEN e.brutto < 0 THEN e.brutto ELSE 0 END) AS brutto_out, SUM(CASE WHEN e.netto < 0 THEN e.netto ELSE 0 END) AS netto_out FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.') AS s;');
 			return $result;
 		}
@@ -94,7 +111,7 @@
 		public static function getEntry($entryId) {
 			$entry = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries WHERE id =\''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
 			if($entry){
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id']);
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id'], $entry['tax_country'], $entry['include'], ($entry['disposal'] == '0000-00-00')?null:new DateTime($entry['disposal']), ($entry['projected_disposal'] == '0000-00-00')?null:new DateTime($entry['projected_disposal']));
 				$eo->setId($entry['id']);
 				return $eo;
 			} else {
@@ -113,7 +130,7 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_entries 
-								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`, `account_id`, `category_id`) VALUES 
+								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`, `account_id`, `category_id`, `tax_country`, `include`, `disposal`, `projected_disposal`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->ownerId).'\', 
 									\''.$this->sp->db->escape($this->notes).'\', 
@@ -124,7 +141,11 @@
 									\''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 									\''.$this->sp->db->escape($this->state).'\',
 									\''.$this->sp->db->escape($this->accountId).'\',
-									\''.$this->sp->db->escape($this->categoryId).'\'
+									\''.$this->sp->db->escape($this->categoryId).'\',
+									\''.$this->sp->db->escape($this->taxCountry).'\',
+									\''.$this->sp->db->escape($this->include).'\',
+									\''.$this->sp->db->escape(($this->disposal)?$this->disposal->format('Y-m-d'):'0000-00-00').'\',
+									\''.$this->sp->db->escape(($this->projectedDisposal)?$this->projectedDisposal->format('Y-m-d'):'0000-00-00').'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -145,7 +166,11 @@
 						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 						`state` = \''.$this->sp->db->escape($this->state).'\',
 						`account_id` = \''.$this->sp->db->escape($this->accountId).'\',
-						`category_id` = \''.$this->sp->db->escape($this->categoryId).'\'
+						`category_id` = \''.$this->sp->db->escape($this->categoryId).'\',
+						`tax_country` = \''.$this->sp->db->escape($this->taxCountry).'\',
+						`include` = \''.$this->sp->db->escape($this->include).'\',
+						`disposal` = \''.$this->sp->db->escape($this->categoryId).'\',
+						`projected_disposal` = \''.$this->sp->db->escape(($this->projectedDisposal)?$this->projectedDisposal->format('Y-m-d'):'0000-00-00').'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -187,7 +212,9 @@
 		public function setNetto($value, $recalcBrutto = false) { $this->netto = $value; return (recalcBrutto===true)?$this->recalcBrutto():$this; }
 		public function setTaxType($type) { $this->taxType = $type; return $this; }
 		public function setTaxValue($value) { $this->taxValue = $value; return $this; }
+		public function setTaxCountry($taxCountry) { $this->taxCountry = $taxCountry; return $this; }
 		public function setNotes($notes) { $this->notes = $notes; return $this; }
+
 		/**
 		 * @param DateTime $date
 		 */
@@ -195,6 +222,19 @@
 		public function setState($state) { $this->state = $state; return $this; }
 		public function setAccount($account) { $this->accountId = $account; $this->account = null; return $this; }
 		public function setCategory($category) { $this->categoryId = $category; $this->category = null; return $this; }
+		/**
+		* @param DateTime $date
+		*/
+		public function setDisposal($date) {
+			$this->disposal = $date; return $this;
+		}
+		/**
+		* @param DateTime $date
+		*/
+		public function setProjectedDisposal($date) {
+			$this->projectedDisposal = $date; return $this;
+		}
+		
 		
 		public function getId(){ return $this->id; }
 		/**
@@ -210,6 +250,7 @@
 		public function getTaxType() { return $this->taxType; }
 		public function getTaxValue() { return $this->taxValue; }
 		public function getTaxAmount() { return round($this->netto * $this->taxValue * 100)*0.01; }
+		public function getTaxCountry() { return $this->taxCountry; }
 		public function getNotes() { return $this->notes; }
 		/**
 		 * @return DateTime
@@ -232,6 +273,18 @@
 			return $this->category;
 		}
 		public function getCategoryId(){ return $this->categoryId; }
+		/**
+		* @return DateTime
+		*/
+		public function getDisposal() {
+			return $this->disposal;
+		}
+		/**
+		* @return DateTime
+		*/
+		public function getProjectedDisposal() {
+			return $this->projectedDisposal;
+		}
 		
 	}
 ?>

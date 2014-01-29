@@ -29,6 +29,7 @@
 				$view->addValue('contact_id', (isset($args['contact_filter'])?$args['contact_filter']:''));
 				$view->addValue('start_view', (isset($args['tab']))?$args['tab']:$user->getUserData()->opt('set.calendar_start_view', 'month')->getValue());
 				$view->addValue('first_hour', $user->getUserData()->opt('set.first_hour', '6')->getValue());
+				$view->addValue('event_duration', $user->getUserData()->opt('set.event_duration', '30')->getValue());
 				return $view->render();
 			} else {
 				return '';

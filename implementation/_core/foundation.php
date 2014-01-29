@@ -68,6 +68,7 @@
 		$_SESSION['history']['active_page'] = (substr($_SERVER['SCRIPT_FILENAME'], strlen($GLOBALS['config']['root']), strlen($_SERVER['SCRIPT_FILENAME'])-strlen($GLOBALS['config']['root']))).$get;
 	}
 	
+	
 	//some imports to speed up things a bit -> no autoload needed for these
 	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/CoreService.php');
 	require_once($GLOBALS['config']['root'].'_core/_serviceprovider/AbstractService.php');

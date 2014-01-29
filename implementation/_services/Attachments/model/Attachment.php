@@ -14,13 +14,15 @@
 		private $date;
 		private $file;
 		private $fileType;
+		private $fileName;
 	
-		public function __construct($service='', $param = '', $date = null, $file = '', $fileType = '') {
+		public function __construct($service='', $param = '', $date = null, $file = '', $fileType = '', $fileName = '') {
 			$this->service = $service;
 			$this->param = $param;
 			$this->date = (!$date)?new DateTime():$date;
 			$this->file = $file;
 			$this->fileType = $fileType;
+			$this->fileName = $fileName;
 			
             parent::__construct(ServiceProvider::get()->db->prefix.'attachments', array());
         }
@@ -36,7 +38,7 @@
         public static function getAttachment($attachmentId) {
         	$a = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'attachments WHERE `id` = \''.ServiceProvider::getInstance()->db->escape($attachmentId).'\';');
         	if($a) {
-        		$ao = new Attachment($a['service'], $a['param'], $a['date'], $a['file'], $a['file_type']);
+        		$ao = new Attachment($a['service'], $a['param'], $a['date'], $a['file'], $a['file_type'], $a['file_name']);
         		$ao->setId($a['id']);
         		return $ao;
         	}
@@ -52,7 +54,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'attachments WHERE service = \''.ServiceProvider::getInstance()->db->escape($service).'\' AND param = \''.ServiceProvider::getInstance()->db->escape($param).'\';');
 			$out = array();
 			foreach($result as $a) {
-				$ao = new Attachment($a['service'], $a['param'], $a['date'], $a['file'], $a['file_type']);
+				$ao = new Attachment($a['service'], $a['param'], $a['date'], $a['file'], $a['file_type'], $a['file_name']);
 				$ao->setId($a['id']);
 				$out[] = $ao;
 			}
@@ -76,13 +78,14 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'attachments 
-								(`service`, `param`, `date`, `file`, `file_type`) VALUES 
+								(`service`, `param`, `date`, `file`, `file_type`, `file_name`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->service).'\',
 									\''.$this->sp->db->escape($this->param).'\',
 									\''.$this->sp->db->escape($this->date->format('Y-m-d')).'\',
 									\''.$this->sp->db->escape($this->file).'\',
-									\''.$this->sp->db->escape($this->fileType).'\'
+									\''.$this->sp->db->escape($this->fileType).'\',
+									\''.$this->sp->db->escape($this->fileName).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -98,7 +101,8 @@
 						`param` = \''.$this->sp->db->escape($this->param).'\', 
 						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d')).'\', 
 						`file` = \''.$this->sp->db->escape($this->file).'\',
-						`file_type` = \''.$this->sp->db->escape($this->fileType).'\'
+						`file_type` = \''.$this->sp->db->escape($this->fileType).'\',
+						`file_name` = \''.$this->sp->db->escape($this->fileName).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -124,6 +128,7 @@
 		public function setDate($date) { $this->date = $date; return $this; }
 		public function setFile($file) { $this->file = $file; return $this; }
 		public function setFileType($fileType) { $this->fileType = $fileType; return $this; }
+		public function setFileName($fileName) { $this->fileName = $fileName; return $this; }
 
 	
 		public function getId(){ return $this->id; }
@@ -135,6 +140,7 @@
 		public function getDate() { return $this->date; }
 		public function getFile() { return $this->file; }
 		public function getFileType() { return $this->fileType; }
+		public function getFileName() { return $this->fileName; }
 
 	}
 ?>

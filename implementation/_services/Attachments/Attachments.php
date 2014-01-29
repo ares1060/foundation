@@ -59,6 +59,7 @@
 						
 						$aiv->addValue('id', $a->getId());
 						$aiv->addValue('url', $a->getFile());
+						$aiv->addValue('file_name', ($a->getFileName() != '')?$a->getFileName():$a->getFile());
 						$ext = explode('.', $a->getFile());
 						$ext = array_pop($ext);
 						$aiv->addValue('thumb', urlencode(($ext == 'jpg' || $ext == 'png' || $ext == 'gif')?$this->settings->attachment_folder.(($this->settings->service_subdir == 1)?$att->getService().'/':'').$a->getFile():$this->sp->tpl->getTemplateDir().'/img/attachment_dummy.png'));
@@ -101,6 +102,7 @@
 						if(rename($GLOBALS['config']['root'].$this->settings->upload_folder.$args['file'], $GLOBALS['config']['root'].$this->settings->attachment_folder.(($this->settings->service_subdir == 1)?$att->getService().'/':'').$args['file'])){
 							$ao = new Attachment($args['service'], $args['param']);
 							$ao->setFile($args['file']);
+							$ao->setFileName(isset($args['file_name'])?$args['file_name']:$args['file']);
 							if($ao->save()){
 								return $ao->getId();
 							}

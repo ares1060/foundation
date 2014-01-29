@@ -127,7 +127,7 @@
 				//edit form
 				$post = Post::getPost($args['id']);
 				if($post && $post->getAuthorId() == $user->getId()){
-					$view->addValue('form_title', 'Eintrag bearbeiten');
+					$view->addValue('form_title', 'Eintrag editieren');
 
 					$view->addValue('id', $post->getId());
 					$view->addValue('title', $post->getTitle());

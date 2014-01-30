@@ -45,6 +45,10 @@
 			}
 			return $out;
 		}
+		
+		public static function deletePartsForInvoice($invoiceId){
+			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_invoice_parts WHERE invoice_id=\''.ServiceProvider::get()->db->escape($invoiceId).'\';');
+		}
 	
 		/**
 		 * INSTANCE METHODS

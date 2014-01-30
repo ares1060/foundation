@@ -162,7 +162,9 @@
 		 *	Deletes the invoice data item from the database
 		 */
 		public function delete(){
-			return $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_invoices WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
+			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_invoices WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
+			if($ok) InvoicePart::deletePartsForInvoice($this->id);
+			return $ok
 		}
 		 
 		/**

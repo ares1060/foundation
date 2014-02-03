@@ -32,6 +32,8 @@
 			$whereSQL = 'WHERE e.user_id = \''.$user->getId().'\'';
 			$tags = false;
 			$contacts = false;
+			$lastYear = new DateTime();
+			$lastYear = $lastYear->format('Y') - 1;
 			
 			if(isset($args['search']) && strlen($args['search']) > 2){
 				$args['search'] = $this->sp->db->escape($args['search']);
@@ -120,6 +122,8 @@
 			if(isset($args['mode']) && $args['mode'] == 'wrapped'){
 				$header = $view->showSubView('header');
 				if($contacts) $header->showSubView('filter_contacts');
+				$header->addValue('last_year', $lastYear);
+				
 				
 				$cats = Category::getCategories();
 				if($cats){
@@ -261,6 +265,7 @@
 						$tax = $view->showSubView('tax_input');
 						
 						if($entry->getProjectedDisposal()) $view->addValue('projected_disposal', $entry->getDate()->diff($entry->getProjectedDisposal())->y);
+						if($entry->getDisposal()) $view->addValue('disposal', $entry->getDisposal()->format('d.m.Y'));
 					}
 					
 					if($tax){
@@ -371,7 +376,7 @@
 					$pd = new DateTime($args['date']);
 					$entry->setProjectedDisposal($pd->add(new DateInterval('P'.$years.'Y')));
 				}
-				if(isset($args['disposal'])) $entry->setDisposal(new DateTime($args['date']));
+				if(isset($args['disposal'])) $entry->setDisposal(new DateTime($args['disposal']));
 				
 				if($entry->getOwnerId() < 0) $entry->setOwner($user->getId());
 				
@@ -402,6 +407,8 @@
 						foreach($oldParts as $opart){
 							$opart->delete();
 						}
+					} else {
+						InvoicePart::deletePartsForInvoice($inv->getId());
 					}
 				}
 				

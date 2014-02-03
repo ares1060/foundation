@@ -17,6 +17,7 @@
 			if(isset($args['action'])) $action = $args['action'];
 			switch($action){
 				case 'view.list': return $this->handleViewList($args); break;
+				case 'get.links': return $this->handleGetLinks($args); break;
 				case 'view.links': return $this->handleViewLinks($args); break;
 				case 'view.detail': return $this->handleViewDetail($args); break;
 				case 'view.form': return $this->handleViewForm($args); break;
@@ -125,7 +126,9 @@
 		private function handleViewLinks($args){
 			$user = $this->sp->user->getLoggedInUser();
 			$sm = (isset($args['mode']) && $args['mode'] == 'simple');
+			$sh = (isset($args['mode']) && $args['mode'] == 'short');
 			if($sm) $view = new core\Template\ViewDescriptor('_services/Contacts/contact_simplelinks');
+			else if ($sh) $view = new core\Template\ViewDescriptor('_services/Contacts/contact_shortlist');
 			else $view = new core\Template\ViewDescriptor('_services/Contacts/contact_links');
 
 			if($user && isset($args['entry_id']) && isset($args['link_table'])){
@@ -136,15 +139,22 @@
 						foreach($contacts as $contact){
 							if(isset($svc) && $svc) $svc->showSubView('divider');
 							$svc = $view->showSubView('row');
-							$svc->addValue('firstname', $contact->getFirstName());
-							$svc->addValue('lastname', $contact->getLastName());
+							if($sh){
+								$svn = $svc->showSubView('nameonly');
+								$svn->addValue('firstname', $contact->getFirstName());
+								$svn->addValue('lastname', $contact->getlastName());
+								$svc->addValue('action_icon', (isset($args['actionicon']))?$args['actionicon']:'glyphicon glyphicon-remove');
+							} else {
+								$svc->addValue('firstname', $contact->getFirstName());
+								$svc->addValue('lastname', $contact->getLastName());
+							}
 							$svc->addValue('id', $contact->getId());
 							$svc->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 						}
 					}
 				}
 			}
-			
+
 			return $view->render();
 			
 		}

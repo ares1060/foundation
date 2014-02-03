@@ -13,6 +13,7 @@
 		public function render($args){
 			if(isset($args['action'])) $action = $args['action'];
 			switch($action){
+				case 'get.event': return $this->handleGetEvent($args); break;
 				case 'view.overview': return $this->handleViewOverview($args); break;
 				case 'view.agenda': return $this->handleViewAgenda($args); break;
 				case 'view.form': return $this->handleViewForm($args); break; 
@@ -159,6 +160,7 @@
 			if($user && $user->getId() > 0){
 				$view = new core\Template\ViewDescriptor('_services/Calendar/event_form');
 				$event = $this->sp->db->fetchRow('SELECT * FROM '.$this->sp->db->prefix.'calendar_events WHERE id =\''.$this->sp->db->escape($args['id']).'\';');
+				if($event['owner_id'] != $user->getId()) return '';
 				$view->addValue('id', $event['id']);
 				
 				$event['start_date'] = new DateTime($event['start_date']);
@@ -168,6 +170,19 @@
 				$view->addValue('date_to', $event['end_date']->format('d.m.Y H:i'));
 				$view->addValue('text', $event['text']);
 				return $view->render();
+			} else {
+				return '';
+			}
+		}
+		
+		private function handleGetEvent($args){
+			$user = $this->sp->user->getLoggedInUser();
+		
+			if($user && $user->getId() > 0 && isset($args['id'])){
+				$event = $this->sp->db->fetchRow('SELECT * FROM '.$this->sp->db->prefix.'calendar_events WHERE id =\''.$this->sp->db->escape($args['id']).'\';');
+				if($event['owner_id'] != $user->getId()) return '';
+
+				return $event;
 			} else {
 				return '';
 			}

@@ -169,7 +169,7 @@
 						`category_id` = \''.$this->sp->db->escape($this->categoryId).'\',
 						`tax_country` = \''.$this->sp->db->escape($this->taxCountry).'\',
 						`include` = \''.$this->sp->db->escape($this->include).'\',
-						`disposal` = \''.$this->sp->db->escape($this->categoryId).'\',
+						`disposal` = \''.$this->sp->db->escape(($this->disposal)?$this->disposal->format('Y-m-d'):'0000-00-00').'\',
 						`projected_disposal` = \''.$this->sp->db->escape(($this->projectedDisposal)?$this->projectedDisposal->format('Y-m-d'):'0000-00-00').'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}

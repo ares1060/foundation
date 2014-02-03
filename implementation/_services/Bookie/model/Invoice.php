@@ -164,7 +164,7 @@
 		public function delete(){
 			$ok = $this->sp->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_invoices WHERE id=\''.ServiceProvider::get()->db->escape($this->id).'\';');
 			if($ok) InvoicePart::deletePartsForInvoice($this->id);
-			return $ok
+			return $ok;
 		}
 		 
 		/**

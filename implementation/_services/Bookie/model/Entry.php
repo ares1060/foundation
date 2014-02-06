@@ -214,6 +214,7 @@
 		public function setTaxValue($value) { $this->taxValue = $value; return $this; }
 		public function setTaxCountry($taxCountry) { $this->taxCountry = $taxCountry; return $this; }
 		public function setNotes($notes) { $this->notes = $notes; return $this; }
+		public function setInclude($include) { $this->include = $include; return $this; }
 
 		/**
 		 * @param DateTime $date
@@ -252,6 +253,7 @@
 		public function getTaxAmount() { return round($this->netto * $this->taxValue * 100)*0.01; }
 		public function getTaxCountry() { return $this->taxCountry; }
 		public function getNotes() { return $this->notes; }
+		public function getInclude() { return $this->include; }
 		/**
 		 * @return DateTime
 		 */

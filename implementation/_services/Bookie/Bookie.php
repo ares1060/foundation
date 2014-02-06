@@ -221,6 +221,7 @@
 					$view->addValue('tax_value', $entry->getTaxValue()*100);
 					$view->addValue('date', $entry->getDate()->format('d.m.Y'));
 					$view->addValue('notes', $entry->getNotes());
+					$view->addValue('include', $entry->getInclude()?'checked="checked"':'');
 					$view->addValue('state_'.$entry->getState(), ' selected="selected"');
 					
 					$inv = Invoice::getInvoicesForEntry($entry->getId());
@@ -248,7 +249,8 @@
 							$siv->addValue('number', ++$num);
 						}
 						
-						$view->showSubView('entry_type_in');
+						$tv = $view->showSubView('entry_type_in');
+						$tv->addValue('include', $entry->getInclude()?'checked="checked"':'');
 						
 						$view->showSubView('add_invoice_item');
 						
@@ -260,6 +262,7 @@
 					} else {
 						$sel = $view->showSubView('entry_type_selection');
 						$sel->addValue('type_'.(($entry->getBrutto() >= 0)?'in':'out').'_checked', 'checked');
+						$sel->addValue('include', $entry->getInclude()?'checked="checked"':'');
 						
 						//if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1') $tax = $view->showSubView('tax_input');
 						$tax = $view->showSubView('tax_input');
@@ -300,7 +303,7 @@
 					return 'not for you';
 				}
 			} else {
-
+				
 				if(isset($args['mode']) && $args['mode'] == 'invoice'){
 					$view->addValue('title', 'Neue Rechnung');
 					$invv = $view->showSubView('invoice');
@@ -312,12 +315,13 @@
 					$iviv = $view->showSubView('invoice_item');
 					$iviv->addValue('dom_id', 'empty_invoice_item');
 					
-					$view->showSubView('entry_type_in');
+					$tv = $view->showSubView('entry_type_in');
+					$tv->addValue('include', 'checked="checked"');
 					if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1') $view->showSubView('tax_input');
 				} else {
 					$view->addValue('title', 'Neuer Eintrag');
-					$view->showSubView('entry_type_selection');
-					
+					$tv = $view->showSubView('entry_type_selection');
+					$tv->addValue('include', 'checked="checked"');
 					//if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1') $view->showSubView('tax_input');
 					$view->showSubView('tax_input');
 				}
@@ -367,6 +371,7 @@
 				if(isset($args['netto'])) $entry->setNetto($args['netto']);
 				if(isset($args['date'])) $entry->setDate(new DateTime($args['date']));
 				if(isset($args['category'])) $entry->setCategory($args['category']);
+				if(isset($args['include'])) $entry->setInclude($args['include']);
 				if(isset($args['account'])){
 					$acc = Account::getAccount($args['account']);
 					if($acc->getOwnerID() == -1 || $acc->getOwnerID() == $user->getId()) $entry->setAccount($args['account']);

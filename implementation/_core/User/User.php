@@ -1,6 +1,8 @@
 <?php
 
 	namespace at\foundation\core\User;
+	use at\foundation\core\User\model;
+
 	use at\foundation\core;	
 	use at\foundation\core\ServiceProvider;	
 	use at\foundation\core\User\view\UserAdminView;
@@ -51,23 +53,14 @@
             parent::__construct();
             
 			$this->viewAdmin = new UserAdminView($this->settings, $this);
-            $this->viewFront = new UserFrontView($this->settings,  $this);
-           	           	
-            //$this->debugVar($_SESSION['User'] == null);
-            //$this->debugVar($_SESSION['User']['loggedInUser'] == null);            	
+            $this->viewFront = new UserFrontView($this->settings,  $this);        	
             
             //load User Data From Session if available
             if(isset($_SESSION['User']) && isset($_SESSION['User']['loggedInUser'])){
-            	 
-            	$_SESSION['User']['viewingUser'] = $this->fixObject($_SESSION['User']['viewingUser']);
-            	$_SESSION['User']['loggedInUser'] = $this->fixObject($_SESSION['User']['loggedInUser']);
+            	             	
+            	$this->loggedInUser = model\User::getUser($_SESSION['User']['loggedInUser']); 	
             	
-            	            	
-            	if(get_class($_SESSION['User']['loggedInUser']) != 'model\User') $this->debugVar('fixObject ERROR');
-            	            	
-            	$this->loggedInUser = $_SESSION['User']['loggedInUser'];
-            	
-            	if(isset($_SESSION['User']['viewingUser'])) $this->viewingUser = $_SESSION['User']['viewingUser'];
+            	if(isset($_SESSION['User']['viewingUser'])) $this->viewingUser = model\User::getUser($_SESSION['User']['viewingUser']);
             	else $this->viewingUser = $this->loggedInUser;
             	
             } else $this->loggedInUser = null;
@@ -210,13 +203,13 @@
             		break;
 				case 'unset_viewing_user':
 					$this->viewingUser = $this->loggedInUser;
-					$_SESSION['User']['viewingUser'] = $this->viewingUser;
+					$_SESSION['User']['viewingUser'] = $this->viewingUser->getId();
 					return true;
 					break;
 				case 'set_viewing_user':
 					if($this->checkRight('can_change_viewing_user') && $id != -1){
 						$this->viewingUser = model\User::getUser($id);
-						$_SESSION['User']['viewingUser'] = $this->viewingUser;
+						$_SESSION['User']['viewingUser'] = $this->viewingUser->getId();
 						return true;
 					} else {
 						$this->_msg($this->_('You are not authorized', 'rights'), Messages::ERROR);
@@ -319,6 +312,7 @@
          */
 		public function logout() {
          	$this->loggedInUser = null;
+         	$this->viewingUser = null;
         	$_SESSION = array();
         	session_unset ();
         	session_destroy ();
@@ -609,7 +603,7 @@
          public function setViewingUser(model\User $user){
          	if($this->checkRight('can_change_viewing_user')){
          		$this->viewingUser = $user;
-         		$_SESSION['User']['viewingUser'] = $user;
+         		$_SESSION['User']['viewingUser'] = $user->getId();
          	}
          }
          
@@ -627,7 +621,7 @@
         private function setLoggedInUser($user) {
          	if($user != null){
          		$this->loggedInUser = $user;
-         		$_SESSION['User']['loggedInUser'] = $user;
+         		$_SESSION['User']['loggedInUser'] = $user->getId();
          	} 
         }
          
@@ -637,7 +631,7 @@
           */
          public function getLoggedInUser() {
          	if($this->loggedInUser == null){
-         		if(isset($_SESSION['User']) && isset($_SESSION['User']['loggedInUser'])) $this->loggedInUser = $_SESSION['User']['loggedInUser'];
+         		if(isset($_SESSION['User']) && isset($_SESSION['User']['loggedInUser'])) $this->loggedInUser = model\User::getUser($_SESSION['User']['loggedInUser']);
          	}
          	return $this->loggedInUser;
          }

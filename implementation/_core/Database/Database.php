@@ -22,7 +22,7 @@
 		private function connect() {
 			//init database
 			if(isset($this->mysqli)) $this->mysqli->close();
-
+			
 			$this->mysqli = new \mysqli($this->settings->host, $this->settings->user, $this->settings->password, $this->settings->table);
             if (mysqli_connect_errno()) {
 				//TODO use foundation messages

@@ -140,7 +140,7 @@
 					$class = null;
 				}
 				if(isset($_SESSION['User']) && isset($_SESSION['User']['loggedInUser'])){
-					$this->rights->getUserRights(@$_SESSION['User']['loggedInUser']->getId(), $name);
+					$this->rights->getUserRights(@$_SESSION['User']['loggedInUser'], $name);
 				}
 			} else {
 				$class = $this->services[strtolower($name)];

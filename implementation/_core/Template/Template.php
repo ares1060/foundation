@@ -43,6 +43,8 @@
             }*/
 			$this->template = ($this->settings->tpl_template == null) ? $this->settings->tpl_base_template : $this->settings->tpl_template;
 
+			$user = core\ServiceProvider::get()->user->getLoggedInUser();
+			
             $this->baseReplaces = array('version'=>'PerPedes V '.core\ServiceProvider::VERSION, 
                                         'version_short'=>core\ServiceProvider::VERSION,
                                         'root'=>(isset($GLOBALS['connector_to_root'])) ? $GLOBALS['connector_to_root']: $GLOBALS['to_root'], // connector gets new root if needen because of template rendering from other folder
@@ -51,10 +53,10 @@
                                         'tpl_root_folder' => '_templates/'.$this->settings->tpl_base_template,
                                         'tpl_folder' => $this->getTemplateDir(),
             							'service_folder' => '_services',
-                                        'user_id'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getId() : '',
-                                        'user_group'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getGroup()->getName() : '',
-            							'user_nick'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getNick() : '',
-            							'user_email'=> isset($_SESSION['User']['loggedInUser']) ? $_SESSION['User']['loggedInUser']->getEMail() : '');
+                                        'user_id'=> $user ? $user->getId() : '',
+                                        'user_group'=> $user ? $user->getGroup()->getName() : '',
+            							'user_nick'=> $user ? $user->getNick() : '',
+            							'user_email'=> $user ? $user->getEMail() : '');
 
             
             foreach($_GET as $key=>$get){

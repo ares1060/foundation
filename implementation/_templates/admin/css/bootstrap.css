@@ -1970,6 +1970,13 @@ fieldset[disabled] .form-control {
   background-color: #eeeeee;
 }
 
+.form-control.regular[disabled],
+.form-control.regular[readonly],
+fieldset[disabled] .form-control.regular {
+  cursor: default;
+  background-color: #ffffff;
+}
+
 textarea.form-control {
   height: auto;
 }

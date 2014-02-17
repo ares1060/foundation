@@ -49,11 +49,23 @@
 		public static function deletePartsForInvoice($invoiceId){
 			return ServiceProvider::get()->db->fetchBool('DELETE FROM '.ServiceProvider::get()->db->prefix.'bookie_invoice_parts WHERE invoice_id=\''.ServiceProvider::get()->db->escape($invoiceId).'\';');
 		}
+		
 	
 		/**
 		 * INSTANCE METHODS
  		 */
-		 
+
+		public function data() {		
+			$out = array(
+				"id" => $this->id,
+				'invoiceId' => $this->invoiceId,
+				'date' => (($this->date)?$this->date->format('d.m.Y'):''),
+				'notes' => $this->notes,
+				'amount' => $this->notes
+			);
+			return $out;
+		}
+		
 		/**
 		 * Overriding the BaseModel save to do proper save
 		 */

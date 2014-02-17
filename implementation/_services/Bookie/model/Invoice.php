@@ -176,6 +176,28 @@
 			if($this->dunnings != '') $this->dunnings .= ',';
 			$this->dunnings .= $date->format('Y-m-d');
 		}
+		
+		public function data() {
+			$ivps = InvoicePart::getPartsForInvoice($this->getId());
+			$parts = array();
+			foreach($ivps as $ivp) {
+				$parts[] = $ivp->data();
+			}
+			
+			$out = array(
+				"id" => $this->id,
+				"entryId" => $this->entryId,
+				'altSrcAddress' => $this->altSrcAddress,
+				'altDstAddress' => $this->altDstAddress,
+				'number' => $this->number,
+				'payDate' => $this->payDate->format('d.m.Y'),
+				'reminderDate' => (($this->reminderDate)?$this->reminderDate->format('d.m.Y'):''),
+				'dunnings' => $this->dunnings,
+				'parts' => $parts
+			);
+			return $out;
+		}
+		 
 		 
 		/**
 		 * GETTER & SETTER
@@ -188,7 +210,7 @@
 		/**
 		 * @param DateTime $date
 		 */
-		public function setPayDate($date) { $this->date = $date; return $this; }
+		public function setPayDate($date) { $this->payDate = $date; return $this; }
 		/**
 		* @param DateTime $date
 		*/

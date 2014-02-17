@@ -36,9 +36,11 @@
 		* @var DateTime
 		*/
 		private $projectedDisposal;
+		private $uid;
+		private $deleted;
 		
 	
-		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open', $account = -1, $category = -1, $taxCountry = 0, $include = true, $disposal = null, $projectedDisposal = null) {
+		public function __construct($owner = -1, $brutto = 0, $netto = 0, $taxType = '', $taxValue = 0, $date = null, $notes = '', $state = 'open', $account = -1, $category = -1, $taxCountry = 0, $include = true, $disposal = null, $projectedDisposal = null, $uid = '', $deleted=false) {
             $this->ownerId = $owner;
 			$this->brutto = $brutto;
 			$this->netto = $netto;
@@ -53,6 +55,8 @@
 			$this->include = $include;
 			$this->disposal = $disposal;
 			$this->projectedDisposal = $projectedDisposal;
+			$this->uid = $uid;
+			$this->deleted = $deleted;
 			parent::__construct(ServiceProvider::get()->db->prefix.'bookie_entries', array());
         }
 		
@@ -73,7 +77,7 @@
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, e.id as id, e.user_id as user_id FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $entry) {
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id'], $entry['tax_country'], $entry['include'], ($entry['disposal'] == '0000-00-00')?null:new DateTime($entry['disposal']), ($entry['projected_disposal'] == '0000-00-00')?null:new DateTime($entry['projected_disposal']));
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id'], $entry['tax_country'], $entry['include'], ($entry['disposal'] == '0000-00-00')?null:new DateTime($entry['disposal']), ($entry['projected_disposal'] == '0000-00-00')?null:new DateTime($entry['projected_disposal']), $entry['uid'], $entry['deleted']);
 				$eo->setId($entry['id']);
 				$out[] = $eo;
 			}
@@ -111,7 +115,7 @@
 		public static function getEntry($entryId) {
 			$entry = ServiceProvider::getInstance()->db->fetchRow('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_entries WHERE id =\''.ServiceProvider::getInstance()->db->escape($entryId).'\';');
 			if($entry){
-				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id'], $entry['tax_country'], $entry['include'], ($entry['disposal'] == '0000-00-00')?null:new DateTime($entry['disposal']), ($entry['projected_disposal'] == '0000-00-00')?null:new DateTime($entry['projected_disposal']));
+				$eo = new Entry($entry['user_id'], $entry['brutto'], $entry['netto'], $entry['tax_type'], $entry['tax_value'], new DateTime($entry['date']), $entry['notes'], $entry['state'], $entry['account_id'], $entry['category_id'], $entry['tax_country'], $entry['include'], ($entry['disposal'] == '0000-00-00')?null:new DateTime($entry['disposal']), ($entry['projected_disposal'] == '0000-00-00')?null:new DateTime($entry['projected_disposal']), $entry['uid'], $entry['deleted']);
 				$eo->setId($entry['id']);
 				return $eo;
 			} else {
@@ -130,7 +134,7 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_entries 
-								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`, `account_id`, `category_id`, `tax_country`, `include`, `disposal`, `projected_disposal`) VALUES 
+								(`user_id`, `notes`, `brutto`, `netto`, `tax_type`, `tax_value`, `date`, `state`, `account_id`, `category_id`, `tax_country`, `include`, `disposal`, `projected_disposal`, `uid`, `deleted`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->ownerId).'\', 
 									\''.$this->sp->db->escape($this->notes).'\', 
@@ -145,7 +149,9 @@
 									\''.$this->sp->db->escape($this->taxCountry).'\',
 									\''.$this->sp->db->escape($this->include).'\',
 									\''.$this->sp->db->escape(($this->disposal)?$this->disposal->format('Y-m-d'):'0000-00-00').'\',
-									\''.$this->sp->db->escape(($this->projectedDisposal)?$this->projectedDisposal->format('Y-m-d'):'0000-00-00').'\'
+									\''.$this->sp->db->escape(($this->projectedDisposal)?$this->projectedDisposal->format('Y-m-d'):'0000-00-00').'\',
+									\''.$this->sp->db->escape($this->uid).'\',
+									\''.$this->sp->db->escape($this->deleted).'\'
 								);');
 				if($succ) {
 					$this->id = $this->sp->db->getInsertedID();
@@ -170,7 +176,9 @@
 						`tax_country` = \''.$this->sp->db->escape($this->taxCountry).'\',
 						`include` = \''.$this->sp->db->escape($this->include).'\',
 						`disposal` = \''.$this->sp->db->escape(($this->disposal)?$this->disposal->format('Y-m-d'):'0000-00-00').'\',
-						`projected_disposal` = \''.$this->sp->db->escape(($this->projectedDisposal)?$this->projectedDisposal->format('Y-m-d'):'0000-00-00').'\'
+						`projected_disposal` = \''.$this->sp->db->escape(($this->projectedDisposal)?$this->projectedDisposal->format('Y-m-d'):'0000-00-00').'\',
+						`uid` = \''.$this->sp->db->escape($this->uid).'\',
+						`deleted` = \''.$this->sp->db->escape($this->deleted).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -189,7 +197,8 @@
 		 * @return Entry Returns a reference to this instance of Entry
 		 */
 		public function recalcNetto(){
-			$this->netto = round($this->brutto / (1 + $this->taxValue) * 100) * 0.01;
+			if($this->brutto == 0) $this->netto = 0; 
+			else $this->netto = round($this->brutto / (1 + $this->taxValue) * 100) * 0.01;
 			return $this;
 		}
 		
@@ -198,10 +207,40 @@
 		 * @return Entry Returns a reference to this instance of Entry
 		 */
 		public function recalcBrutto(){
-			$this->brutto = round($this->netto * (1 + $this->taxValue) * 100) * 0.01;
+			if($this->netto == 0) $this->brutto = 0;
+			else $this->brutto = round($this->netto * (1 + $this->taxValue) * 100) * 0.01;
 			return $this;
 		}
 		 
+		public function data() {
+			$ivs = Invoice::getInvoicesForEntry($this->id);
+			$invoice = '';
+			if(count($ivs)> 0){
+				$invoice = $ivs[0]->data();
+			}
+			
+			$out = array(
+				"id" => $this->id,
+				"ownerId" => $this->ownerId,
+				"notes" => $this->notes,
+				"brutto" => $this->brutto,
+				"netto" => $this->netto,
+				"taxType" => $this->taxType,
+				"taxValue" => $this->taxValue,
+				"date" => $this->date->format('d.m.Y'),
+				"state" => $this->state,
+				"accountId" => $this->accountId,
+				"categoryId" => $this->categoryId,
+				"taxCountry" => $this->taxCountry,
+				"include" => $this->include,
+				"disposal" => (($this->disposal)?$this->disposal->format('d.m.Y'):""),
+				"projectedDisposal" => (($this->projectedDisposal)?$this->disposal->format('d.m.Y'):""),
+				"uid" => $this->uid,
+				"deleted" => $this->deleted,
+				'invoice' => $invoice
+			);
+			return $out;
+		}
 		 
 		/**
 		 * GETTER & SETTER
@@ -235,6 +274,9 @@
 		public function setProjectedDisposal($date) {
 			$this->projectedDisposal = $date; return $this;
 		}
+		public function setUID($uid) { $this->uid = $uid; return $this;}
+		public function setDeleted($del) { $this->deleted = $del; return $this;}
+		
 		
 		
 		public function getId(){ return $this->id; }
@@ -287,6 +329,8 @@
 		public function getProjectedDisposal() {
 			return $this->projectedDisposal;
 		}
+		public function getDeleted() { return $this->deleted; }
+		public function getUID() { return $this->uid; }
 		
 	}
 ?>

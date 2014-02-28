@@ -69,9 +69,9 @@
 				
 				if(isset($args['date_from']) && $args['date_from'] != ''){
 					$args['date_from'] = $this->sp->db->escape($args['date_from']);
-					$whereSQL .= ' AND e.start_date >= \''.$args['date_from'].'\'';
+					$whereSQL .= ' AND (e.start_date >= \''.$args['date_from'].'\' OR e.end_date >= \''.$args['date_from'].'\')';
 				} else {
-					$whereSQL .= ' AND e.start_date >= \''.$now->format('Y-m-d').'\'';
+					$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d').'\' OR e.end_date >= \''.$now->format('Y-m-d').'\')';
 				}
 				
 				if(isset($args['date_to']) && $args['date_to'] != ''){
@@ -128,6 +128,10 @@
 				
 				$day = '';
 				$dayView = null;
+				$multiDay = array();
+				$singleDay = array();
+				
+				//seperate event types
 				foreach($events as $event){
 					$date = new DateTime($event['start_date']);
 					if($day != $date->format('d')) {
@@ -144,9 +148,13 @@
 					$ev->addValue('title', $event['text']);
 					$ev->addValue('from_time', $date->format('H:i'));
 					$dateTo = new DateTime($event['end_date']);
-					$ev->addValue('to_time', $dateTo->format('H:i'));
+					if($date->format('d.m.Y') != $dateTo->format('d.m.Y')) $multiDay[] = $event;
+					else $ev->addValue('to_time', $dateTo->format('H:i'));
 
 				}
+				
+				//create sub views
+				
 				
 				return $view->render();
 			} else {

@@ -106,8 +106,11 @@
 		 * @param DateTime $fromDate
 		 * @param DateTime $toDate
 		 */
-		public static function getInvoiceCount($fromDate, $toDate) {
-			$count = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices AS i LEFT JOIN '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e ON e.id = i.entry_id WHERE e.date >= \''.ServiceProvider::getInstance()->db->escape($fromDate->format('Y-m-d')).'\' AND e.date <= \''.ServiceProvider::getInstance()->db->escape($toDate->format('Y-m-d')).'\';');
+		public static function getInvoiceCount($fromDate, $toDate, $userId = '') {
+			if($userId != ''){
+				$userId = ' AND e.user_id = \''.ServiceProvider::getInstance()->db->escape($userId).'\'';
+			}
+			$count = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) AS count FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_invoices AS i LEFT JOIN '.ServiceProvider::getInstance()->db->prefix.'bookie_entries AS e ON e.id = i.entry_id WHERE e.date >= \''.ServiceProvider::getInstance()->db->escape($fromDate->format('Y-m-d')).'\' AND e.date <= \''.ServiceProvider::getInstance()->db->escape($toDate->format('Y-m-d')).'\''.$userId.';');
 			if($count && isset($count['count'])){
 				return $count['count'];
 			} else {

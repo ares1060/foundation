@@ -234,7 +234,7 @@
 				"taxCountry" => $this->taxCountry,
 				"include" => $this->include,
 				"disposal" => (($this->disposal)?$this->disposal->format('d.m.Y'):""),
-				"projectedDisposal" => (($this->projectedDisposal)?$this->disposal->format('d.m.Y'):""),
+				"projectedDisposal" => (($this->projectedDisposal)?$this->projectedDisposal->format('d.m.Y'):""),
 				"uid" => $this->uid,
 				"deleted" => $this->deleted,
 				'invoice' => $invoice

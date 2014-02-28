@@ -71,6 +71,7 @@
 					$svn->addValue('lastname', $contact->getlastName());
 					$sv->addValue('email', $contact->getEmail());
 					$sv->addValue('phone', $contact->getPhone());
+					$sv->addValue('uid', $contact->getUID());
 					$sv->addValue('action_icon', (isset($args['actionicon']))?$args['actionicon']:'glyphicon glyphicon-filter');
 					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 				}
@@ -113,6 +114,7 @@
 					$sv->addValue('lastname', $contact->getlastName());
 					$sv->addValue('email', $contact->getEmail());
 					$sv->addValue('phone', $contact->getPhone());
+					$sv->addValue('uid', $contact->getUID());
 					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 					$colContent .= $sv->render();
 					$count++;
@@ -148,6 +150,7 @@
 								$svc->addValue('firstname', $contact->getFirstName());
 								$svc->addValue('lastname', $contact->getLastName());
 							}
+							$svc->addValue('uid', $contact->getUID());
 							$svc->addValue('id', $contact->getId());
 							$svc->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 						}
@@ -187,6 +190,8 @@
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
+					$view->addValue('uid', $contact->getUID());
+					$view->addValue('company', $contact->getCompany());
 					$view->addValue('birthdate', ($contact->getBirthdate()->format('Y') * 1 > 0)?$contact->getBirthdate()->format('d.m.Y'):'');
 					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 						
@@ -230,6 +235,8 @@
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
+					$view->addValue('company', $contact->getCompany());
+					$view->addValue('uid', $contact->getUID());
 					$view->addValue('birthdate', ($contact->getBirthdate()->format('Y') * 1 > 0)?$contact->getBirthdate()->format('d.m.Y'):'');
 					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 		
@@ -280,6 +287,8 @@
 				if(isset($args['phone'])) $contact->setPhone($args['phone']);
 				if(isset($args['notes'])) $contact->setNotes($args['notes']);
 				if(isset($args['ssnum'])) $contact->setSocialSecurityNumber($args['ssnum']);
+				if(isset($args['uid'])) $contact->setUID($args['uid']);
+				if(isset($args['company'])) $contact->setCompany($args['company']);
 				if(isset($args['birthdate'])) $contact->setBirthdate(new DateTime($args['birthdate']));
 				if(isset($args['image'])) {
 					if(file_exists($GLOBALS['config']['root'].$this->settings->upload_folder.$args['image'])){
@@ -379,6 +388,7 @@
 								$svcn->addValue('firstname', $contact->getFirstName());
 								$svcn->addValue('lastname', $contact->getLastName());
 								$svc->addValue('action_icon', 'glyphicon glyphicon-remove');
+								$svc->addValue('uid', $contact->getUID());
 								$svc->addValue('id', $contact->getId());
 								$svc->addValue('image', urlencode(($contact->getImage() == '')?$this->sp->ref('Contacts')->settings->default_image:$this->sp->ref('Contacts')->settings->image_folder.$contact->getImage()));
 								$contactRndr .= $svc->render();
@@ -453,6 +463,10 @@
 			}
 				
 			return false;
+		}
+		
+		public function getLinkedContacts($linktable, $entryId){
+			return Contact::getLinkedContacts($linktable, $entryId);
 		}
 		
 		public function checkAttachmentAuth($param){

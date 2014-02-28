@@ -215,6 +215,10 @@
 			return true;
 		}
         
+		public function getLinkedTags($service, $param, $userId){
+			return Tag::getLinkedTags($service, $param, $userId);
+		}
+		
 		/**
 		 * Creates a SQL subselect for joining when filtering for tags
 		 * @param string $service The name of the service

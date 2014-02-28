@@ -321,7 +321,7 @@
 					$view->addValue('title', 'Neue Rechnung');
 					$invv = $view->showSubView('invoice');
 				
-					$invcount = Invoice::getInvoiceCount(new DateTime('01-01-'.date('Y')), new DateTime('31-12-'.date('Y'))) + 1;
+					$invcount = Invoice::getInvoiceCount(new DateTime('01-01-'.date('Y')), new DateTime('31-12-'.date('Y')), $user->getId()) + 1;
 					$invv->addValue('number', $user->getUserData()->opt('set.invoice_prefix', 'WMR_')->getValue().date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
 					
 					$view->showSubView('add_invoice_item');
@@ -416,9 +416,9 @@
 					if($entry->getTaxCountry() == 0){
 						if(isset($args['tax_type'])) $entry->setTaxType($args['tax_type']);
 						if(isset($args['tax_value'])) $entry->setTaxValue($args['tax_value']);
-					} else if ($entry->getBrutto() == 1) { 
-						//set tax to 20% if EU
-						$entry->setTaxType('Vorsteuer');
+					} else if ($entry->getTaxCountry() == 1 && $entry->getBrutto() < 0) { 
+						//set tax to 20% if EU an buy
+						$entry->setTaxType(($entry->getBrutto() > 0)?'Umsatzsteuer':'Vorsteuer');
 						$entry->setTaxValue(0.2);
 					} else {
 						$entry->setTaxType('');
@@ -461,7 +461,7 @@
 					else if(!isset($args['id'])) $inv = new Invoice($entry->getId());
 					else $inv = null;
 					
-					$invcount = Invoice::getInvoiceCount(new DateTime('01-01-'.date('Y')), new DateTime('31-12-'.date('Y'))) + 1;
+					$invcount = Invoice::getInvoiceCount(new DateTime('01-01-'.date('Y')), new DateTime('31-12-'.date('Y')), $user->getId()) + 1;
 					
 					if($inv){
 						if(isset($args['altdstaddr'])) $inv->setAltDstAddress($args['altdstaddr']);

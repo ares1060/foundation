@@ -32,6 +32,22 @@
 	/* STATIC HELPER */
 	
 		/**
+		* Fetches all UserDataFields
+		* @return UserDataField[]
+		*/
+		public static function getUserDataFields(){
+			$res = ServiceProvider::get()->db->fetchAll('SELECT * FROM '.ServiceProvider::get()->db->prefix.'userdatafield');
+			$out = array();
+			foreach($res as $q){
+				$t = new UserDataField($q['name'], $q['group'], $q['type'], $q['info'], $q['vis_register'], $q['vis_login'], $q['vis_edit']);
+				$t->setId($q['id']);
+				$out[] = $t;
+			}
+			
+			return $out;
+		}
+		
+		/**
 		 * Fetches the UserDataField with the given id
 		 * @return UserDataField
 		 */

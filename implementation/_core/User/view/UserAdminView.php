@@ -1,6 +1,8 @@
 <?php
 	
 	namespace at\foundation\core\User\view;
+	use at\foundation\core\User\model\UserDataField;
+
 	use at\foundation\core;
 	use at\foundation\core\Messages\Messages;
 	use at\foundation\core\User\User;
@@ -166,10 +168,31 @@
         		$view->addValue('status', $this->tplGetStatusDropdown($user->getStatus()));
         		
 				$ud = $user->getUserData();
-				$fn = $ud->getFieldNames();
-				foreach($fn as $n){
-					$view->addValue('userdata_'.$n, $ud->get($n, true)->getValue());
+				$fn = UserDataField::getUserDataFields();
+				$settings = '';
+				foreach($fn as $n){ /* @var $n UserDataField */
+					$view->addValue('userdata_'.$n->getName(), $ud->opt($n->getName(), '', true)->getValue());
+					
+					if(strpos($n->getName(), 'set.') === 0) {
+						$udi = $ud->opt($n->getName(), '', false);
+						$sv = new SubViewDescriptor('setting_'.(($n->getType() == User::DATA_TYPE_TEXT)?'text':(($n->getType() == User::DATA_TYPE_CHECKBOX)?'checkbox':'input')));
+						$sv->setParent($view);
+						$sv->addValue('label', $n->getInfo());
+						$sv->addValue('name', $n->getName());
+						
+						if($n->getType() == User::DATA_TYPE_CHECKBOX){
+							if($udi->getValue() == 1) $sv->addValue('value', 'checked="checked"');
+							else $sv->addValue('value', '');
+						} else {
+							$sv->addValue('value', $udi->getValue());
+						}
+						
+						$settings .= $sv->render();
+						//$sv->updateQualifiedName($view->getQualifiedName());
+					}
 				}
+				
+				$view->addValue('settings', $settings);
         		
 				return $view->render();
 			} else {

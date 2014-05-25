@@ -25,6 +25,8 @@
 	
 //--------------- INIT GLOBALS ------------------//
 	
+	if(!isset($GLOBALS['debug_log'])) $GLOBALS['debug_log'] = '';
+	
     $GLOBALS['stat']['start'] = microtime(true);
 	$GLOBALS['config']['default_language'] = 'de';
 	$GLOBALS['config']['root'] = substr(dirname(__FILE__), 0, -5);	
@@ -77,13 +79,19 @@
 	require_once($GLOBALS['config']['root'].'_core/Template/ViewDescriptor.php');
 	require_once($GLOBALS['config']['root'].'_core/Template/SubViewDescriptor.php');
 		
+	$GLOBALS['debug_log'] .= '<br>create sp: '.(microtime(true)-$GLOBALS['stat']['start']);
+	
 	//make sure a ServiceProvider instance is available
 	$sp = core\ServiceProvider::getInstance();
+	
+	$GLOBALS['debug_log'] .= '<br>do login: '.(microtime(true)-$GLOBALS['stat']['start']);
 	
 	/* check for login */
 	if(isset($_REQUEST['pw']) && $_REQUEST['pw'] != '' && isset($_REQUEST['login']) && $_REQUEST['login'] != ''){
 		$sp->user->login($_REQUEST['login'], $_REQUEST['pw']);
 	}
+	
+	$GLOBALS['debug_log'] .= '<br>check session: '.(microtime(true)-$GLOBALS['stat']['start']);
 	
 	/* check session expiration */
 	$sp->user->checkSessionExpiration();

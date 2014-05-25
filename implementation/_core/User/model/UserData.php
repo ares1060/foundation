@@ -29,6 +29,7 @@
 															
 			$this->data = array();
 			$this->keys = array();
+												
 			if($qry != array()) {
 				foreach($qry as $d){
 					$di = new UserDataItem($d['user_id'], $d['field_id'], $d['value']);

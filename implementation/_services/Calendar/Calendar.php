@@ -67,18 +67,21 @@
 					$tags = true;
 				}
 				
+				$dateFrom = new DateTime();
+				$dateFrom->setTime(0, 0, 0);
 				if(isset($args['date_from']) && $args['date_from'] != ''){
 					$args['date_from'] = $this->sp->db->escape($args['date_from']);
-					$whereSQL .= ' AND (e.start_date >= \''.$args['date_from'].'\' OR e.end_date >= \''.$args['date_from'].'\')';
+					$dateFrom = new DateTime($args['date_from']);
+					$whereSQL .= ' AND (e.start_date >= \''.$args['date_from'].' 00:00:00\' OR (e.end_date >= \''.$args['date_from'].' 00:00:00\' AND e.start_date <= \''.$args['date_from'].' 00:00:00\'))';
 				} else {
-					$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d').'\' OR e.end_date >= \''.$now->format('Y-m-d').'\')';
+					$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d').' 00:00:00\' OR (e.end_date >= \''.$now->format('Y-m-d').' 00:00:00\' AND e.start_date <= \''.$now->format('Y-m-d').' 00:00:00\'))';
 				}
 				
 				if(isset($args['date_to']) && $args['date_to'] != ''){
 					$args['date_to'] = $this->sp->db->escape($args['date_to']);
-					$whereSQL .= ' AND e.start_date <= \''.$args['date_to'].'\'';
+					$whereSQL .= ' AND e.start_date <= \''.$args['date_to'].' 24:59:59\'';
 				} else if(isset($args['days'])){
-					$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').'\'';
+					$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').' 24:59:59\'';
 				}
 				
 				$from = 0;
@@ -107,7 +110,7 @@
 				}
 				
 				if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
-				
+								
 				$events = $this->sp->db->fetchAll('SELECT *, e.id AS id FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.' ORDER BY e.start_date'.$limit);
 				$count = $this->sp->db->fetchRow('SELECT SUM(tc.count) AS count FROM (SELECT COUNT(*) AS count FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.') AS tc;');
 				
@@ -126,35 +129,88 @@
 					$footer->addValue('pages', $pages);
 				}
 				
-				$day = '';
 				$dayView = null;
 				$multiDay = array();
 				$singleDay = array();
+				$days = array();
 				
 				//seperate event types
 				foreach($events as $event){
 					$date = new DateTime($event['start_date']);
-					if($day != $date->format('d')) {
-						$day = $date->format('d');
-						$dayView = $view->showSubView('day');
-						if($date->format('d') == $nowDay) $dayView->addValue('day', 'Heute');
-						else if($date->format('d') == $nowDay+1) $dayView->addValue('day', 'Morgen');
-						else $dayView->addValue('day', $this->sp->txtfun->fixDateLoc($date->format('l')));
-						
-						$dayView->addValue('date', $this->sp->txtfun->fixDateLoc($date->format('d. F Y')));
-					}
-					$ev = $dayView->showSubView('event');
-					$ev->addValue('id', $event['id']);
-					$ev->addValue('title', $event['text']);
-					$ev->addValue('from_time', $date->format('H:i'));
 					$dateTo = new DateTime($event['end_date']);
-					if($date->format('d.m.Y') != $dateTo->format('d.m.Y')) $multiDay[] = $event;
-					else $ev->addValue('to_time', $dateTo->format('H:i'));
+
+					if($dateFrom->diff($date)->invert == 0 && !in_array($date->format('Y-m-d'), $days)) $days[] = $date->format('Y-m-d');
+					if($dateFrom->diff($dateTo)->invert == 0 && !in_array($dateTo->format('Y-m-d'), $days)) $days[] = $dateTo->format('Y-m-d');
+					
+					if($date->format('d.m.Y') != $dateTo->format('d.m.Y')) {
+						$multiDay[] = $event;
+						$dur = $date->diff($dateTo);
+						for($d = 1; $d < $dur->days; $d++){
+							$date = $date->add(new DateInterval('P1D'));
+							if($dateFrom->diff($date)->invert == 0 && !in_array($date->format('Y-m-d'), $days)) $days[] = $date->format('Y-m-d');
+						}
+					} else $singleDay[] = $event;
 
 				}
+
+				sort($days);
 				
 				//create sub views
-				
+				foreach($days as $day){
+					
+					$dayTime = new DateTime($day);
+					
+					$dayView = $view->showSubView('day');
+					$tNow = clone $now;
+					if($day == $tNow->format('Y-m-d')) $dayView->addValue('day', 'Heute');
+					else if($day == $tNow->add(new DateInterval('P1D'))->format('Y-m-d')) $dayView->addValue('day', 'Morgen');
+					else $dayView->addValue('day', $this->sp->txtfun->fixDateLoc($dayTime->format('l')));
+									
+					$dayView->addValue('date', $this->sp->txtfun->fixDateLoc($dayTime->format('d. F Y')));
+
+					foreach($singleDay as $event){
+						$date = new DateTime($event['start_date']);
+						
+						if($date->format('Y-m-d') != $day) break;
+						
+						array_shift($singleDay);
+						$dateTo = new DateTime($event['end_date']);
+
+						$ev = $dayView->showSubView('event');
+						$ev->addValue('id', $event['id']);
+						$ev->addValue('url', '?page=calendar&tab=agenda#event/'.$event['id']);
+						$ev->addValue('title', $event['text']);
+						$ev->addValue('from_time', $date->format('H:i'));				
+						$ev->addValue('to_time', $dateTo->format('H:i'));
+					}
+					
+					$tMultiDay = array();
+					foreach($multiDay as $mEvent){
+						
+						$mDate = new DateTime($mEvent['start_date']);
+						$mDateTo = new DateTime($mEvent['end_date']);
+
+
+						$ev = $dayView->showSubView('event');
+						$ev->addValue('id', $mEvent['id']);
+						$ev->addValue('title', $mEvent['text']);
+							
+						if($mDate->format('Y-m-d') == $day) {
+							$ev->addValue('from_time', $dateTo->format('H:i'));
+							$ev->addValue('to_time', '...');
+							$tMultiDay[] = $mEvent;
+						} else if($mDateTo->format('Y-m-d') != $day) {
+							$ev->addValue('from_time', '...');
+							$ev->addValue('to_time', '...');
+							$tMultiDay[] = $mEvent;
+						} else {
+							$ev->addValue('from_time', '...');
+							$ev->addValue('to_time', $date->format('H:i'));
+						}
+					}
+					$multiDay = $tMultiDay;
+
+				}
 				
 				return $view->render();
 			} else {

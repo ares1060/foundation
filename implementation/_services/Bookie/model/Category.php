@@ -30,6 +30,7 @@
 			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).','.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
 			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, c.id as id FROM '.ServiceProvider::getInstance()->db->prefix.'bookie_categories AS c '.$insertSQL.' '.$limit.';');
+			
 			$out = array();
 			foreach($result as $cat) {
 				$co = new Category($cat['name'], $cat['taxid']);

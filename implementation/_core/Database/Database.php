@@ -93,8 +93,10 @@
          * @param string $query
          */
         public function fetchRow($query){
-       		$result = $this->mysqli->query($query, MYSQLI_USE_RESULT);
+        	$result = $this->mysqli->query($query, MYSQLI_USE_RESULT);
        		
+        	$GLOBALS['debug_log'] .= '<br/>fetchRow: '.(microtime(true)-$GLOBALS['stat']['start']).' -> '.$query;
+        	
        		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		
        		if($result) {
@@ -113,6 +115,8 @@
          */
         public function fetchAll($query){
        		$result = $this->mysqli->query($query, MYSQLI_USE_RESULT);
+       		
+       		$GLOBALS['debug_log'] .= '<br/>fetchAll: '.(microtime(true)-$GLOBALS['stat']['start']).' -> '.$query;
        		
        		$result ? $this->querycount['success']++ : $this->querycount['error']++;
        		

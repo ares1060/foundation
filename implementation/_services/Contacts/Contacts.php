@@ -37,8 +37,18 @@
 			$whereSQL = 'WHERE user_id = \''.$user->getId().'\'';
 			if(isset($args['search']) && strlen($args['search']) > 2){
 					$args['search'] = trim($args['search']);
+					$firstSpace = strpos($args['search'], ' ');
 					$lastSpace = strrpos($args['search'], ' ');
-					$whereSQL .= ' AND (`firstname` LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], 0, $lastSpace):$args['search']).'%\' '.(($lastSpace !== False)?'AND':'OR').' `lastname` LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], $lastSpace+1):$args['search']).'%\')';
+					$whereSQL .= ' AND (
+						`company` 
+							LIKE \''.$this->sp->db->escape(($firstSpace !== False)?substr($args['search'], 0, $firstSpace):$args['search']).'%\' 
+						OR
+						`firstname` 
+							LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], 0, $lastSpace):$args['search']).'%\' '
+						.(($lastSpace !== False)?'AND':'OR').' 
+						`lastname` 
+							LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], $lastSpace+1):$args['search']).'%\'
+						)';
 			}
 			
 			if(isset($args['ids']) && $args['ids'] != '' && is_array($args['ids']) && count($args['ids']) > 0){
@@ -67,8 +77,10 @@
 					if(isset($args['css_class'])) $sv->addValue('class', $args['css_class']);
 					$sv->addValue('id', $contact->getId());
 					$svn = $sv->showSubView('nameonly');
-					$svn->addValue('firstname', $contact->getFirstName());
-					$svn->addValue('lastname', $contact->getlastName());
+					$svn->addValue('firstname', $contact->getFirstName().(($contact->getCompany() == '')?'<br/>':''));
+					$svn->addValue('lastname', $contact->getLastName());
+					$svn->addValue('title', $contact->getTitle());
+					$svn->addValue('company', $contact->getCompany().(($contact->getCompany() == '')?'':'<br/>'));
 					$sv->addValue('email', $contact->getEmail());
 					$sv->addValue('phone', $contact->getPhone());
 					$sv->addValue('uid', $contact->getUID());
@@ -97,8 +109,8 @@
 						$colContent = '';
 					}
 					
-					if($fc != strtoupper(substr($contact->getlastName(),0, 1))){
-						$fc = strtoupper(substr($contact->getlastName(),0, 1));
+					if($fc != strtoupper(substr($contact->getLastName(),0, 1))){
+						$fc = strtoupper(substr($contact->getLastName(),0, 1));
 						$svh = new core\Template\SubViewDescriptor('segment_header');
 						$svh->setParent($view);
 						$svh->updateQualifiedName($col->getQualifiedName());
@@ -111,11 +123,16 @@
 					$sv->updateQualifiedName($col->getQualifiedName());
 					$sv->addValue('id', $contact->getId());
 					$sv->addValue('firstname', $contact->getFirstName());
-					$sv->addValue('lastname', $contact->getlastName());
+					$sv->addValue('lastname', $contact->getLastName());
+					$sv->addValue('title', $contact->getTitle());
+					$sv->addValue('company', $contact->getCompany());
 					$sv->addValue('email', $contact->getEmail());
 					$sv->addValue('phone', $contact->getPhone());
 					$sv->addValue('uid', $contact->getUID());
 					$sv->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
+					
+					 if($user->getUserData()->opt('set.has_bookie', false)->getValue()) $sv->showSubView('has_bookie')->addValue('id', $contact->getId());
+					
 					$colContent .= $sv->render();
 					$count++;
 				}
@@ -143,12 +160,16 @@
 							$svc = $view->showSubView('row');
 							if($sh){
 								$svn = $svc->showSubView('nameonly');
-								$svn->addValue('firstname', $contact->getFirstName());
-								$svn->addValue('lastname', $contact->getlastName());
+								$svn->addValue('firstname', $contact->getFirstName().(($contact->getCompany() == '')?'<br/>':''));
+								$svn->addValue('lastname', $contact->getLastName());
+								$svn->addValue('lastname', $contact->getTitle());
+								$svn->addValue('company', $contact->getCompany().(($contact->getCompany() == '')?'':(($sm)?' ':'<br/>')));
 								$svc->addValue('action_icon', (isset($args['actionicon']))?$args['actionicon']:'glyphicon glyphicon-remove');
 							} else {
-								$svc->addValue('firstname', $contact->getFirstName());
+								$svc->addValue('firstname', $contact->getFirstName().(($contact->getCompany() == '')?(($sm)?' ':'<br/>'):''));
 								$svc->addValue('lastname', $contact->getLastName());
+								$svc->addValue('title', $contact->getTitle());
+								$svc->addValue('company', $contact->getCompany().(($contact->getCompany() == '')?'':(($sm)?' ':'<br/>')));
 							}
 							$svc->addValue('uid', $contact->getUID());
 							$svc->addValue('id', $contact->getId());
@@ -182,17 +203,19 @@
 					$view = new core\Template\ViewDescriptor('_services/Contacts/contact_detail');
 					$view->addValue('id', $contact->getId());
 					$view->addValue('firstname', $contact->getFirstName());
-					$view->addValue('lastname', $contact->getlastName());
+					$view->addValue('lastname', $contact->getLastName());
+					$view->addValue('title', $contact->getTitle());
 					$view->addValue('email', $contact->getEmail());
 					$view->addValue('address', $contact->getAddress());
 					$view->addValue('pc', $contact->getPostCode());
 					$view->addValue('city', $contact->getCity());
+					$view->addValue('country', $contact->getCountry());
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
 					$view->addValue('uid', $contact->getUID());
 					$view->addValue('company', $contact->getCompany());
-					$view->addValue('birthdate', ($contact->getBirthdate()->format('Y') * 1 > 0)?$contact->getBirthdate()->format('d.m.Y'):'');
+					$view->addValue('birthdate', ($contact->getBirthdate())?$contact->getBirthdate()->format('d.m.Y'):'');
 					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 						
 					$cd = $contact->getContactData();
@@ -227,17 +250,19 @@
 				if($contact && $contact->getOwnerId() == $user->getId()){
 					$view->addValue('id', $contact->getId());
 					$view->addValue('firstname', $contact->getFirstName());
-					$view->addValue('lastname', $contact->getlastName());
+					$view->addValue('lastname', $contact->getLastName());
+					$view->addValue('title', $contact->getTitle());
 					$view->addValue('email', $contact->getEmail());
 					$view->addValue('address', $contact->getAddress());
 					$view->addValue('pc', $contact->getPostCode());
 					$view->addValue('city', $contact->getCity());
+					$view->addValue('country', $contact->getCountry());
 					$view->addValue('notes', $contact->getNotes());
 					$view->addValue('ssnum', $contact->getSocialSecurityNumber());
 					$view->addValue('phone', $contact->getPhone());
 					$view->addValue('company', $contact->getCompany());
 					$view->addValue('uid', $contact->getUID());
-					$view->addValue('birthdate', ($contact->getBirthdate()->format('Y') * 1 > 0)?$contact->getBirthdate()->format('d.m.Y'):'');
+					$view->addValue('birthdate', ($contact->getBirthdate())?$contact->getBirthdate()->format('d.m.Y'):'');
 					$view->addValue('image', urlencode(($contact->getImage() == '')?$this->settings->default_image:$this->settings->image_folder.$contact->getImage()));
 		
 					$cd = $contact->getContactData();
@@ -257,7 +282,7 @@
 					
 				} else {
 					$view->addValue('image', urlencode($this->settings->default_image));
-					$view->addValue('title', 'Neuer Kontakt');
+					$view->addValue('form_title', 'Neuer Kontakt');
 				}
 				
 				return $view->render();
@@ -280,16 +305,18 @@
 				
 				if(isset($args['firstname'])) $contact->setFirstName($args['firstname']);
 				if(isset($args['lastname'])) $contact->setLastName($args['lastname']);
+				if(isset($args['title'])) $contact->setTitle($args['title']);
 				if(isset($args['address'])) $contact->setAddress($args['address']);
 				if(isset($args['pc'])) $contact->setPostCode($args['pc']);
 				if(isset($args['city'])) $contact->setCity($args['city']);
+				if(isset($args['country'])) $contact->setCountry($args['country']);
 				if(isset($args['email'])) $contact->setEmail($args['email']);
 				if(isset($args['phone'])) $contact->setPhone($args['phone']);
 				if(isset($args['notes'])) $contact->setNotes($args['notes']);
 				if(isset($args['ssnum'])) $contact->setSocialSecurityNumber($args['ssnum']);
 				if(isset($args['uid'])) $contact->setUID($args['uid']);
 				if(isset($args['company'])) $contact->setCompany($args['company']);
-				if(isset($args['birthdate'])) $contact->setBirthdate(new DateTime($args['birthdate']));
+				if(isset($args['birthdate'])) $contact->setBirthdate(($args['birthdate'] == '')?null:new DateTime($args['birthdate']));
 				if(isset($args['image'])) {
 					if(file_exists($GLOBALS['config']['root'].$this->settings->upload_folder.$args['image'])){
 						//move file from upload folder to image folder
@@ -385,8 +412,10 @@
 							foreach($contacts as $contact){
 								$svc = $cv->showSubView('row');
 								$svcn = $svc->showSubView('nameonly');
-								$svcn->addValue('firstname', $contact->getFirstName());
+								$svcn->addValue('firstname', $contact->getFirstName().(($contact->getCompany() == '')?'<br/>':''));
 								$svcn->addValue('lastname', $contact->getLastName());
+								$svcn->addValue('title', $contact->getTitle());
+								$svcn->addValue('company', $contact->getCompany().(($contact->getCompany() == '')?'':'<br/>'));
 								$svc->addValue('action_icon', 'glyphicon glyphicon-remove');
 								$svc->addValue('uid', $contact->getUID());
 								$svc->addValue('id', $contact->getId());

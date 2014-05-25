@@ -29,10 +29,11 @@
 		
 		private function handleViewList($args){
 			$user = $this->sp->user->getLoggedInUser();
-			$whereSQL = 'WHERE e.user_id = \''.$user->getId().'\' AND e.deleted = \'\'';
+			$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'bookie_invoices inv ON e.id = inv.entry_id WHERE e.user_id = \''.$user->getId().'\' AND e.deleted = \'\'';
 			$tags = false;
 			$contacts = false;
 			$lastYear = new DateTime();
+			$lastMonth = $lastYear->format('m') - 1;
 			$lastQuarter = ceil($lastYear->format('m') / 3) - 1;
 			$lastYear = $lastYear->format('Y') - 1;
 			
@@ -78,14 +79,16 @@
 				$whereSQL .= ' AND `brutto` <= '.$args['amount_to'];
 			}
 			
+			if(!isset($args['date_from']) && isset($args['mode']) && $args['mode'] == 'wrapped') $args['date_from'] = date('Y').'-01-01';
+			
 			if(isset($args['date_from']) && $args['date_from'] != ''){
 				$args['date_from'] = $this->sp->db->escape($args['date_from']);
-				$whereSQL .= ' AND `date` >= \''.$args['date_from'].'\'';
+				$whereSQL .= ' AND ((`date` >= \''.$args['date_from'].'\' AND (inv.pay_date IS NULL OR inv.pay_date = \'0000-00-00\')) OR (inv.pay_date >= \''.$args['date_from'].'\' AND inv.pay_date != \'0000-00-00\'))';
 			}
 				
 			if(isset($args['date_to']) && $args['date_to'] != ''){
 				$args['date_to'] = $this->sp->db->escape($args['date_to']);
-				$whereSQL .= ' AND `date` <= \''.$args['date_to'].'\'';
+				$whereSQL .= ' AND ((`date` <= \''.$args['date_to'].'\' AND (inv.pay_date IS NULL OR inv.pay_date = \'0000-00-00\')) OR (inv.pay_date <= \''.$args['date_to'].'\' AND inv.pay_date != \'0000-00-00\'))';
 			}
 			
 			$from = 0;
@@ -113,7 +116,7 @@
 			if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
 			
 			$whereSQL .= ' ORDER BY e.date DESC, e.id DESC';
-			
+
 			$entries = Entry::getEntries($whereSQL, $from, $rows);
 
 			$view = new core\Template\ViewDescriptor('_services/Bookie/entry_list');	
@@ -126,10 +129,15 @@
 				if($contacts) $header->showSubView('filter_contacts');
 				$header->addValue('last_year', $lastYear);
 				$header->addValue('last_quarter', ($lastQuarter==0)?'4':$lastQuarter);
+				$header->addValue('last_month', ($lastMonth==0)?'12':$lastMonth);
+				$months = array('Dezember', 'J&auml;nner', 'Februar', 'M&auml;rz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember');
+				$header->addValue('last_month_name', $months[$lastMonth]);
+				$header->addValue('last_month_year', ($lastMonth==0)?$lastYear:$lastYear+1);
 				$header->addValue('last_quarter_year', ($lastQuarter==0)?$lastYear:$lastYear+1);
+				$header->addValue('filter_preset_date_from', '01.01.'.date('Y'));
 				
 				
-				$cats = Category::getCategories();
+				$cats = Category::getCategories('ORDER BY c.name ASC');
 				if($cats){
 					foreach($cats as $cat){
 						$cv = $header->showSubView('category_option');
@@ -147,8 +155,17 @@
 			
 			$totals = Entry::getEntrySums($whereSQL);
 			
-			$view->addValue('total_in', number_format($totals['brutto_in'], 2, ',', '.'));
-			$view->addValue('total_out', number_format($totals['brutto_out'], 2, ',', '.'));
+			$subValuesView = $view->showSubView('sub_values'.($user->getUserData()->opt('set.taxes', false, false)->getValue()?'':'_notax'));
+			
+			$subValuesView->addValue('total_in', number_format($totals['brutto_in'], 2, ',', '.'));
+			$subValuesView->addValue('total_out', number_format($totals['brutto_out'], 2, ',', '.'));
+			
+			$subValuesView->addValue('netto_in', number_format($totals['netto_in'], 2, ',', '.'));
+			$subValuesView->addValue('netto_out', number_format($totals['netto_out'], 2, ',', '.'));
+			
+			$subValuesView->addValue('tax_in', number_format($totals['brutto_in'] - $totals['netto_in'], 2, ',', '.'));
+			$subValuesView->addValue('tax_out', number_format($totals['brutto_out'] - $totals['netto_out'], 2, ',', '.'));
+			
 			$tv = $totals['brutto_out'] + $totals['brutto_in'];
 			$view->addValue('total_class', ($tv < 0)?'out':'in');
 			$view->addValue('total', number_format($tv, 2, ',', '.'));
@@ -157,7 +174,7 @@
 			$sum = Entry::getEntrySums('WHERE e.user_id = \''.$user->getId().'\' AND e.deleted = \'\' AND e.account_id = \'2\'');
 			if($sum['brutto_in'] + $sum['brutto_out'] < 0) $view->showSubView('cashwarning');
 			
-			foreach($entries as $entry){
+			foreach($entries as $entry){ /* @var $entry Entry */
 				$sv = $view->showSubView('row');
 
 				if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0) $sv->hideSubView('action_delete');
@@ -169,9 +186,10 @@
 				$sv->addValue('type', ($entry->getBrutto() <= 0)?'out':'in');
 				$sv->addValue('amount', number_format($entry->getBrutto(), 2, ',', '.'));
 				$sv->addValue('state', $entry->getState());
+				$sv->addValue('include', ($entry->getInclude())?'':'moot');
 				$sv->addValue('notes', nl2br($entry->getNotes()));
 				
-				if($entry->getTaxValue() > 0){
+				if($entry->getTaxValue() > 0 && $entry->getTaxCountry() == 0){
 					$svt = $sv->showSubView('taxinfo');
 					$svt->addValue('tax_label', $entry->getTaxType());
 					$svt->addValue('tax_amount', number_format($entry->getTaxAmount(), 2, ',', '.'));
@@ -188,6 +206,9 @@
 					$inv = $inv[0];
 					$isv = $sv->showSubView('pdf');
 					$isv->addValue('id', $inv->getId());
+					
+					$iidsv = $sv->showSubView('invoice_id');
+					$iidsv->addValue('invoice_id', $inv->getNumber());
 					
 					//check for dunnings
 					if($entry->getState() != 'payed'){
@@ -246,7 +267,7 @@
 						$invv->addValue('altdstaddr', $inv->getAltDstAddress());
 						$invv->addValue('altsrcaddr', $inv->getAltSrcAddress());
 						if($inv->getReminderDate()) $invv->addValue('reminder', $inv->getReminderDate()->format('d.m.Y H:i'));
-						$invv->addValue('paydate', $inv->getPayDate()->format('d.m.Y'));
+						if($inv->getPayDate()) $invv->addValue('paydate', $inv->getPayDate()->format('d.m.Y'));
 						
 						$view->addValue('title', 'Rechnung editieren');
 						
@@ -269,7 +290,7 @@
 						$iviv = $view->showSubView('invoice_item');
 						$iviv->addValue('dom_id', 'empty_invoice_item');
 						
-						if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1') $tax = $view->showSubView('tax_input');
+						if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1' || $user->getUserData()->opt('set.uid', '')->getValue() != '') $tax = $view->showSubView('tax_input');
 						
 					} else {
 						$sel = $view->showSubView('entry_type_selection');
@@ -301,7 +322,7 @@
 						}
 					}
 					
-					$cats = Category::getCategories();
+					$cats = Category::getCategories('ORDER BY c.name ASC');
 					if($cats){
 						foreach($cats as $cat){
 							$cv = $view->showSubView('category_option');
@@ -334,6 +355,10 @@
 						$tax = $view->showSubView('tax_input');
 						$tax->addValue('tax_type', 'Umsatzsteuer');
 						$tax->addValue('tax_value', 20);
+					} else if($user->getUserData()->opt('set.uid', '')->getValue() != '') {
+						$tax = $view->showSubView('tax_input');
+						$tax->addValue('tax_type', '');
+						$tax->addValue('tax_value', 0);
 					}
 				} else {
 					$view->addValue('title', 'Neuer Eintrag');
@@ -343,9 +368,15 @@
 						$tax = $view->showSubView('tax_input');
 						$tax->addValue('tax_type', 'Vorsteuer');
 						$tax->addValue('tax_value', 20);
+					} else if($user->getUserData()->opt('set.uid', '')->getValue() != '') {
+						$tax = $view->showSubView('tax_input');
+						$tax->addValue('tax_type', '');
+						$tax->addValue('tax_value', 0);
 					}
 					$view->addValue('state_payed', ' selected="selected"');
 				}
+				
+				$view->addValue('date', date('d.m.Y'));
 				
 				$accs = Account::getAccountsForUser($user->getId());
 				if($accs){
@@ -357,7 +388,7 @@
 					}
 				}
 				
-				$cats = Category::getCategories();
+				$cats = Category::getCategories('ORDER BY c.name ASC');
 				if($cats){
 					foreach($cats as $cat){
 						$cv = $view->showSubView('category_option');
@@ -404,34 +435,44 @@
 				
 				
 				//Eigenes Personal - 14
-				//fremdes Personal - 15
 				//Versicherung - 5
 				//PKW - 6
+				//Reisekosten Inland - 8
 				//Zinsen und ähnliche Aufwendungen - 9
 				//Spenden und Trinkgelder - 12
 				//Eigene Pflichtversicherungseiträge - 10
+				//Reisekosten Ausland - 19
+				//Anschaffung PKW - 20
 				
-				if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1' && !in_array($entry->getCategoryId(), array(5,6,9,10,12,14,15))){
-					if(isset($args['tax_country'])) $entry->setTaxCountry($args['tax_country']);
-					if($entry->getTaxCountry() == 0){
-						if(isset($args['tax_type'])) $entry->setTaxType($args['tax_type']);
-						if(isset($args['tax_value'])) $entry->setTaxValue($args['tax_value']);
-					} else if ($entry->getTaxCountry() == 1 && $entry->getBrutto() < 0) { 
-						//set tax to 20% if EU an buy
-						$entry->setTaxType(($entry->getBrutto() > 0)?'Umsatzsteuer':'Vorsteuer');
-						$entry->setTaxValue(0.2);
+				if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1' || $user->getUserData()->opt('set.uid', '')->getValue() != ''){ 
+					if(!in_array($entry->getCategoryId(), array(5,6,8,9,10,12,14,19,20))){
+						if(isset($args['tax_country'])) $entry->setTaxCountry($args['tax_country']);
+						if($entry->getTaxCountry() == 0){
+							if(isset($args['tax_type'])) $entry->setTaxType($args['tax_type']);
+							if(isset($args['tax_value'])) $entry->setTaxValue($args['tax_value']);
+						} else if ($entry->getTaxCountry() == 1 && $entry->getBrutto() < 0) { 
+							//set tax to 20% if EU an buy
+							$entry->setTaxType(($entry->getBrutto() > 0)?'Umsatzsteuer':'Vorsteuer');
+							$entry->setTaxValue(0.2);
+						} else {
+							$entry->setTaxType('');
+							$entry->setTaxValue(0);
+						}
+						if(isset($args['tax_uid'])) $entry->setUID($args['tax_uid']);
+						
+						//check if entry tax configuration is valid
+						if($entry->getBrutto() > 0){ //income
+							if($entry->getUID() == '' && ($entry->getTaxCountry() > 0 || $entry->getBrutto() > 10000)) return false; //if the income is from outside the home country or > 10000 an UID is mandatory 
+						}
+						
+						
+					} else if ($entry->getCategoryId() == 8 && $user->getUserData()->opt('set.taxes', '0')->getValue() == '1') { //Reisekosten Inland
+						$entry->setTaxType('Vorsteuer');
+						$entry->setTaxValue(0.1);
 					} else {
 						$entry->setTaxType('');
 						$entry->setTaxValue(0);
 					}
-					if(isset($args['tax_uid'])) $entry->setUID($args['tax_uid']);
-					
-					//check if entry tax configuration is valid
-					if($entry->getBrutto() > 0){ //income
-						if($entry->getUID() == '' && ($entry->getTaxCountry() > 0 || $entry->getBrutto() > 10000)) return false; //if the income is from outside the home country or > 10000 an UID is mandatory 
-					}
-					
-					
 				} else {
 					$entry->setTaxType('');
 					$entry->setTaxValue(0);
@@ -441,14 +482,15 @@
 				
 				
 				if(isset($args['projected_disposal'])) {
-					$years = $args['projected_disposal'];
+					$years = max(3, $args['projected_disposal']);
+					if($entry->getCategoryId() == 20) $years = 8;
 					$pd = new DateTime($args['date']);
 					$entry->setProjectedDisposal($pd->add(new DateInterval('P'.$years.'Y')));
 				}
 				if(isset($args['disposal'])) $entry->setDisposal(new DateTime($args['disposal']));
 				
 				//check category and disposal
-				if($entry->getCategoryId() == 1 && $entry->getNetto() < -400 && $entry->getProjectedDisposal() == null) return false;
+				if(($entry->getCategoryId() == 1 || $entry->getCategoryId() == 20) && $entry->getNetto() < -400 && $entry->getProjectedDisposal() == null) return false;
 				
 				if($entry->getOwnerId() < 0) $entry->setOwner($user->getId());
 				
@@ -467,7 +509,7 @@
 						if(isset($args['altdstaddr'])) $inv->setAltDstAddress($args['altdstaddr']);
 						if(isset($args['altsrcaddr'])) $inv->setAltSrcAddress($args['altsrcaddr']);
 						//if(isset($args['reminder'])) $inv->setReminderDate(new DateTime(($args['reminder'] == '')?'00-00-0000 00:00:00':$args['reminder']));
-						if(isset($args['paydate'])) $inv->setPayDate(new DateTime($args['paydate']));
+						if(isset($args['paydate'])) $inv->setPayDate(($args['paydate'] == '')?null:new DateTime($args['paydate']));
 						//if(isset($args['number'])) $inv->setNumber($args['number']);
 						if($inv->getNumber() == '') $inv->setNumber($user->getUserData()->opt('set.invoice_prefix', 'WMR_')->getValue().date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
 						

@@ -4,34 +4,34 @@
 	<form class="form-horizontal" role="form" action="#" method="post">
 		<input type="hidden" value="{@pp:id}" id="id" name="id"/>
 		<div class="form-group">
-			<label for="nick" class="col-sm-2 control-label">Username</label>
-			<div class="col-sm-10">
+			<label for="nick" class="col-sm-3 control-label">Username</label>
+			<div class="col-sm-9">
 				<input class="form-control" id="nick" placeholder="Username" value="{@pp:nick}">
 			</div>
 		</div>
 		
 		<div class="form-group">
-			<label for="vname" class="col-sm-2 control-label">Vorname</label>
-			<div class="col-sm-10">
+			<label for="vname" class="col-sm-3 control-label">Vorname</label>
+			<div class="col-sm-9">
 				<input class="form-control" id="vname" placeholder="Vorname" value="{@pp:userdata_vname}">
 			</div>
 		</div>
 		<div class="form-group">
-			<label for="nname" class="col-sm-2 control-label">Nachname</label>
-			<div class="col-sm-10">
+			<label for="nname" class="col-sm-3 control-label">Nachname</label>
+			<div class="col-sm-9">
 				<input class="form-control" id="nname" placeholder="Nachname" value="{@pp:userdata_nname}">
 			</div>
 		</div>
 		
 		<div class="form-group">
-			<label for="email" class="col-sm-2 control-label">E-Mail</label>
-			<div class="col-sm-10">
+			<label for="email" class="col-sm-3 control-label">E-Mail</label>
+			<div class="col-sm-9">
 				<input type="email" class="form-control" id="email" placeholder="E-Mail" value="{@pp:email}">
 			</div>
 		</div>
 		<div class="form-group">
-			<label for="pw" class="col-sm-2 control-label">Passwort</label>
-			<div class="col-sm-5">
+			<label for="pw" class="col-sm-3 control-label">Passwort</label>
+			<div class="col-sm-4">
 				<input class="form-control" id="pw" type="password" placeholder="Passwort">
 			</div>
 			<div class="col-sm-5">
@@ -39,19 +39,44 @@
 			</div>
 		</div>
 		<div class="form-group">
-			<label for="group" class="col-sm-2 control-label">Gruppe</label>
-			<div class="col-sm-10">
+			<label for="group" class="col-sm-3 control-label">Gruppe</label>
+			<div class="col-sm-9">
 				{@pp:group}
 			</div>
 		</div>		
 		<div class="form-group">
-			<label for="status" class="col-sm-2 control-label">Status</label>
-			<div class="col-sm-10">
+			<label for="status" class="col-sm-3 control-label">Status</label>
+			<div class="col-sm-9">
 				{@pp:status}
 			</div>
 		</div>
+		<pp:dynamic name="setting_input">
 		<div class="form-group">
-			<div class="col-sm-offset-2 col-sm-10">
+			<label for="{@pp:name}" class="col-sm-3 control-label">{@pp:label}</label>
+			<div class="col-sm-9">
+				<input class="form-control" id="{@pp:name}" placeholder="" name="{@pp:name}" value="{@pp:value}">
+			</div>
+		</div>
+		</pp:dynamic>
+		<pp:dynamic name="setting_text">
+		<div class="form-group">
+			<label for="{@pp:name}" class="col-sm-3 control-label">{@pp:label}</label>
+			<div class="col-sm-9">
+				<textarea class="form-control" id="{@pp:name}" name="{@pp:name}">{@pp:value}</textarea>
+			</div>
+		</div>
+		</pp:dynamic>
+		<pp:dynamic name="setting_checkbox">
+		<div class="form-group">
+			<label for="{@pp:name}" class="col-sm-3 control-label">{@pp:label}</label>
+			<div class="col-sm-9">
+				<input type="checkbox" class="form-control" id="{@pp:name}" name="{@pp:name}" data-on-label="Ja" data-off-label="Nein" {@pp:value} />
+			</div>
+		</div>
+		</pp:dynamic>
+		{@pp:settings}
+		<div class="form-group">
+			<div class="col-sm-offset-3 col-sm-9">
 				<button class="btn btn-primary" autocomplete="off" data-loading-text="Speichere ..." id="form_save">Speichern</button>
 				<a class="btn btn-default" href="?service=User">Abbrechen</a>
 			</div>
@@ -59,9 +84,22 @@
 	</form>
 	<script type="text/javascript">
 		$(function(){
+			
+			$('input[type="checkbox"]').bootstrapSwitch();
+			
 			$('#form_save').unbind().click(function(){
 				var _this = this;
 				$(this).button('loading');
+				
+				var data = {
+					'vname' : $('#vname').val(),
+					'nname' : $('#nname').val()
+				};
+				
+				$('[name^="set."]').each(function(){
+					data[$(this).attr('name')] = ($(this).attr('type')=='checkbox')?(($(this).is(':checked'))?1:0):$(this).val();
+				});
+
 				$.ajax({
 					type: "POST",
 					url: "../_core/connector.php",
@@ -77,10 +115,7 @@
 							'pwd2': $('#pw2').val(),
 							'group': $('#group').val(),
 							'status': $('#status').val(),
-							'data': {
-								'vname' : $('#vname').val(),
-								'nname' : $('#nname').val()
-							}
+							'data': data
 						}
 					},
 					dataType: 'json',

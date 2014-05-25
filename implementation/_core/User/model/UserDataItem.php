@@ -118,6 +118,9 @@
 			return $this->user;
 		}
 		public function getUserId() { return $this->userId; }
+		/**
+		 * @return UserDataField
+		 */
 		public function getField() { 
 			if($this->field == null) UserDataField::getField($this->fieldId);
 			return $this->field;

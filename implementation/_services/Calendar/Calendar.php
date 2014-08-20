@@ -121,6 +121,7 @@
 				$view->addValue('pages', $pages);
 				if(isset($args['mode']) && $args['mode'] == 'wrapped'){
 					$header = $view->showSubView('header');
+					$header->addValue('date_from', $dateFrom->format('d.m.Y'));
 					if($contacts) $header->showSubView('filter_contacts');
 					
 					$footer = $view->showSubView('footer');

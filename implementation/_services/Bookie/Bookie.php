@@ -69,14 +69,32 @@
 				$whereSQL .= ' AND `category_id` = \''.$this->sp->db->escape($args['category']).'\'';
 			}
 			
+			
+			
+			$from = false;
 			if(isset($args['amount_from']) && $args['amount_from'] != ''){
-				$args['amount_from'] = $this->sp->db->escape($args['amount_from']);
-				$whereSQL .= ' AND `brutto` >= '.$args['amount_from'];
+				$from = $this->sp->db->escape($args['amount_from']);
 			}
 			
+			$to = false;
 			if(isset($args['amount_to']) && $args['amount_to'] != ''){
-				$args['amount_to'] = $this->sp->db->escape($args['amount_to']);
-				$whereSQL .= ' AND `brutto` <= '.$args['amount_to'];
+				$to = $this->sp->db->escape($args['amount_to']);
+			}
+			
+			if($from !== false && $to !== false){
+				if($from > $to) {
+					$tmp = $from;
+					$from = $to;
+					$to = $tmp;
+				}
+			}
+			
+			if($from !== false){
+				$whereSQL .= ' AND `brutto` >= '.$from;
+			}
+			
+			if($to !== false){
+				$whereSQL .= ' AND `brutto` <= '.$to;
 			}
 			
 			if(!isset($args['date_from']) && isset($args['mode']) && $args['mode'] == 'wrapped') $args['date_from'] = date('Y').'-01-01';
@@ -443,9 +461,10 @@
 				//Eigene Pflichtversicherungseiträge - 10
 				//Reisekosten Ausland - 19
 				//Anschaffung PKW - 20
+				//Privatentnahme - 21
 				
 				if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1' || $user->getUserData()->opt('set.uid', '')->getValue() != ''){ 
-					if(!in_array($entry->getCategoryId(), array(5,6,8,9,10,12,14,19,20))){
+					if(!in_array($entry->getCategoryId(), array(5,6,8,9,10,12,14,19,20,21))){
 						if(isset($args['tax_country'])) $entry->setTaxCountry($args['tax_country']);
 						if($entry->getTaxCountry() == 0){
 							if(isset($args['tax_type'])) $entry->setTaxType($args['tax_type']);

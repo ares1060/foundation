@@ -16,4 +16,4 @@ attachments
 
 /implementation/_services/Bookie/logs
 
-Database.ini
+implementation/_core/Database/Database.ini

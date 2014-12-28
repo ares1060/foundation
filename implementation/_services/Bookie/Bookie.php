@@ -33,8 +33,8 @@
 			$tags = false;
 			$contacts = false;
 			$lastYear = new DateTime();
-			$lastMonth = $lastYear->format('m') - 1;
-			$lastQuarter = ceil($lastYear->format('m') / 3) - 1;
+			$lastMonth = $this->clamp($lastYear->format('m') - 1, 1, 12, true);
+			$lastQuarter = $this->clamp($this->getQuarter($lastYear) - 1, 1, 4, true);
 			$lastYear = $lastYear->format('Y') - 1;
 			
 			if(isset($args['search']) && strlen($args['search']) > 2){
@@ -146,12 +146,26 @@
 				$header = $view->showSubView('header');
 				if($contacts) $header->showSubView('filter_contacts');
 				$header->addValue('last_year', $lastYear);
-				$header->addValue('last_quarter', ($lastQuarter==0)?'4':$lastQuarter);
-				$header->addValue('last_month', ($lastMonth==0)?'12':$lastMonth);
+				$header->addValue('llast_year', $lastYear-1);
+				$header->addValue('lllast_year', $lastYear-2);
+				$header->addValue('last_quarter', $lastQuarter);
+				$header->addValue('llast_quarter', $this->clamp($lastQuarter - 1, 1, 4, true));
+				$header->addValue('lllast_quarter', $this->clamp($lastQuarter - 2, 1, 4, true));
+				$header->addValue('llllast_quarter', $this->clamp($lastQuarter - 3, 1, 4, true));
+				$header->addValue('last_month', $lastMonth);
+				$header->addValue('llast_month', $this->clamp($lastMonth - 1, 1, 12, true));
+				$header->addValue('lllast_month', $this->clamp($lastMonth - 2, 1, 12, true));
 				$months = array('Dezember', 'J&auml;nner', 'Februar', 'M&auml;rz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember');
 				$header->addValue('last_month_name', $months[$lastMonth]);
-				$header->addValue('last_month_year', ($lastMonth==0)?$lastYear:$lastYear+1);
-				$header->addValue('last_quarter_year', ($lastQuarter==0)?$lastYear:$lastYear+1);
+				$header->addValue('llast_month_name', $months[$this->clamp($lastMonth - 1, 1, 12, true)]);
+				$header->addValue('lllast_month_name', $months[$this->clamp($lastMonth - 2, 1, 12, true)]);
+				$header->addValue('last_month_year', ($lastMonth==12)?$lastYear:$lastYear+1);
+				$header->addValue('llast_month_year', ($lastMonth > 1)?$lastYear+1:$lastYear);
+				$header->addValue('lllast_month_year', ($lastMonth > 2)?$lastYear+1:$lastYear);
+				$header->addValue('last_quarter_year', ($lastQuarter==4)?$lastYear:$lastYear+1);
+				$header->addValue('llast_quarter_year', ($lastQuarter > 1)?$lastYear+1:$lastYear);
+				$header->addValue('lllast_quarter_year', ($lastQuarter > 2)?$lastYear+1:$lastYear);
+				$header->addValue('llllast_quarter_year', ($lastQuarter > 3)?$lastYear+1:$lastYear);
 				$header->addValue('filter_preset_date_from', '01.01.'.date('Y'));
 				
 				
@@ -603,6 +617,25 @@
 			$file = fopen($GLOBALS['config']['root'].$this->settings->log_folder.$fileName, 'a');
 			fwrite($file, "\r\n".$action.' -> '.json_encode($data));
 			fclose($file);
+		}
+		
+		private function getQuarter($date){
+			$q = ceil($date->format('m') / 3);
+			return $q;
+		}
+		
+		private function clamp($number, $min, $max, $overlap){
+		    $diff = $max - $min + 1;
+		    
+		    if($number > $max) {
+		        if(!$overlap) $number = $max;
+		        else $number = $min + ($number - $min) % $diff;
+		    } else if($number < $min) {
+		        if(!$overlap) $number = $min;
+		        else $number = abs(($max - $number) % $diff - $max);
+		    }
+		    
+		    return $number;
 		}
 		
 	}

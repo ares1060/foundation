@@ -403,6 +403,7 @@
 							
 					$view = new core\Template\ViewDescriptor('_services/Contacts/contact_linker');
 					$view->addValue('link_table', $args['link_table']);
+					$view->addValue('label', (isset($args['form_label']))?$args['form_label']:'Kontakte');
 								
 					if(isset($args['entry_id']) && $args['entry_id'] != ''){
 						$contacts = Contact::getLinkedContacts($args['link_table'], $args['entry_id']);

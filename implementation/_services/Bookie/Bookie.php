@@ -209,8 +209,8 @@
 			foreach($entries as $entry){ /* @var $entry Entry */
 				$sv = $view->showSubView('row');
 
-				if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0) $sv->hideSubView('action_delete');
-				else $sv->showSubView('action_delete');
+				//if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0) $sv->hideSubView('action_delete');
+				$sv->showSubView('action_delete');
 				
 				$sv->addValue('id', $entry->getId());
 				$sv->addValue('account', ($entry->getAccount())?$entry->getAccount()->getName():'NULL');
@@ -223,7 +223,7 @@
 				
 				if($entry->getTaxValue() > 0 && $entry->getTaxCountry() == 0){
 					$svt = $sv->showSubView('taxinfo');
-					$svt->addValue('tax_label', $entry->getTaxType());
+					$svt->addValue('tax_label', ($entry->getTaxType() == 'Umsatzsteuer')?'USt.':(($entry->getTaxType() == 'Vorsteuer')?'VSt.':$entry->getTaxType()));
 					$svt->addValue('tax_amount', number_format($entry->getTaxAmount(), 2, ',', '.'));
 				}
 				
@@ -449,13 +449,13 @@
 				if(isset($args['notes'])) $entry->setNotes($args['notes']);
 				if(isset($args['state'])) $entry->setState($args['state']);
 				
-				if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0){
+				/*if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0){
 					//can't edit old cash entry
 					$entry->save();
 					return $entry->getId(); 
-				}
+				}*/
 				
-				if(isset($args['date']) && $entry->getAccountId() != 2) $entry->setDate(new DateTime($args['date']));
+				if(isset($args['date']) /*&& $entry->getAccountId() != 2*/) $entry->setDate(new DateTime($args['date']));
 				if(isset($args['include'])) $entry->setInclude($args['include']);
 				if(isset($args['brutto'])) $entry->setBrutto($args['brutto']);
 				if(isset($args['category']) && $entry->getBrutto() < 0) $entry->setCategory($args['category']);
@@ -582,7 +582,7 @@
 					$entry = Entry::getEntry($args['id']);
 					if(!$entry) return true;
 					if($entry->getOwnerId() != $user->getId()) return false;
-					if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0) return false; //can't delete cash entry
+					//if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0) return false; //can't delete cash entry
 					//if($entry->getBrutto() >= 0 && count(Invoice::getInvoicesForEntry($entry->getId())) > 0) return false; //can't delete invoice 
 					$entry->setDeleted(true);
 					/*$ok = $entry->delete();

@@ -25,6 +25,7 @@
     	// User Objects
     	private $loggedInUser;
         private $viewingUser;
+        private $superUserForLoggedInUser;
         
         // tmp Groups -> dataHandler
      //   private $groups;
@@ -78,7 +79,7 @@
 		}
          
         
-         public function render($args){
+		public function render($args){
          	/*$this->debugVar($this->loggedInUser);
          	$this->debugVar($_SESSION['User']);*/
             $action = (isset($args['action'])) ? $args['action'] : '';
@@ -635,6 +636,26 @@
          	}
          	return $this->loggedInUser;
          }
+         
+         
+         /**
+          * returns the superuser of the logged in user
+          * @return at\foundation\core\User\model\User
+          */
+         public function getSuperUserForLoggedInUser() {
+         	$user = $this->getLoggedInUser();
+         	if(
+         		!$this->$superUserForLoggedInUser &&
+         		model\UserDataField::getUserDataFieldByName('set.parent_user') &&
+         		$user->getUserData()->opt('set.parent_user', 0) > 0
+         	){
+         		$this->$superUserForLoggedInUser = model\User::getUser($user->getUserData()->opt('set.parent_user', 0));
+         	} else {
+         		$this->$superUserForLoggedInUser = $user;
+         	}
+         	return $this->$superUserForLoggedInUser;
+         }
+         
          
          /**
           * updates data for viewing and loggedin User

@@ -109,8 +109,9 @@
 						$colContent = '';
 					}
 					
-					if($fc != strtoupper(substr($contact->getLastName(),0, 1))){
-						$fc = strtoupper(substr($contact->getLastName(),0, 1));
+					$fchar = strtoupper(substr(preg_replace('~&([a-z]{1,2})(acute|cedil|circ|grave|lig|orn|ring|slash|th|tilde|uml);~i', '$1', htmlentities($contact->getLastName(), ENT_QUOTES, 'UTF-8')), 0, 1));
+					if($fc != $fchar){
+						$fc = $fchar;
 						$svh = new core\Template\SubViewDescriptor('segment_header');
 						$svh->setParent($view);
 						$svh->updateQualifiedName($col->getQualifiedName());

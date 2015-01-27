@@ -23,7 +23,7 @@
 		}
 		
 		private function handleViewList($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			$whereSQL = 'WHERE 1=1';
 			$tags = false;
 			$contacts = false;
@@ -121,7 +121,7 @@
 		}
 		
 		private function handleViewForm($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			$view = new core\Template\ViewDescriptor('_services/Blog/post_form');
 			if($user && isset($args['id'])){
 				//edit form
@@ -148,7 +148,7 @@
 		}
 		
 		private function handleSave($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				if(isset($args['id'])){
 					//get post
@@ -179,7 +179,7 @@
 		
 		
 		private function handleDelete($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				if(isset($args['id'])){
 					//get contact
@@ -198,7 +198,7 @@
 		}
 		
 		public function checkAttachmentAuth($param){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				$post = Post::getPost($param);
 				if($post && $post->getAuthorId() == $user->getId()) return true;

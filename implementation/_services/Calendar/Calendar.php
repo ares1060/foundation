@@ -22,7 +22,7 @@
 		}
 		
 		private function handleViewOverview($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			
 			if($user && $user->getId() > 0){
 				$view = new core\Template\ViewDescriptor('_services/Calendar/calendar_overview');
@@ -39,7 +39,7 @@
 		}
 		
 		private function handleViewAgenda($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 				
 			if($user && $user->getId() > 0){
 				$view = new core\Template\ViewDescriptor('_services/Calendar/calendar_agenda');
@@ -221,7 +221,7 @@
 		}
 		
 		private function handleViewForm($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 				
 			if($user && $user->getId() > 0){
 				$view = new core\Template\ViewDescriptor('_services/Calendar/event_form');
@@ -242,7 +242,7 @@
 		}
 		
 		private function handleGetEvent($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 		
 			if($user && $user->getId() > 0 && isset($args['id'])){
 				$event = $this->sp->db->fetchRow('SELECT * FROM '.$this->sp->db->prefix.'calendar_events WHERE id =\''.$this->sp->db->escape($args['id']).'\';');

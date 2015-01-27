@@ -53,7 +53,7 @@
 			$param = (isset($args['param']))?$args['param']:'';
 			$name = (isset($args['name']))?$args['name']:'';
 			
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			
 			if(!isset($args['param'])) $tags = Tag::getTags($service, $name, ($user)?$user->getId():-1);
 			else $tags = Tag::getLinkedTags($service, $param, ($user)?$user->getId():-1);
@@ -128,7 +128,7 @@
 			$param = (isset($args['param']))?$args['param']:'';
 			$name = (isset($args['name']))?$args['name']:'';
 				
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 
 			$tpl = new core\Template\ViewDescriptor('_services/Tags/tag_linker');
 			
@@ -151,7 +151,7 @@
 		}
 		
 		private function handleSaveTags($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user) {
 				//get all currently linked tags
 				$tags = Tag::getLinkedTags($args['service'], $args['param'], $user->getId());

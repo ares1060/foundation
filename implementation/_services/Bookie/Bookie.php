@@ -1,5 +1,7 @@
 <?php
-	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Entry.php');
+	use at\foundation\core\ServiceProvider;
+
+require_once($GLOBALS['config']['root'].'_services/Bookie/model/Entry.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Invoice.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/InvoicePart.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Receipt.php');
@@ -27,60 +29,58 @@
 			}
 		}
 		
-		private function handleViewList($args){
-			$user = $this->sp->user->getLoggedInUser();
-			$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'bookie_invoices inv ON e.id = inv.entry_id WHERE e.user_id = \''.$user->getId().'\' AND e.deleted = \'\'';
+		public static function buildWhereSQLQuery($args){
+			$sp = ServiceProvider::getInstance();
+			$user = $sp->user->getSuperUserForLoggedInUser();
+			
+			$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'bookie_invoices inv ON e.id = inv.entry_id WHERE e.user_id = \''.$user->getId().'\' AND e.deleted != \'1\'';
 			$tags = false;
 			$contacts = false;
-			$lastYear = new DateTime();
-			$lastMonth = $this->clamp($lastYear->format('m') - 1, 1, 12, true);
-			$lastQuarter = $this->clamp($this->getQuarter($lastYear) - 1, 1, 4, true);
-			$lastYear = $lastYear->format('Y') - 1;
-			
-			if(isset($args['search']) && strlen($args['search']) > 2){
-				$args['search'] = $this->sp->db->escape($args['search']);
 				
+			if(isset($args['search']) && strlen($args['search']) > 2){
+				$args['search'] = $sp->db->escape($args['search']);
+			
 				//TODO tagging still hacky
-				$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Bookie\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
-				//$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'bookie_categories c ON e.category_id = c.id '.$whereSQL;
+				$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Bookie\' LEFT JOIN '.$sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
+				//$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'bookie_categories c ON e.category_id = c.id '.$whereSQL;
 				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\' )';
 				$tags = true;
 			}
-			
+				
 			if(isset($args['state']) && is_array($args['state']) && count($args['state']) > 0){
 				$values = '';
 				foreach($args['state'] as $val){
-					$values .= '\''.$this->sp->db->escape($val).'\',';
+					$values .= '\''.$sp->db->escape($val).'\',';
 				}
 				$values = substr($values, 0, -1);
 				$whereSQL .= ' AND `state` IN ('.$values.')';
 			}
-			
+				
 			if(isset($args['account']) && is_array($args['account']) && count($args['account']) > 0){
 				$values = '';
 				foreach($args['account'] as $val){
-					$values .= '\''.$this->sp->db->escape($val).'\',';
+					$values .= '\''.$sp->db->escape($val).'\',';
 				}
 				$values = substr($values, 0, -1);
 				$whereSQL .= ' AND `account_id` IN ('.$values.')';
 			}
-			
+				
 			if(isset($args['category'])){
-				$whereSQL .= ' AND `category_id` = \''.$this->sp->db->escape($args['category']).'\'';
+				$whereSQL .= ' AND `category_id` = \''.$sp->db->escape($args['category']).'\'';
 			}
-			
-			
-			
+				
+				
+				
 			$from = false;
 			if(isset($args['amount_from']) && $args['amount_from'] != ''){
-				$from = $this->sp->db->escape($args['amount_from']);
+				$from = $sp->db->escape($args['amount_from']);
 			}
-			
+				
 			$to = false;
 			if(isset($args['amount_to']) && $args['amount_to'] != ''){
-				$to = $this->sp->db->escape($args['amount_to']);
+				$to = $sp->db->escape($args['amount_to']);
 			}
-			
+				
 			if($from !== false && $to !== false){
 				if($from > $to) {
 					$tmp = $from;
@@ -88,27 +88,51 @@
 					$to = $tmp;
 				}
 			}
-			
+				
 			if($from !== false){
 				$whereSQL .= ' AND `brutto` >= '.$from;
 			}
-			
+				
 			if($to !== false){
 				$whereSQL .= ' AND `brutto` <= '.$to;
 			}
-			
+				
 			if(!isset($args['date_from']) && isset($args['mode']) && $args['mode'] == 'wrapped') $args['date_from'] = date('Y').'-01-01';
-			
+				
 			if(isset($args['date_from']) && $args['date_from'] != ''){
-				$args['date_from'] = $this->sp->db->escape($args['date_from']);
+				$args['date_from'] = $sp->db->escape($args['date_from']);
 				$whereSQL .= ' AND ((`date` >= \''.$args['date_from'].'\' AND (inv.pay_date IS NULL OR inv.pay_date = \'0000-00-00\')) OR (inv.pay_date >= \''.$args['date_from'].'\' AND inv.pay_date != \'0000-00-00\'))';
 			}
-				
+			
 			if(isset($args['date_to']) && $args['date_to'] != ''){
-				$args['date_to'] = $this->sp->db->escape($args['date_to']);
+				$args['date_to'] = $sp->db->escape($args['date_to']);
 				$whereSQL .= ' AND ((`date` <= \''.$args['date_to'].'\' AND (inv.pay_date IS NULL OR inv.pay_date = \'0000-00-00\')) OR (inv.pay_date <= \''.$args['date_to'].'\' AND inv.pay_date != \'0000-00-00\'))';
 			}
+				
+			//TODO: generalize this so that services can infuse filter criteria generically
+			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
+				$values = '';
+				foreach($args['contact_filter'] as $val){
+					$values .= $sp->db->escape($val).',';
+				}
+				$values = substr($values, 0, -1);
+				$whereSQL = 'JOIN '.$sp->db->prefix.'bookie_entries_contacts AS c ON c.entry_id = e.id '.$whereSQL;
+				$whereSQL .= ' AND contact_id IN ('.$values.')';
+				$contacts = true;
+			}
+				
+			if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
+				
+			$whereSQL .= ' ORDER BY e.date DESC, e.id DESC';
 			
+			return $whereSQL;
+		}
+		
+		private function handleViewList($args){
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
+			
+			$whereSQL = self::buildWhereSQLQuery($args);
+
 			$from = 0;
 			if(isset($args['from']) && $args['from'] > 0) {
 				$from = $this->sp->db->escape($args['from']);
@@ -119,24 +143,16 @@
 				$rows = $this->sp->db->escape($args['rows']);
 			}
 			
-			//TODO: generalize this so that services can infuse filter criteria generically
-			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
-				$values = '';
-				foreach($args['contact_filter'] as $val){
-					$values .= $this->sp->db->escape($val).',';
-				}
-				$values = substr($values, 0, -1);
-				$whereSQL = 'JOIN '.$this->sp->db->prefix.'bookie_entries_contacts AS c ON c.entry_id = e.id '.$whereSQL;
-				$whereSQL .= ' AND contact_id IN ('.$values.')';
-				$contacts = true;
-			}
-			
-			if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
-			
-			$whereSQL .= ' ORDER BY e.date DESC, e.id DESC';
-
 			$entries = Entry::getEntries($whereSQL, $from, $rows);
 
+			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0) $contacts = true;
+			else $contacts = false;
+			
+			$lastYear = new DateTime();
+			$lastMonth = $this->clamp($lastYear->format('m') - 1, 1, 12, true);
+			$lastQuarter = $this->clamp($this->getQuarter($lastYear) - 1, 1, 4, true);
+			$lastYear = $lastYear->format('Y') - 1;
+			
 			$view = new core\Template\ViewDescriptor('_services/Bookie/entry_list');	
 			if($rows < 0) $rows = count($entries);
 			$pages =  ceil(Entry::getEntryCount($whereSQL) / $rows);
@@ -208,9 +224,6 @@
 			
 			foreach($entries as $entry){ /* @var $entry Entry */
 				$sv = $view->showSubView('row');
-
-				//if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0) $sv->hideSubView('action_delete');
-				$sv->showSubView('action_delete');
 				
 				$sv->addValue('id', $entry->getId());
 				$sv->addValue('account', ($entry->getAccount())?$entry->getAccount()->getName():'NULL');
@@ -235,6 +248,7 @@
 				//check if invoice
 				$inv = Invoice::getInvoicesForEntry($entry->getId());
 				if($inv && count($inv) > 0){
+					$sv->hideSubView('action_delete');
 					$inv = $inv[0];
 					$isv = $sv->showSubView('pdf');
 					$isv->addValue('id', $inv->getId());
@@ -263,7 +277,9 @@
 							}
 						}
 					}
-					
+				} else {
+					//if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0) $sv->hideSubView('action_delete');
+					$sv->showSubView('action_delete');
 				}
 					
 			}
@@ -272,8 +288,9 @@
 		}
 		
 		private function handleViewForm($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			$view = new core\Template\ViewDescriptor('_services/Bookie/entry_form');
+			$view->addValue('useruid', $user->getUserData()->opt('set.uid', '', false)->getValue());
 			if($user && isset($args['id'])){
 				//edit form
 				$entry = Entry::getEntry($args['id']);
@@ -435,7 +452,7 @@
 		}
 		
 		private function handleSave($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				if(isset($args['id'])){
 					//get entry
@@ -484,9 +501,9 @@
 							if(isset($args['tax_type'])) $entry->setTaxType($args['tax_type']);
 							if(isset($args['tax_value'])) $entry->setTaxValue($args['tax_value']);
 						} else if ($entry->getTaxCountry() == 1 && $entry->getBrutto() < 0) { 
-							//set tax to 20% if EU an buy
+							//set tax to 20% if EU and buy and tax_value is 0
 							$entry->setTaxType(($entry->getBrutto() > 0)?'Umsatzsteuer':'Vorsteuer');
-							$entry->setTaxValue(0.2);
+							$entry->setTaxValue(($args['tax_value'] <= 0)?0.2:$args['tax_value']);
 						} else {
 							$entry->setTaxType('');
 							$entry->setTaxValue(0);
@@ -575,7 +592,7 @@
 		}
 		
 		private function handleDelete($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				if(isset($args['id'])){
 					//get contact
@@ -602,7 +619,7 @@
 		}
 		
 		public function checkAttachmentAuth($param){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				$entry = Entry::getEntry($param);
 				if($entry && $entry->getOwnerId() == $user->getId()) return true;

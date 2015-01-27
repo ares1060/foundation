@@ -39,7 +39,7 @@
 		}
 		
 		private function handleViewCount($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 							
 			if($this->checkAuth($args['service'], $args['param'])){
 				return Attachment::getAttachmentCount($args['service'], $args['param']);
@@ -79,7 +79,7 @@
 		}
 		
 		private function handleViewForm($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 
 			
 		}

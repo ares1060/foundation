@@ -7,14 +7,14 @@ require_once($to_root.'_core/foundation.php');
 require_once('dhtmlx/connector/db_mysqli.php');
 require_once('dhtmlx/connector/scheduler_connector.php');
 
-$user = $sp->user->getLoggedInUser();
+$user = $sp->user->getSuperUserForLoggedInUser();
 
 if($user && $user->getId() > 0){
 	$conn = new SchedulerConnector($sp->db->mysqli, 'MySQLi');
 	$conn->enable_log("log.txt",true);
 	
 	function setOwner($data){
-		$user = at\foundation\core\ServiceProvider::getInstance()->user->getLoggedInUser();
+		$user = at\foundation\core\ServiceProvider::getInstance()->user->getSuperUserForLoggedInUser();
 		if ($data->get_value("owner_id") == '' || $data->get_value("owner_id") != $user->getId()){
 			$data->set_value("owner_id", $user->getId());
 		}

@@ -645,15 +645,16 @@
          public function getSuperUserForLoggedInUser() {
          	$user = $this->getLoggedInUser();
          	if(
-         		!$this->$superUserForLoggedInUser &&
+         		!$this->superUserForLoggedInUser &&
          		model\UserDataField::getUserDataFieldByName('set.parent_user') &&
-         		$user->getUserData()->opt('set.parent_user', 0) > 0
+         		$user &&
+         		$user->getUserData()->opt('set.parent_user', 0)->getValue() > 0
          	){
-         		$this->$superUserForLoggedInUser = model\User::getUser($user->getUserData()->opt('set.parent_user', 0));
+         		$this->superUserForLoggedInUser = model\User::getUser($user->getUserData()->opt('set.parent_user', 0));
          	} else {
-         		$this->$superUserForLoggedInUser = $user;
+         		$this->superUserForLoggedInUser = $user;
          	}
-         	return $this->$superUserForLoggedInUser;
+         	return $this->superUserForLoggedInUser;
          }
          
          

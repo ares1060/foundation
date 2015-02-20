@@ -1,7 +1,7 @@
 <?php
 	use at\foundation\core\ServiceProvider;
 
-require_once($GLOBALS['config']['root'].'_services/Bookie/model/Entry.php');
+	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Entry.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Invoice.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/InvoicePart.php');
 	require_once($GLOBALS['config']['root'].'_services/Bookie/model/Receipt.php');

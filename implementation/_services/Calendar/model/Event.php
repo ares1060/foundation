@@ -19,20 +19,25 @@
 		private $ownerUser;
 		private $eventGroupUid;
 		private $text;
+		private $color;
+		private $wholeDay;
 	
 		/**
 		 * @param DateTime $start
 		 * @param DateTime $end
 		 * @param string $text
+		 * @param string $color
 		 * @param int $owner
 		 * @param string $eventGroupUid
 		 */
-		public function __construct($start, $end, $text, $owner, $eventGroupUid) {
+		public function __construct($start = null, $end = null, $text = '', $color = '', $owner = '', $wholeDay = false, $eventGroupUid = '') {
             
 			$this->start = (!$start)?null:$start;
 			$this->end = (!$end)?null:$end;
 			$this->text = $text;
+			$this->color = $color;
 			$this->ownerId = $owner;
+			$this->wholeDay = $wholeDay;
 			$this->eventGroupUid = $eventGroupUid;
 			
 			parent::__construct(ServiceProvider::get()->db->prefix.'calendar_events', array());
@@ -52,14 +57,19 @@
 		public static function getEvents($insertSQL = '', $from = 0, $rows = -1){
 			if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.ServiceProvider::getInstance()->db->escape($from).', '.ServiceProvider::getInstance()->db->escape($rows);
 			else $limit = '';
-			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'calendar_events '.$insertSQL.' '.$limit.';');
+			
+			//echo 'SELECT * FROM '.ServiceProvider::getInstance()->db->prefix.'calendar_events '.$insertSQL.' '.$limit.';';
+			
+			$result = ServiceProvider::getInstance()->db->fetchAll('SELECT *, e.id AS id FROM '.ServiceProvider::getInstance()->db->prefix.'calendar_events AS e '.$insertSQL.' '.$limit.';');
 			$out = array();
 			foreach($result as $event) {
 				$ev = new Event(
 					($event['start_date'] == '0000-00-00 00:00:00')?null:new DateTime($event['start_date']), 
 					($event['end_date'] == '0000-00-00 00:00:00')?null:new DateTime($event['end_date']),
 					$event['text'],
+					$event['color'],
 					$event['owner_id'],
+					$event['whole_day'],
 					$event['event_group_id']
 				);
 				$ev->setId($event['id']);
@@ -80,7 +90,9 @@
 					($event['start_date'] == '0000-00-00 00:00:00')?null:new DateTime($event['start_date']), 
 					($event['end_date'] == '0000-00-00 00:00:00')?null:new DateTime($event['end_date']),
 					$event['text'],
+					$event['color'],
 					$event['owner_id'],
+					$event['whole_day'],
 					$event['event_group_id']
 				);
 				$ev->setId($event['id']);
@@ -101,13 +113,15 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'calendar_events 
-								(`id`, `start_date`, `end_date`, `text`, `owner_id`, `event_group_id`) VALUES 
+								(`id`, `start_date`, `end_date`, `text`, `color`, `owner_id`, `whole_day`, `event_group_id`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->id).'\',
 									\''.$this->sp->db->escape(($this->start)?$this->start->format('Y-m-d H:i:s'):'0000-00-00 00:00:00').'\',
 									\''.$this->sp->db->escape(($this->end)?$this->end->format('Y-m-d H:i:s'):'0000-00-00 00:00:00').'\',
 									\''.$this->sp->db->escape($this->text).'\',
+									\''.$this->sp->db->escape($this->color).'\',
 									\''.$this->sp->db->escape($this->ownerId).'\',
+									\''.$this->sp->db->escape($this->wholeDay).'\',
 									\''.$this->sp->db->escape($this->eventGroupUid).'\'
 								);');
 				if($succ) {
@@ -123,8 +137,10 @@
 						`start_date` = \''.$this->sp->db->escape(($this->start)?$this->start->format('Y-m-d H:i:s'):'0000-00-00 00:00:00').'\',
 						`end_date` = \''.$this->sp->db->escape(($this->end)?$this->end->format('Y-m-d H:i:s'):'0000-00-00 00:00:00').'\',
 						`text` = \''.$this->sp->db->escape($this->text).'\',
+						`color` = \''.$this->sp->db->escape($this->color).'\',
 						`owner_id` = \''.$this->sp->db->escape($this->ownerId).'\',
-						`event_group_id` = \''.$this->sp->db->escape($this->eventGroupUid).'\',
+						`whole_day` = \''.$this->sp->db->escape($this->wholeDay).'\',
+						`event_group_id` = \''.$this->sp->db->escape($this->eventGroupUid).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}
 			return true;
@@ -145,6 +161,8 @@
 				'start' => ($this->start)?$this->start->format('d.m.Y H:i:s'):'',
 				'end' => (($this->end)?$this->end->format('d.m.Y H:i:s'):''),
 				'text' => $this->text,
+				'color' => $this->color,
+				'whole_day' => $this->wholeDay,
 				'eventGroupId' => $this->eventGroupUid
 			);
 			return $out;
@@ -166,8 +184,10 @@
 			$this->end = $date; return $this;
 		}
 		public function setText($text) { $this->text = $text; return $this; }
+		public function setColor($color) { $this->color = $color; return $this; }
 		public function setEventGroupId($id) { $this->eventGroupUid = $id; return $this; }
 		public function setOwner($id) { $this->ownerId = $id; $this->ownerUser = null; return $this; }
+		public function setWholeDay($day) { $this->wholeDay = $day; return $this; }
 		
 		public function getId(){ return $this->id; }
 		/**
@@ -179,6 +199,8 @@
 		*/
 		public function getEndDate(){ return $this->end; }
 		public function getText(){ return $this->text; }
+		public function getColor(){ return $this->color; }
+		public function getWholeDay(){ return $this->wholeDay; }
 		public function getEventGroupId(){ return $this->eventGroupUid; }
 		
 		public function getOwner(){

@@ -1,6 +1,11 @@
 <?php
 
+	use at\foundation\core\TextFunctions\TextFunctions;
+
+	use at\foundation\core\Template\SubViewDescriptor;
 	use at\foundation\core;
+	
+	require_once($GLOBALS['config']['root'].'_services/Calendar/model/Event.php');
 	
 	class Calendar extends core\AbstractService implements core\IService {
 		
@@ -16,7 +21,10 @@
 				case 'get.event': return $this->handleGetEvent($args); break;
 				case 'view.overview': return $this->handleViewOverview($args); break;
 				case 'view.agenda': return $this->handleViewAgenda($args); break;
+				case 'view.week': return $this->handleViewWeek($args); break;
 				case 'view.form': return $this->handleViewForm($args); break; 
+				case 'do.save': return $this->handleSave($args); break; 
+				case 'do.delete': return $this->handleDelete($args); break; 
 				default: return 'mooh!'; break;
 			}
 		}
@@ -95,9 +103,6 @@
 					$rows = $this->sp->db->escape($args['rows']);
 				}		
 				
-				if($from >= 0 && $rows >= 0) $limit = ' LIMIT '.$this->sp->db->escape($from).','.$this->sp->db->escape($rows);
-				else $limit = '';		
-				
 				//TODO: generalize this so that services can infuse filter criteria generically
 				if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
 					$values = '';
@@ -112,9 +117,8 @@
 				
 				if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
 								
-				$events = $this->sp->db->fetchAll('SELECT *, e.id AS id FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.' ORDER BY e.start_date'.$limit);
+				$events = Event::getEvents($whereSQL.' ORDER BY e.start_date', $from, $rows);
 				$count = $this->sp->db->fetchRow('SELECT SUM(tc.count) AS count FROM (SELECT COUNT(*) AS count FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.') AS tc;');
-				
 				
 				if($rows < 0) $rows = max(1, count($events));
 				$pages = ceil($count['count'] / $rows);
@@ -138,13 +142,13 @@
 				
 				//seperate event types
 				foreach($events as $event){
-					$date = new DateTime($event['start_date']);
-					$dateTo = new DateTime($event['end_date']);
+					$date = clone $event->getStartDate();
+					$dateTo = clone $event->getEndDate();
 
 					if($dateFrom->diff($date)->invert == 0 && !in_array($date->format('Y-m-d'), $days)) $days[] = $date->format('Y-m-d');
 					if($dateFrom->diff($dateTo)->invert == 0 && !in_array($dateTo->format('Y-m-d'), $days)) $days[] = $dateTo->format('Y-m-d');
 					
-					if($date->format('d.m.Y') != $dateTo->format('d.m.Y')) {
+					if($date->format('d.m.Y') != $dateTo->format('d.m.Y') || $event->getWholeDay()) {
 						$multiDay[] = $event;
 						$dur = $date->diff($dateTo);
 						for($d = 1; $d < $dur->days; $d++){
@@ -170,48 +174,271 @@
 									
 					$dayView->addValue('date', $this->sp->txtfun->fixDateLoc($dayTime->format('d. F Y')));
 
+					$tMultiDay = array();
+					foreach($multiDay as $mEvent){
+					
+						$mDate = $mEvent->getStartDate();
+						$mDateTo = $mEvent->getEndDate();
+					
+					
+						$ev = $dayView->showSubView('event');
+						$ev->addValue('id', $mEvent->getId());
+						$ev->addValue('title', $mEvent->getText());
+					
+						$ev->addValue('time_sep', '-');
+					
+						$fromTime = $mDate->format('H:i');
+						$toTime = $mDateTo->format('H:i');
+					
+						if($mDate->format('Y-m-d') == $day && $fromTime != '00:00') {
+							$ev->addValue('from_time', $fromTime);
+							$ev->addValue('time_sep', '~');
+							$ev->addValue('to_time', '');
+							$tMultiDay[] = $mEvent;
+						} else if($mDateTo->format('Y-m-d') != $day || $fromTime == '00:00') {
+							$ev->addValue('from_time', 'Ganzer Tag');
+							$ev->addValue('time_sep', '');
+							$ev->addValue('to_time', '');
+							if($mDateTo->format('Y-m-d') != $day) $tMultiDay[] = $mEvent;
+						} else {
+							$ev->addValue('from_time', '');
+							$ev->addValue('time_sep', '~');
+							$ev->addValue('to_time', $toTime);
+						}
+					}
+					$multiDay = $tMultiDay;
+					
 					foreach($singleDay as $event){
-						$date = new DateTime($event['start_date']);
+						$date = clone $event->getStartDate();
 						
 						if($date->format('Y-m-d') != $day) break;
 						
 						array_shift($singleDay);
-						$dateTo = new DateTime($event['end_date']);
+						$dateTo = clone $event->getEndDate();
 
 						$ev = $dayView->showSubView('event');
-						$ev->addValue('id', $event['id']);
-						$ev->addValue('url', '?page=calendar&tab=agenda#event/'.$event['id']);
-						$ev->addValue('title', $event['text']);
+						$ev->addValue('id', $event->getId());
+						$ev->addValue('url', '?page=calendar&tab=agenda#event/'.$event->getId());
+						$ev->addValue('title', $event->getText());
 						$ev->addValue('from_time', $date->format('H:i'));				
 						$ev->addValue('to_time', $dateTo->format('H:i'));
+						$ev->addValue('time_sep', '-');
 					}
+
+				}
+				
+				return $view->render();
+			} else {
+				return '';
+			}
+		}
+		
+		private function handleViewWeek($args){
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
+		
+			if($user && $user->getId() > 0){
+				$view = new core\Template\ViewDescriptor('_services/Calendar/calendar_week');
+				$whereSQL = 'WHERE e.owner_id = \''.$this->sp->db->escape($user->getId()).'\'';
+
+				$now = new DateTime();
+				$now->setTime(0, 0, 0);
+				$nowWeekDay = $now->format('w') - 1;
+				
+				($nowWeekDay >= 0)?$now->sub(new DateInterval('P'.$nowWeekDay.'D')):$now->sub(new DateInterval('P'.abs($nowWeekDay-5).'D'));
+				
+				$to = clone $now;
+				$to->setTime(0, 0, 0);
+				$to->add(new DateInterval('P6D'));
+				
+				$dateFrom = new DateTime();
+				$dateFrom->setTime(0, 0, 0);
+				if(isset($args['date_from']) && $args['date_from'] != ''){
+					$args['date_from'] = $this->sp->db->escape($args['date_from']);
+					$dateFrom = new DateTime($args['date_from']);
+					$whereSQL .= ' AND (e.start_date >= \''.$args['date_from'].' 00:00:00\' OR (e.end_date >= \''.$args['date_from'].' 00:00:00\' AND e.start_date <= \''.$args['date_from'].' 00:00:00\'))';
+				
+					$now = new DateTime($args['date_from']);
+					$now->setTime(0, 0, 0);
 					
-					$tMultiDay = array();
-					foreach($multiDay as $mEvent){
-						
-						$mDate = new DateTime($mEvent['start_date']);
-						$mDateTo = new DateTime($mEvent['end_date']);
-
-
-						$ev = $dayView->showSubView('event');
-						$ev->addValue('id', $mEvent['id']);
-						$ev->addValue('title', $mEvent['text']);
-							
-						if($mDate->format('Y-m-d') == $day) {
-							$ev->addValue('from_time', $dateTo->format('H:i'));
-							$ev->addValue('to_time', '...');
-							$tMultiDay[] = $mEvent;
-						} else if($mDateTo->format('Y-m-d') != $day) {
-							$ev->addValue('from_time', '...');
-							$ev->addValue('to_time', '...');
-							$tMultiDay[] = $mEvent;
-						} else {
-							$ev->addValue('from_time', '...');
-							$ev->addValue('to_time', $date->format('H:i'));
+					$to = new DateTime($args['date_from']);
+					$to->setTime(0, 0, 0);
+					$to->add(new DateInterval('P6D'));
+				} else {
+					$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d').' 00:00:00\' OR (e.end_date >= \''.$now->format('Y-m-d').' 00:00:00\' AND e.start_date <= \''.$now->format('Y-m-d').' 00:00:00\'))';
+				}
+				
+				$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').' 24:59:59\' ORDER BY e.start_date';
+				
+				$events = Event::getEvents($whereSQL);				
+				
+				$today = new DateTime();
+				$today = $today->format('d.m.Y');
+				
+				$todayFrom = clone $now;
+				
+				$multidaycounts = array(0,0,0,0,0,0,0);
+				
+				foreach($events as $event){
+					if($event->getWholeDay()) {
+						$md = min($event->getEndDate()->format('z'), $to->format('z')) - $now->format('z');
+						for($i = max($now->format('z'), $event->getStartDate()->format('z')) - $now->format('z'); $i <= $md; $i++){
+							$multidaycounts[$i]++;
 						}
 					}
-					$multiDay = $tMultiDay;
-
+				}
+				
+				$parallelMultiDayEvents = max($multidaycounts);
+				$usedMultidayLevels = array();
+				$multidayLevelsZIndex = array();
+				for($i = 0; $i < $parallelMultiDayEvents; $i++){
+					$usedMultidayLevels[$i] = false;
+					$multidayLevelsZIndex[$i] = -1;
+				}
+				
+				$events = array_reverse($events);
+				
+				function dateToRow($date) {
+					return ($date->format('H') + round($date->format('i') / 60) * 0.5);
+				}
+				
+				for($i = 0; $i < 7; $i++){
+					$dv = new SubViewDescriptor('day');
+					$dv->addValue('day', $this->sp->txtfun->fixDateLoc($now->format('l')));
+					$dv->addValue('date', $now->format('d.m.'));
+					$dv->addValue('date_full', $now->format('Y-m-d'));
+					
+					if($today == $now->format('d.m.Y')) {
+						$nowTime = new DateTime();
+						$dv->addValue('today', ' today');
+						$tiv = $dv->showSubView('time');
+						$tiv->addValue('top', ($nowTime->format('H') + round($nowTime->format('i') / 0.06) / 1000) + 2);
+						$tiv->addValue('zindex', count($event));
+					}
+					
+					$overlapEvents = array();
+					
+					$colCount = 0;
+					$eventRange = array_fill(0, 48, 0);
+					$todaysEvents = array();
+					
+					//seperate event types
+					while($event = array_pop($events)) {
+						if($event->getStartDate()->format('z') * 1 > $now->format('z') * 1) {
+							$events[] = $event;
+							break;
+						}
+						$ev = new SubViewDescriptor('item');
+						
+						$ev->addValue('zindex', count($events) + 1);
+						
+						$ev->addValue('id', $event->getId());
+						
+						$mask = null;
+						if($event->getWholeDay()) {
+							$ev->addValue('start_hour', 1);
+							$ev->addValue('height', 1 / $parallelMultiDayEvents);
+							
+							for($m = 0; $m < $parallelMultiDayEvents; $m++){
+								if(!$usedMultidayLevels[$m] || $usedMultidayLevels[$m] < $event->getStartDate()->format('z')) {
+									if($multidayLevelsZIndex[$m] > 0) {
+										$multidayLevelsZIndex[$m]--;
+										$ev->addValue('zindex', $multidayLevelsZIndex[$m]);
+									} else $multidayLevelsZIndex[$m] = count($events) + 1;
+									$ev->addValue('start_hour', 1 + $m / $parallelMultiDayEvents);
+									$usedMultidayLevels[$m] = $event->getEndDate()->format('z');
+									break;
+								}
+							}
+							
+							$ev->addValue('colspan', min($event->getEndDate()->format('z'), $to->format('z')) - max($event->getStartDate()->format('z'), $now->format('z')) + 1);
+							$ev->addValue('type', 'multiday');
+							$ev->addValue('from_to', $event->getStartDate()->format('d.m.') .' - '. $event->getEndDate()->format('d.m.'));
+						} else if($event->getStartDate()->format('z') != $now->format('z')) {
+							$ev->addValue('start_hour', 2);
+							if($event->getEndDate()->format('z') == $now->format('z')){
+								$ev->addValue('height', dateToRow($event->getEndDate()));
+								$ev->addValue('overlap', 'overlap top');
+								$length = dateToRow($event->getEndDate()) * 2;
+							} else {
+								$ev->addValue('height', 24);
+								$ev->addValue('overlap', 'overlap top bottom');
+								$overlapEvents[] = $event;
+								$length = 48;
+							}
+							$ev->addValue('from_to', $event->getStartDate()->format('d.m. H:i') .' - '. $event->getEndDate()->format('d.m. H:i'));
+							
+							$mask = array_fill(0, $length, 1);
+							$todaysEvents[] = array(
+								'view' => $ev,
+								'from' => 0,
+								'length' => $length
+							);
+						} else {
+							$ev->addValue('start_hour', dateToRow($event->getStartDate()) + 2);
+							$from = dateToRow($event->getStartDate()) * 2;
+								
+							if($event->getStartDate()->format('z') == $event->getEndDate()->format('z')){
+								$ev->addValue('height', dateToRow($event->getEndDate()) - dateToRow($event->getStartDate()));
+								$ev->addValue('from_to', $event->getStartDate()->format('H:i') .'-'. $event->getEndDate()->format('H:i'));
+								$length = dateToRow($event->getEndDate()) * 2 - $from;
+							} else {
+								$ev->addValue('height', 24 - dateToRow($event->getStartDate()));
+								$ev->addValue('overlap', 'overlap bottom');
+								$overlapEvents[] = $event;
+								$ev->addValue('from_to', $event->getStartDate()->format('d.m. H:i') .' - '. $event->getEndDate()->format('d.m. H:i'));
+								$length = 48 - $from;
+							}
+							
+							$mask = array_fill($from, $length, 1);
+							$todaysEvents[] = array(
+								'view' => $ev,
+								'from' => $from,
+								'length' => $length
+							);
+						}
+						
+						if($mask) {
+							foreach($mask as $index => $value){
+								$eventRange[$index] += 1;
+							}
+						}
+						
+						$ev->addValue('text', $event->getText());
+						
+						if($event->getColor() != ''){
+							$tv = new SubViewDescriptor('tag');
+							$tv->addValue('color', $event->getColor());
+							$ev->addSubView($tv);
+						}
+						
+						$dv->addSubView($ev);
+					}
+					
+					//count events today and set their width accordingly
+					$shift = 0;
+					while($event = array_shift($todaysEvents)) {
+						$cols = max(array_slice($eventRange, $event['from'], $event['length']));
+						if($cols > 1) {
+							$event['view']->addValue('colspan', 1 / $cols);
+							$event['view']->addValue('left', 100 * $shift / $cols .'%');
+							$shift++;
+						} else {
+							$shift = 0;
+						}
+					}
+					
+					
+					$view->addSubView($dv);
+					$now->add(new DateInterval('P1D'));
+					
+					$events = array_merge($events, $overlapEvents);
+				}
+					
+				if(isset($args['mode']) && $args['mode'] == 'wrapped'){
+					$header = $view->showSubView('header');
+					$header->addValue('date_from', $todayFrom->format('Y-m-d'));
+						
+					$footer = $view->showSubView('footer');
 				}
 				
 				return $view->render();
@@ -225,16 +452,20 @@
 				
 			if($user && $user->getId() > 0){
 				$view = new core\Template\ViewDescriptor('_services/Calendar/event_form');
-				$event = $this->sp->db->fetchRow('SELECT * FROM '.$this->sp->db->prefix.'calendar_events WHERE id =\''.$this->sp->db->escape($args['id']).'\';');
-				if($event['owner_id'] != $user->getId()) return '';
-				$view->addValue('id', $event['id']);
+				if(isset($args['id'])){
+					$event = Event::getEvent($args['id']);
+					if($event->getOwnerId() != $user->getId()) return '';
+					$view->addValue('id', $event->getId());
 				
-				$event['start_date'] = new DateTime($event['start_date']);
-				$view->addValue('date_from', $event['start_date']->format('d.m.Y H:i'));
+					$view->addValue('date_from', $event->getStartDate()->format('d.m.Y H:i'));
 				
-				$event['end_date'] = new DateTime($event['end_date']);
-				$view->addValue('date_to', $event['end_date']->format('d.m.Y H:i'));
-				$view->addValue('text', $event['text']);
+					$view->addValue('date_to', $event->getEndDate()->format('d.m.Y H:i'));
+					$view->addValue('text', $event->getText());
+					$view->addValue('whole_day', ($event->getWholeDay())?' checked="checked"':'');
+					
+					$jbv = $view->showSubView('journal_button');
+					$jbv->addValue('id', $event->getId());
+				}
 				return $view->render();
 			} else {
 				return '';
@@ -252,6 +483,51 @@
 			} else {
 				return '';
 			}
+		}
+		
+		private function handleSave($args){
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
+			if($user){
+				if(isset($args['id'])){
+					//get event
+					$event = Event::getEvent($args['id']);
+					if(!$event || $event->getOwnerId() != $user->getId()) return false;
+				} else {
+					//create new event
+					$event = new Event();
+					$event->setOwner($user->getId());
+				}
+				
+				if(isset($args['text'])) $event->setText($args['text']);
+				if(isset($args['start_date'])) $event->setStartDate(new DateTime($args['start_date']));
+				if(isset($args['end_date'])) $event->setEndDate(new DateTime($args['end_date']));
+				if(isset($args['whole_day']) && $args['whole_day']) $event->setWholeDay(true);
+				else $event->setWholeDay(false);
+				
+				$ok = $event->save();
+				
+				if($ok) return $event->getId();
+				else return false;
+			} else {
+				return false;
+			}
+		}
+		
+		private function handleDelete($args){
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
+			if($user){
+				if(isset($args['id'])){
+					//get contact
+					$event = Event::getEvent($args['id']);
+					if(!$event) return true;
+					if($event->getOwnerId() != $user->getId()) return false;
+
+					//TODO clean up linked contacts
+					
+					return $event->delete();
+				}
+			}
+			return false;
 		}
 		
 	}

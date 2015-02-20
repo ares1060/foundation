@@ -33,7 +33,7 @@
 		}
 		
 		private function handleViewList($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			$whereSQL = 'WHERE user_id = \''.$user->getId().'\'';
 			if(isset($args['search']) && strlen($args['search']) > 2){
 					$args['search'] = trim($args['search']);
@@ -144,14 +144,13 @@
 		}
 		
 		private function handleViewLinks($args){
-			$user = $this->sp->user->getLoggedInUser();
 			$sm = (isset($args['mode']) && $args['mode'] == 'simple');
 			$sh = (isset($args['mode']) && $args['mode'] == 'short');
 			if($sm) $view = new core\Template\ViewDescriptor('_services/Contacts/contact_simplelinks');
 			else if ($sh) $view = new core\Template\ViewDescriptor('_services/Contacts/contact_shortlist');
 			else $view = new core\Template\ViewDescriptor('_services/Contacts/contact_links');
 
-			if($user && isset($args['entry_id']) && isset($args['link_table'])){
+			if(isset($args['entry_id']) && isset($args['link_table'])){
 				if($this->checkLinkingAuth($args['link_table'], $args['entry_id'])){
 					$contacts = Contact::getLinkedContacts($args['link_table'], $args['entry_id']);
 					if(count($contacts) > 0){
@@ -185,7 +184,7 @@
 		}
 		
 		private function checkLinkingAuth($linkTable, $entryId){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			$entry = $this->sp->db->fetchRow('SELECT * FROM '.$this->sp->db->prefix.$this->sp->db->escape($linkTable).' WHERE id = \''.$entryId.'\';');
 			if((isset($entry['owner_id']) || isset($entry['author_id']) || isset($entry['user_id'])) && $user){
 				if(isset($entry['owner_id']) && $entry['owner_id'] == $user->getId()) return true;
@@ -197,7 +196,7 @@
 		}
 		
 		private function handleViewDetail($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user && isset($args['id'])){
 				$contact = Contact::getContact($args['id']);
 				if($contact && $contact->getOwnerId() == $user->getId()){
@@ -244,7 +243,7 @@
 		}
 		
 		private function handleViewForm($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				$view = new core\Template\ViewDescriptor('_services/Contacts/contact_detail');
 				if(isset($args['id'])) $contact = Contact::getContact($args['id']);
@@ -293,7 +292,7 @@
 		}
 		
 		private function handleSave($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				if(isset($args['id'])){
 					//get contact
@@ -358,7 +357,7 @@
 		}
 		
 		private function handleDelete($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				if(isset($args['id'])){
 					$contact = Contact::getContact($args['id']);
@@ -381,7 +380,7 @@
 		}
 		
 		private function handleDeleteContactData($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				if(isset($args['id'])){
 					$cdi = ContactDataItem::getContactDataItem($args['id']);
@@ -395,7 +394,7 @@
 		}
 		
 		private function handleViewLinker($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				//check if arguments are available
 				// - entry_id (opt)
@@ -437,7 +436,7 @@
 		}
 		
 		private function handleLinks($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				if(isset($args['entry_id']) && isset($args['link_table'])){
 					return $this->saveLinks(isset($args['contact_ids'])?$args['contact_ids']:array(), $args['link_table'], $args['entry_id']);
@@ -448,7 +447,7 @@
 		}
 		
 		public function saveLinks($contactIds, $linkTable, $entryId){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if(!$user) return false;
 			if(!$this->checkLinkingAuth($linkTable, $entryId)) return false;
 			$oldCids = Contact::getLinkedContacts($linkTable, $entryId, true);
@@ -473,7 +472,7 @@
 		}
 		
 		private function handleLink($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				//check if all arguments are available
 				// - contact_id
@@ -485,7 +484,7 @@
 		}
 		
 		private function handleDeleteLink($args){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				//check if all arguments are available
 				// - contact_id
@@ -501,7 +500,7 @@
 		}
 		
 		public function checkAttachmentAuth($param){
-			$user = $this->sp->user->getLoggedInUser();
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
 			if($user){
 				$contact = Contact::getContact($param);
 				if($contact && $contact->getOwnerId() == $user->getId()) return true;

@@ -89,7 +89,7 @@
 				if(isset($args['date_to']) && $args['date_to'] != ''){
 					$args['date_to'] = $this->sp->db->escape($args['date_to']);
 					$whereSQL .= ' AND e.start_date <= \''.$args['date_to'].' 24:59:59\'';
-				} else if(isset($args['days'])){
+				} else if(isset($args['days'])) {
 					$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').' 24:59:59\'';
 				}
 				
@@ -120,7 +120,7 @@
 				$events = Event::getEvents($whereSQL.' ORDER BY e.start_date', $from, $rows);
 				$count = $this->sp->db->fetchRow('SELECT SUM(tc.count) AS count FROM (SELECT COUNT(*) AS count FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.') AS tc;');
 				
-				if($rows < 0) $rows = max(1, count($events));
+				if($rows < 0) $rows = min(10, count($events));
 				$pages = ceil($count['count'] / $rows);
 				
 				$view->addValue('pages', $pages);
@@ -133,6 +133,7 @@
 					$footer->addValue('current_page', '0');
 					$footer->addValue('events_per_page', $rows);
 					$footer->addValue('pages', $pages);
+					$footer->addValue('event_duration', $user->getUserData()->opt('set.event_duration', '30')->getValue());
 				}
 				
 				$dayView = null;
@@ -186,7 +187,8 @@
 						$ev->addValue('title', $mEvent->getText());
 					
 						$ev->addValue('time_sep', '-');
-					
+						$ev->addValue('url', '?page=calendar&tab=agenda#event/'.$mEvent->getId());
+						
 						$fromTime = $mDate->format('H:i');
 						$toTime = $mDateTo->format('H:i');
 					
@@ -204,6 +206,12 @@
 							$ev->addValue('from_time', '');
 							$ev->addValue('time_sep', '~');
 							$ev->addValue('to_time', $toTime);
+						}
+						
+						if($mEvent->getColor() != ''){
+							$tv = new SubViewDescriptor('tag');
+							$tv->addValue('color', $mEvent->getColor());
+							$ev->addSubView($tv);
 						}
 					}
 					$multiDay = $tMultiDay;
@@ -223,6 +231,12 @@
 						$ev->addValue('from_time', $date->format('H:i'));				
 						$ev->addValue('to_time', $dateTo->format('H:i'));
 						$ev->addValue('time_sep', '-');
+						
+						if($event->getColor() != ''){
+							$tv = new SubViewDescriptor('tag');
+							$tv->addValue('color', $event->getColor());
+							$ev->addSubView($tv);
+						}
 					}
 
 				}
@@ -304,6 +318,7 @@
 				for($i = 0; $i < 7; $i++){
 					$dv = new SubViewDescriptor('day');
 					$dv->addValue('day', $this->sp->txtfun->fixDateLoc($now->format('l')));
+					$dv->addValue('day_short', substr($this->sp->txtfun->fixDateLoc($now->format('l')), 0, 2));
 					$dv->addValue('date', $now->format('d.m.'));
 					$dv->addValue('date_full', $now->format('Y-m-d'));
 					
@@ -335,6 +350,7 @@
 						
 						$mask = null;
 						if($event->getWholeDay()) {
+							//a whole day event
 							$ev->addValue('start_hour', 1);
 							$ev->addValue('height', 1 / $parallelMultiDayEvents);
 							
@@ -354,6 +370,7 @@
 							$ev->addValue('type', 'multiday');
 							$ev->addValue('from_to', $event->getStartDate()->format('d.m.') .' - '. $event->getEndDate()->format('d.m.'));
 						} else if($event->getStartDate()->format('z') != $now->format('z')) {
+							//event started before today
 							$ev->addValue('start_hour', 2);
 							if($event->getEndDate()->format('z') == $now->format('z')){
 								$ev->addValue('height', dateToRow($event->getEndDate()));
@@ -374,11 +391,12 @@
 								'length' => $length
 							);
 						} else {
+							//event starts today
 							$ev->addValue('start_hour', dateToRow($event->getStartDate()) + 2);
 							$from = dateToRow($event->getStartDate()) * 2;
 								
 							if($event->getStartDate()->format('z') == $event->getEndDate()->format('z')){
-								$ev->addValue('height', dateToRow($event->getEndDate()) - dateToRow($event->getStartDate()));
+								$ev->addValue('height', max(.5, dateToRow($event->getEndDate()) - dateToRow($event->getStartDate())));
 								$ev->addValue('from_to', $event->getStartDate()->format('H:i') .'-'. $event->getEndDate()->format('H:i'));
 								$length = dateToRow($event->getEndDate()) * 2 - $from;
 							} else {
@@ -389,7 +407,8 @@
 								$length = 48 - $from;
 							}
 							
-							$mask = array_fill($from, $length, 1);
+							
+							if($length > 0) $mask = array_fill($from, $length, 1);
 							$todaysEvents[] = array(
 								'view' => $ev,
 								'from' => $from,
@@ -417,7 +436,8 @@
 					//count events today and set their width accordingly
 					$shift = 0;
 					while($event = array_shift($todaysEvents)) {
-						$cols = max(array_slice($eventRange, $event['from'], $event['length']));
+						if($event['length'] > 0) $cols = max(array_slice($eventRange, $event['from'], $event['length']));
+						else $cols = 0;
 						if($cols > 1) {
 							$event['view']->addValue('colspan', 1 / $cols);
 							$event['view']->addValue('left', 100 * $shift / $cols .'%');
@@ -439,6 +459,7 @@
 					$header->addValue('date_from', $todayFrom->format('Y-m-d'));
 						
 					$footer = $view->showSubView('footer');
+					$footer->addValue('event_duration', $user->getUserData()->opt('set.event_duration', '30')->getValue());
 				}
 				
 				return $view->render();
@@ -461,6 +482,7 @@
 				
 					$view->addValue('date_to', $event->getEndDate()->format('d.m.Y H:i'));
 					$view->addValue('text', $event->getText());
+					$view->addValue('color', $event->getColor());
 					$view->addValue('whole_day', ($event->getWholeDay())?' checked="checked"':'');
 					
 					$jbv = $view->showSubView('journal_button');
@@ -499,6 +521,7 @@
 				}
 				
 				if(isset($args['text'])) $event->setText($args['text']);
+				if(isset($args['color'])) $event->setColor($args['color']);
 				if(isset($args['start_date'])) $event->setStartDate(new DateTime($args['start_date']));
 				if(isset($args['end_date'])) $event->setEndDate(new DateTime($args['end_date']));
 				if(isset($args['whole_day']) && $args['whole_day']) $event->setWholeDay(true);

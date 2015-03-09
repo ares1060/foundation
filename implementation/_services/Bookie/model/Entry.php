@@ -292,7 +292,7 @@
 		public function getNetto() { return $this->netto; }
 		public function getTaxType() { return $this->taxType; }
 		public function getTaxValue() { return $this->taxValue; }
-		public function getTaxAmount() { return round($this->netto * $this->taxValue * 100)*0.01; }
+		public function getTaxAmount() { return $this->brutto - $this->netto; }
 		public function getTaxCountry() { return $this->taxCountry; }
 		public function getNotes() { return $this->notes; }
 		public function getInclude() { return $this->include; }

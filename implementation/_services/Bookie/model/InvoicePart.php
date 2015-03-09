@@ -44,7 +44,7 @@
 			$result = ServiceProvider::get()->db->fetchAll('SELECT * FROM `'.ServiceProvider::get()->db->prefix.'bookie_invoice_parts` WHERE `invoice_id` = \''.ServiceProvider::get()->db->escape($invoiceId).'\';');
 			$out = array();
 			foreach($result as $ip) {
-				$ivp = new InvoicePart($ip['invoice_id'], new DateTime($ip['date']), $ip['notes'], $ip['amount']);
+				$ivp = new InvoicePart($ip['invoice_id'], new DateTime($ip['date']), $ip['notes'], $ip['brutto'], $ip['netto'], $ip['tax_value']);
 				$ivp->setId($ip['id']);
 				$out[] = $ivp;
 			}
@@ -66,7 +66,9 @@
 				'invoiceId' => $this->invoiceId,
 				'date' => (($this->date)?$this->date->format('d.m.Y'):''),
 				'notes' => $this->notes,
-				'amount' => $this->brutto
+				'brutto' => $this->brutto,
+				'netto' => $this->netto,
+				'taxValue' => $this->taxValue,
 			);
 			return $out;
 		}
@@ -78,11 +80,13 @@
 			if($this->id == ''){
 				//insert
 				$succ = $this->sp->db->fetchBool('INSERT INTO '.$this->sp->db->prefix.'bookie_invoice_parts 
-								(`invoice_id`, `notes`, `amount`, `date`) VALUES 
+								(`invoice_id`, `notes`, `brutto`, `netto`, `tax_value`, `date`) VALUES 
 								(
 									\''.$this->sp->db->escape($this->invoiceId).'\',
 									\''.$this->sp->db->escape($this->notes).'\',
 									\''.$this->sp->db->escape($this->brutto).'\',
+									\''.$this->sp->db->escape($this->netto).'\',
+									\''.$this->sp->db->escape($this->taxValue).'\',
 									\''.$this->sp->db->escape($this->date->format('Y-m-d')).'\'
 								);');
 				if($succ) {
@@ -97,7 +101,9 @@
 				return $this->sp->db->fetchBool('UPDATE '.ServiceProvider::get()->db->prefix.'bookie_invoice_parts SET
 						`invoice_id` = \''.$this->sp->db->escape($this->invoiceId).'\',
 						`notes` = \''.$this->sp->db->escape($this->notes).'\',
-						`amount` = \''.$this->sp->db->escape($this->brutto).'\',
+						`brutto` = \''.$this->sp->db->escape($this->brutto).'\',
+						`netto` = \''.$this->sp->db->escape($this->netto).'\',
+						`tax_value` = \''.$this->sp->db->escape($this->taxValue).'\',
 						`date` = \''.$this->sp->db->escape($this->date->format('Y-m-d')).'\'
 					WHERE id="'.ServiceProvider::get()->db->escape($this->id).'"');
 			}

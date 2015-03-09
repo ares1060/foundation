@@ -325,7 +325,8 @@
 						$num = 0;
 						foreach($parts as $part){
 							$siv = $view->showSubView('invoice_item');
-							$siv->addValue('amount', str_replace('.', ',', $part->getAmount()));
+							$siv->addValue('amount', str_replace('.', ',', ($part->getTaxValue() > 0 && $part->getNetto() != 0) ? $part->getNetto() : $part->getBrutto()));
+							$siv->addValue('tax_value',  ($part->getTaxValue() != 0 && $part->getNetto() != 0) ? $part->getTaxValue() * 100 : '-1');
 							$siv->addValue('notes', $part->getNotes());
 							$siv->addValue('dom_id', 'invoice_item_'.$part->getid());
 							$siv->addValue('number', ++$num);
@@ -564,12 +565,21 @@
 						if($inv->getNumber() == '') $inv->setNumber($user->getUserData()->opt('set.invoice_prefix', 'WMR_')->getValue().date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
 						
 						$inv->save();
+						$nettoSum = 0;
 						
 						//handle invoice parts
 						if(isset($args['parts'])){
 							$oldParts = InvoicePart::getPartsForInvoice($inv->getId());
 							foreach($args['parts'] as $part){
-								$ip = new InvoicePart($inv->getId(), null, $part['notes'], $part['amount']);
+								$netto = $part['amount'];
+								$brutto = $part['amount'];
+								if($part['tax_value'] > 0) {
+									$brutto = $part['amount'] * (1 + $part['tax_value']);
+								} else {
+									$netto = $part['amount'] / (1 + $entry->getTaxValue());
+								}
+								$nettoSum += $netto;
+								$ip = new InvoicePart($inv->getId(), null, $part['notes'], $brutto, $netto, $part['tax_value']);
 								$ip->save();
 							}
 							
@@ -579,6 +589,8 @@
 						} else {
 							InvoicePart::deletePartsForInvoice($inv->getId());
 						}
+						$entry->setNetto($nettoSum);
+						$entry->save();
 					}
 				}
 				

@@ -1,9 +1,9 @@
 <?php
 
 	use at\foundation\core\TextFunctions\TextFunctions;
-
 	use at\foundation\core\Template\SubViewDescriptor;
 	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
 	
 	require_once($GLOBALS['config']['root'].'_services/Calendar/model/Event.php');
 	
@@ -46,76 +46,93 @@
 			}
 		}
 		
+		public static function buildWhereSQLQuery($args){
+			$sp = ServiceProvider::getInstance();
+			$user = $sp->user->getSuperUserForLoggedInUser();
+			$tags = false;
+			$contacts = false;
+			
+			$whereSQL = 'WHERE e.owner_id = \''.$sp->db->escape($user->getId()).'\'';
+			
+			$days = 4;
+			if(isset($args['days'])) $days = $args['days']+1;
+			
+			$now = new DateTime();
+			$now->setTime(0, 0, 0);
+			
+			$to = new DateTime();
+			$to->setTime(0, 0, 0);
+			$to->add(new DateInterval('P'.$days.'D'));
+			
+			if(isset($args['search']) && strlen($args['search']) > 2){
+				$args['search'] = $sp->db->escape($args['search']);
+			
+				//TODO tagging still hacky
+				$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Calendar\' LEFT JOIN '.$sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
+				$whereSQL .= ' AND (e.text LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\')';
+				$tags = true;
+			}
+			
+			if(isset($args['date_from']) && $args['date_from'] != ''){
+				$args['date_from'] = $sp->db->escape($args['date_from']);
+				$whereSQL .= ' AND (e.start_date >= \''.$args['date_from'].' 00:00:00\' OR (e.end_date >= \''.$args['date_from'].' 00:00:00\' AND e.start_date <= \''.$args['date_from'].' 00:00:00\'))';
+			} else {
+				$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d').' 00:00:00\' OR (e.end_date >= \''.$now->format('Y-m-d').' 00:00:00\' AND e.start_date <= \''.$now->format('Y-m-d').' 00:00:00\'))';
+			}
+			
+			if(isset($args['date_to']) && $args['date_to'] != ''){
+				$args['date_to'] = $sp->db->escape($args['date_to']);
+				$whereSQL .= ' AND e.start_date <= \''.$args['date_to'].' 24:59:59\'';
+			} else if(isset($args['days'])) {
+				$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').' 24:59:59\'';
+			}
+			
+			//TODO: generalize this so that services can infuse filter criteria generically
+			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
+				$values = '';
+				foreach($args['contact_filter'] as $val){
+					$values .= $sp->db->escape($val).',';
+				}
+				$values = substr($values, 0, -1);
+				$whereSQL = 'JOIN '.$sp->db->prefix.'calendar_events_contacts AS c ON c.entry_id = e.id '.$whereSQL;
+				$whereSQL .= ' AND c.contact_id IN ('.$values.')';
+				$contacts = true;
+			}
+			
+			if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
+		
+			return $whereSQL;
+		}
+		
 		private function handleViewAgenda($args){
 			$user = $this->sp->user->getSuperUserForLoggedInUser();
 				
 			if($user && $user->getId() > 0){
 				$view = new core\Template\ViewDescriptor('_services/Calendar/calendar_agenda');
-				$tags = false;
-				$contacts = false;
-				$whereSQL = 'WHERE e.owner_id = \''.$this->sp->db->escape($user->getId()).'\'';
 				
-				
-				$days = 4;
-				if(isset($args['days'])) $days = $args['days']+1;
-				
-				$now = new DateTime();
-				$now->setTime(0, 0, 0);
-				$nowDay = $now->format('d');
-				
-				$to = new DateTime();
-				$to->setTime(0, 0, 0);
-				$to->add(new DateInterval('P'.$days.'D'));
-				
-				if(isset($args['search']) && strlen($args['search']) > 2){
-					$args['search'] = $this->sp->db->escape($args['search']);
-				
-					//TODO tagging still hacky
-					$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Calendar\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
-					$whereSQL .= ' AND (e.text LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\')';
-					$tags = true;
-				}
-				
-				$dateFrom = new DateTime();
-				$dateFrom->setTime(0, 0, 0);
-				if(isset($args['date_from']) && $args['date_from'] != ''){
-					$args['date_from'] = $this->sp->db->escape($args['date_from']);
+				if(isset($args['date_from']) && $args['date_from'] != '') {
 					$dateFrom = new DateTime($args['date_from']);
-					$whereSQL .= ' AND (e.start_date >= \''.$args['date_from'].' 00:00:00\' OR (e.end_date >= \''.$args['date_from'].' 00:00:00\' AND e.start_date <= \''.$args['date_from'].' 00:00:00\'))';
 				} else {
-					$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d').' 00:00:00\' OR (e.end_date >= \''.$now->format('Y-m-d').' 00:00:00\' AND e.start_date <= \''.$now->format('Y-m-d').' 00:00:00\'))';
+					$dateFrom = new DateTime();
+					$dateFrom->setTime(0, 0, 0);
 				}
 				
-				if(isset($args['date_to']) && $args['date_to'] != ''){
-					$args['date_to'] = $this->sp->db->escape($args['date_to']);
-					$whereSQL .= ' AND e.start_date <= \''.$args['date_to'].' 24:59:59\'';
-				} else if(isset($args['days'])) {
-					$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').' 24:59:59\'';
-				}
+				
+				$whereSQL = Calendar::buildWhereSQLQuery($args);
 				
 				$from = 0;
 				if(isset($args['from']) && $args['from'] > 0) {
 					$from = $this->sp->db->escape($args['from']);
 				}
-					
+				
 				$rows = -1;
 				if(isset($args['rows']) && $args['rows'] >= 0){
 					$rows = $this->sp->db->escape($args['rows']);
-				}		
-				
-				//TODO: generalize this so that services can infuse filter criteria generically
-				if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
-					$values = '';
-					foreach($args['contact_filter'] as $val){
-						$values .= $this->sp->db->escape($val).',';
-					}
-					$values = substr($values, 0, -1);
-					$whereSQL = 'JOIN '.$this->sp->db->prefix.'calendar_events_contacts AS c ON c.entry_id = e.id '.$whereSQL;
-					$whereSQL .= ' AND c.contact_id IN ('.$values.')';
-					$contacts = true;
 				}
 				
-				if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
+				$now = new DateTime();
+				$now->setTime(0, 0, 0);
+				$nowDay = $now->format('d');
 								
 				$events = Event::getEvents($whereSQL.' ORDER BY e.start_date', $from, $rows);
 				$count = $this->sp->db->fetchRow('SELECT SUM(tc.count) AS count FROM (SELECT COUNT(*) AS count FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.') AS tc;');
@@ -127,7 +144,7 @@
 				if(isset($args['mode']) && $args['mode'] == 'wrapped'){
 					$header = $view->showSubView('header');
 					$header->addValue('date_from', $dateFrom->format('d.m.Y'));
-					if($contacts) $header->showSubView('filter_contacts');
+					if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0) $header->showSubView('filter_contacts');
 					
 					$footer = $view->showSubView('footer');
 					$footer->addValue('current_page', '0');
@@ -267,10 +284,8 @@
 				$dateFrom = new DateTime();
 				$dateFrom->setTime(0, 0, 0);
 				if(isset($args['date_from']) && $args['date_from'] != ''){
-					$args['date_from'] = $this->sp->db->escape($args['date_from']);
 					$dateFrom = new DateTime($args['date_from']);
-					$whereSQL .= ' AND (e.start_date >= \''.$args['date_from'].' 00:00:00\' OR (e.end_date >= \''.$args['date_from'].' 00:00:00\' AND e.start_date <= \''.$args['date_from'].' 00:00:00\'))';
-				
+
 					$now = new DateTime($args['date_from']);
 					$now->setTime(0, 0, 0);
 					
@@ -278,10 +293,12 @@
 					$to->setTime(0, 0, 0);
 					$to->add(new DateInterval('P6D'));
 				} else {
-					$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d').' 00:00:00\' OR (e.end_date >= \''.$now->format('Y-m-d').' 00:00:00\' AND e.start_date <= \''.$now->format('Y-m-d').' 00:00:00\'))';
+					$args['date_from'] = $now->format('Y-m-d');
 				}
 				
-				$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').' 24:59:59\' ORDER BY e.start_date';
+				$args['date_to'] = $to->format('Y-m-d');
+				
+				$whereSQL = Calendar::buildWhereSQLQuery($args).' ORDER BY e.start_date';
 				
 				$events = Event::getEvents($whereSQL);				
 				

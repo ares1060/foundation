@@ -34,19 +34,23 @@
 		
 		private function handleViewList($args){
 			$user = $this->sp->user->getSuperUserForLoggedInUser();
-			$whereSQL = 'WHERE user_id = \''.$user->getId().'\'';
+			$whereSQL = 'WHERE c.user_id = \''.$user->getId().'\'';
 			if(isset($args['search']) && strlen($args['search']) > 2){
 					$args['search'] = trim($args['search']);
 					$firstSpace = strpos($args['search'], ' ');
 					$lastSpace = strrpos($args['search'], ' ');
+					
+					$whereSQL = 'LEFT JOIN '. $this->sp->db->prefix.'tag_links tl ON c.id = tl.param AND tl.service = \'Contacts\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
 					$whereSQL .= ' AND (
-						`company` 
+						t.name LIKE \''.$this->sp->db->escape($args['search']).'%\'
+						OR
+						c.company 
 							LIKE \''.$this->sp->db->escape(($firstSpace !== False)?substr($args['search'], 0, $firstSpace):$args['search']).'%\' 
 						OR
-						`firstname` 
+						c.firstname
 							LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], 0, $lastSpace):$args['search']).'%\' '
 						.(($lastSpace !== False)?'AND':'OR').' 
-						`lastname` 
+						c.lastname 
 							LIKE \''.$this->sp->db->escape(($lastSpace !== False)?substr($args['search'], $lastSpace+1):$args['search']).'%\'
 						)';
 			}
@@ -68,6 +72,8 @@
 			if(isset($args['rows']) && $args['rows'] >= 0){
 				$rows = $this->sp->db->escape($args['rows']);
 			}
+			
+			$whereSQL.= ' GROUP BY c.id';
 			
 			$contacts = Contact::getContacts($whereSQL, $from, $rows);
 			if(isset($args['mode']) && $args['mode'] == 'short'){
@@ -350,7 +356,8 @@
 					}
 				}
 								
-				return $ok;
+				if($ok) return $contact->getId();
+				else return false;
 			} else {
 				return false;
 			}

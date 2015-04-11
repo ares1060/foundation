@@ -260,8 +260,8 @@
 					if($entry->getState() != 'payed'){
 						$now = new DateTime();
 						$diff = $now->diff($entry->getDate())->days;
-						if($diff > $user->getUserData()->opt('set.dunning_interval', 14)->getValue()){
-							$dc = floor($diff / $user->getUserData()->opt('set.dunning_interval', 14)->getValue());
+						if($diff > max(1, $user->getUserData()->opt('set.dunning_interval', 14)->getValue())){
+							$dc = floor($diff / max(1, $user->getUserData()->opt('set.dunning_interval', 14)->getValue()));
 							if($inv->getDunningCount() < $dc){
 								//its a new dunning
 								$dv = $sv->showSubView('dunning');

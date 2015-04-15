@@ -126,7 +126,7 @@
 				}
 				
 				$rows = -1;
-				if(isset($args['rows']) && $args['rows'] >= 0){
+				if(isset($args['rows']) && $args['rows'] > 0){
 					$rows = $this->sp->db->escape($args['rows']);
 				}
 				
@@ -137,7 +137,7 @@
 				$events = Event::getEvents($whereSQL.' ORDER BY e.start_date', $from, $rows);
 				$count = $this->sp->db->fetchRow('SELECT SUM(tc.count) AS count FROM (SELECT COUNT(*) AS count FROM '.$this->sp->db->prefix.'calendar_events AS e '.$whereSQL.') AS tc;');
 				
-				if($rows < 0) $rows = min(10, count($events));
+				if($rows < 0) $rows = max(1, min(10, count($events)));
 				$pages = ceil($count['count'] / $rows);
 				
 				$view->addValue('pages', $pages);
@@ -451,16 +451,32 @@
 					}
 					
 					//count events today and set their width accordingly
-					$shift = 0;
+					$shift = null;
 					while($event = array_shift($todaysEvents)) {
-						if($event['length'] > 0) $cols = max(array_slice($eventRange, $event['from'], $event['length']));
-						else $cols = 0;
+						if($event['length'] > 0) {
+							$mask = array_fill($event['from'], $event['length'], 1);
+							$cols = max(array_slice($eventRange, $event['from'], $event['length']));
+						} else $cols = 0;
+						
 						if($cols > 1) {
+							if($shift == null){
+								$shift = array_fill(0, $cols, array_fill(0, 48, 0));
+							}
+
+							$col = 0;
+							for($c = 0; $c < $cols; $c++){
+								if($shift[$col][$event['from']] === 0) break;
+								$col++;
+							}
+							
 							$event['view']->addValue('colspan', 1 / $cols);
-							$event['view']->addValue('left', 100 * $shift / $cols .'%');
-							$shift++;
+							$event['view']->addValue('left', 100 * $col / $cols .'%');
+							
+							foreach($mask as $index => $value){
+								$shift[$col][$index] = $value;
+							}
 						} else {
-							$shift = 0;
+							$shift = null;
 						}
 					}
 					

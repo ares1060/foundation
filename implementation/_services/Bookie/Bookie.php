@@ -325,8 +325,8 @@
 						$num = 0;
 						foreach($parts as $part){
 							$siv = $view->showSubView('invoice_item');
-							$siv->addValue('amount', str_replace('.', ',', ($part->getTaxValue() > 0 && $part->getNetto() != 0) ? $part->getNetto() : $part->getBrutto()));
-							$siv->addValue('tax_value',  ($part->getTaxValue() != 0 && $part->getNetto() != 0) ? $part->getTaxValue() * 100 : '-1');
+							$siv->addValue('amount', str_replace('.', ',', ($part->getTaxValue() >= 0 && $part->getNetto() != 0) ? $part->getNetto() : $part->getBrutto()));
+							$siv->addValue('tax_value',  ($part->getTaxValue() >= 0 && $part->getNetto() != 0) ? $part->getTaxValue() * 100 : '-1');
 							$siv->addValue('notes', $part->getNotes());
 							$siv->addValue('dom_id', 'invoice_item_'.$part->getid());
 							$siv->addValue('number', ++$num);
@@ -573,7 +573,7 @@
 							foreach($args['parts'] as $part){
 								$netto = $part['amount'];
 								$brutto = $part['amount'];
-								if($part['tax_value'] > 0) {
+								if($part['tax_value'] >= 0) {
 									$brutto = $part['amount'] * (1 + $part['tax_value']);
 								} else {
 									$netto = $part['amount'] / (1 + $entry->getTaxValue());

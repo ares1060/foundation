@@ -328,10 +328,26 @@
 				
 				$events = array_reverse($events);
 				
+				global $firstHour;
+				$firstHour = explode(':', $user->getUserData()->opt('set.first_hour', '6')->getValue());
+				$firstHour = $firstHour[0] * 1;
+				
 				function dateToRow($date) {
-					return ($date->format('H') + round($date->format('i') / 60) * 0.5);
+					global $firstHour;
+					$h = $date->format('H');
+					$row = ($h + round($date->format('i') / 60) * 0.5);
+					if($h < $firstHour) {
+						$row = 24 - ($firstHour - $row);
+					} else {
+						$row -= $firstHour;
+					}
+					return $row;
 				}
 				
+				function fracMod($val, $div) {
+					return $val - floor($val / $div) * $div;
+				}
+
 				for($i = 0; $i < 7; $i++){
 					$dv = new SubViewDescriptor('day');
 					$dv->addValue('day', $this->sp->txtfun->fixDateLoc($now->format('l')));
@@ -355,7 +371,9 @@
 					
 					//seperate event types
 					while($event = array_pop($events)) {
-						if($event->getStartDate()->format('z') * 1 > $now->format('z') * 1) {
+						if($event->getStartDate()->format('z') > $now->format('z') && 
+							($event->getStartDate()->format('z') - 1 != $now->format('z') || $event->getStartDate()->format('h') >= $firstHour)
+						) {
 							$events[] = $event;
 							break;
 						}
@@ -368,7 +386,7 @@
 						$mask = null;
 						if($event->getWholeDay()) {
 							//a whole day event
-							$ev->addValue('start_hour', 1);
+							$ev->addValue('row', 1);
 							$ev->addValue('height', 1 / $parallelMultiDayEvents);
 							
 							for($m = 0; $m < $parallelMultiDayEvents; $m++){
@@ -377,7 +395,7 @@
 										$multidayLevelsZIndex[$m]--;
 										$ev->addValue('zindex', $multidayLevelsZIndex[$m]);
 									} else $multidayLevelsZIndex[$m] = count($events) + 1;
-									$ev->addValue('start_hour', 1 + $m / $parallelMultiDayEvents);
+									$ev->addValue('row', 1 + $m / $parallelMultiDayEvents);
 									$usedMultidayLevels[$m] = $event->getEndDate()->format('z');
 									break;
 								}
@@ -386,9 +404,11 @@
 							$ev->addValue('colspan', min($event->getEndDate()->format('z'), $to->format('z')) - max($event->getStartDate()->format('z'), $now->format('z')) + 1);
 							$ev->addValue('type', 'multiday');
 							$ev->addValue('from_to', $event->getStartDate()->format('d.m.') .' - '. $event->getEndDate()->format('d.m.'));
-						} else if($event->getStartDate()->format('z') != $now->format('z')) {
+						} else if($event->getStartDate()->format('z') < $now->format('z') || 
+								($event->getStartDate()->format('z') == $now->format('z') && $event->getStartDate()->format('h') < $firstHour)
+						) {
 							//event started before today
-							$ev->addValue('start_hour', 2);
+							$ev->addValue('row', 2);
 							if($event->getEndDate()->format('z') == $now->format('z')){
 								$ev->addValue('height', dateToRow($event->getEndDate()));
 								$ev->addValue('overlap', 'overlap top');
@@ -399,7 +419,13 @@
 								$overlapEvents[] = $event;
 								$length = 48;
 							}
-							$ev->addValue('from_to', $event->getStartDate()->format('d.m. H:i') .' - '. $event->getEndDate()->format('d.m. H:i'));
+							
+							if($event->getStartDate()->format('z') == $event->getEndDate()->format('z')){
+								$ev->addValue('from_to', $event->getStartDate()->format('H:i') .' - '. $event->getEndDate()->format('H:i'));
+							} else {
+								$ev->addValue('from_to', $event->getStartDate()->format('d.m. H:i') .' - '. $event->getEndDate()->format('d.m. H:i'));
+							}
+							
 							
 							$mask = array_fill(0, $length, 1);
 							$todaysEvents[] = array(
@@ -409,18 +435,27 @@
 							);
 						} else {
 							//event starts today
-							$ev->addValue('start_hour', dateToRow($event->getStartDate()) + 2);
+							$ev->addValue('row', dateToRow($event->getStartDate()) + 2);
 							$from = dateToRow($event->getStartDate()) * 2;
 								
-							if($event->getStartDate()->format('z') == $event->getEndDate()->format('z')){
+							if($event->getEndDate()->format('z') == $now->format('z')){
 								$ev->addValue('height', max(.5, dateToRow($event->getEndDate()) - dateToRow($event->getStartDate())));
 								$ev->addValue('from_to', $event->getStartDate()->format('H:i') .'-'. $event->getEndDate()->format('H:i'));
 								$length = dateToRow($event->getEndDate()) * 2 - $from;
 							} else {
 								$ev->addValue('height', 24 - dateToRow($event->getStartDate()));
 								$ev->addValue('overlap', 'overlap bottom');
-								$overlapEvents[] = $event;
-								$ev->addValue('from_to', $event->getStartDate()->format('d.m. H:i') .' - '. $event->getEndDate()->format('d.m. H:i'));
+
+								if($event->getStartDate()->format('z') == $event->getEndDate()->format('z')){
+									if($event->getEndDate()->format('H') >= $firstHour) {
+										$overlapEvents[] = $event;
+									}
+									$ev->addValue('from_to', $event->getStartDate()->format('d.m. H:i') .' - '. $event->getEndDate()->format('H:i'));
+								} else {
+									$overlapEvents[] = $event;
+									$ev->addValue('from_to', $event->getStartDate()->format('d.m. H:i') .' - '. $event->getEndDate()->format('d.m. H:i'));
+								}
+								
 								$length = 48 - $from;
 							}
 							
@@ -490,6 +525,20 @@
 				if(isset($args['mode']) && $args['mode'] == 'wrapped'){
 					$header = $view->showSubView('header');
 					$header->addValue('date_from', $todayFrom->format('Y-m-d'));
+					
+					$h = $firstHour;
+					for($i = 0; $i < 24; $i++){
+						$hour = new SubViewDescriptor('hour');
+						$hour->addValue('value', $h);
+						$header->addSubView($hour);
+						$h++;
+						if($h > 24) $h = 1;
+					}
+					
+					if($firstHour !== 0) {
+						$dci = $header->showSubView('day_swap_indicator');
+						$dci->addValue('row', 24 - $firstHour + 3);
+					}
 						
 					$footer = $view->showSubView('footer');
 					$footer->addValue('event_duration', $user->getUserData()->opt('set.event_duration', '30')->getValue());

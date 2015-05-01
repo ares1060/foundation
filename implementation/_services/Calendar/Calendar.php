@@ -51,6 +51,8 @@
 			$user = $sp->user->getSuperUserForLoggedInUser();
 			$tags = false;
 			$contacts = false;
+			$firstHour = explode(':', $user->getUserData()->opt('set.first_hour', '6')->getValue());
+			$firstHour = $firstHour[0] * 1;
 			
 			$whereSQL = 'WHERE e.owner_id = \''.$sp->db->escape($user->getId()).'\'';
 			
@@ -58,11 +60,18 @@
 			if(isset($args['days'])) $days = $args['days']+1;
 			
 			$now = new DateTime();
-			$now->setTime(0, 0, 0);
+			if(isset($args['date_from']) && $args['date_from'] != ''){
+				$now = new DateTime($args['date_from']);
+			}
+			$now->setTime($firstHour, 0, 0);
 			
 			$to = new DateTime();
-			$to->setTime(0, 0, 0);
-			$to->add(new DateInterval('P'.$days.'D'));
+			if(isset($args['date_to']) && $args['date_to'] != ''){
+				$to = new DateTime($args['date_to']);
+			}
+			$to->setTime(23, 59, 59);
+			if(!isset($args['date_to']) || $args['date_to'] == '') $to->add(new DateInterval('P'.$days.'D'));
+			$to->add(new DateInterval('PT'.$firstHour.'H'));
 			
 			if(isset($args['search']) && strlen($args['search']) > 2){
 				$args['search'] = $sp->db->escape($args['search']);
@@ -73,18 +82,10 @@
 				$tags = true;
 			}
 			
-			if(isset($args['date_from']) && $args['date_from'] != ''){
-				$args['date_from'] = $sp->db->escape($args['date_from']);
-				$whereSQL .= ' AND (e.start_date >= \''.$args['date_from'].' 00:00:00\' OR (e.end_date >= \''.$args['date_from'].' 00:00:00\' AND e.start_date <= \''.$args['date_from'].' 00:00:00\'))';
-			} else {
-				$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d').' 00:00:00\' OR (e.end_date >= \''.$now->format('Y-m-d').' 00:00:00\' AND e.start_date <= \''.$now->format('Y-m-d').' 00:00:00\'))';
-			}
+			$whereSQL .= ' AND (e.start_date >= \''.$now->format('Y-m-d H:i:s').'\' OR (e.end_date >= \''.$now->format('Y-m-d H:i:s').'\' AND e.start_date <= \''.$now->format('Y-m-d H:i:s').'\'))';
 			
-			if(isset($args['date_to']) && $args['date_to'] != ''){
-				$args['date_to'] = $sp->db->escape($args['date_to']);
-				$whereSQL .= ' AND e.start_date <= \''.$args['date_to'].' 24:59:59\'';
-			} else if(isset($args['days'])) {
-				$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d').' 24:59:59\'';
+			if(isset($args['days']) || isset($args['date_to']) && $args['date_to'] != '') {
+				$whereSQL .= ' AND e.start_date <= \''.$to->format('Y-m-d H:i:s').'\'';
 			}
 			
 			//TODO: generalize this so that services can infuse filter criteria generically
@@ -100,7 +101,7 @@
 			}
 			
 			if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
-		
+					
 			return $whereSQL;
 		}
 		
@@ -268,6 +269,10 @@
 			$user = $this->sp->user->getSuperUserForLoggedInUser();
 		
 			if($user && $user->getId() > 0){
+				global $firstHour;
+				$firstHour = explode(':', $user->getUserData()->opt('set.first_hour', '6')->getValue());
+				$firstHour = $firstHour[0] * 1;
+				
 				$view = new core\Template\ViewDescriptor('_services/Calendar/calendar_week');
 				$whereSQL = 'WHERE e.owner_id = \''.$this->sp->db->escape($user->getId()).'\'';
 
@@ -304,6 +309,10 @@
 				
 				$today = new DateTime();
 				$today = $today->format('d.m.Y');
+				$yesterday = new DateTime();
+				$yesterday->sub(new DateInterval('P1D'));
+				$yesterday = $yesterday->format('d.m.Y');
+				$nowTime = new DateTime();
 				
 				$todayFrom = clone $now;
 				
@@ -328,10 +337,6 @@
 				
 				$events = array_reverse($events);
 				
-				global $firstHour;
-				$firstHour = explode(':', $user->getUserData()->opt('set.first_hour', '6')->getValue());
-				$firstHour = $firstHour[0] * 1;
-				
 				function dateToRow($date) {
 					global $firstHour;
 					$h = $date->format('H');
@@ -355,11 +360,10 @@
 					$dv->addValue('date', $now->format('d.m.'));
 					$dv->addValue('date_full', $now->format('Y-m-d'));
 					
-					if($today == $now->format('d.m.Y')) {
-						$nowTime = new DateTime();
+					if($today == $now->format('d.m.Y') && $nowTime->format('H') >= $firstHour || $today == $now->format('d.m.Y') && $nowTime->format('H') < $firstHour) {
 						$dv->addValue('today', ' today');
 						$tiv = $dv->showSubView('time');
-						$tiv->addValue('top', ($nowTime->format('H') + round($nowTime->format('i') / 0.06) / 1000) + 2);
+						$tiv->addValue('top', ($nowTime->format('H') + round($nowTime->format('i') / 0.06) / 1000) + 2 - $firstHour);
 						$tiv->addValue('zindex', count($event));
 					}
 					
@@ -372,8 +376,9 @@
 					//seperate event types
 					while($event = array_pop($events)) {
 						if($event->getStartDate()->format('z') > $now->format('z') && 
-							($event->getStartDate()->format('z') - 1 != $now->format('z') || $event->getStartDate()->format('h') >= $firstHour)
+							($event->getStartDate()->format('z') - 1 != $now->format('z') || $event->getStartDate()->format('H') >= $firstHour)
 						) {
+							//future event
 							$events[] = $event;
 							break;
 						}
@@ -405,7 +410,7 @@
 							$ev->addValue('type', 'multiday');
 							$ev->addValue('from_to', $event->getStartDate()->format('d.m.') .' - '. $event->getEndDate()->format('d.m.'));
 						} else if($event->getStartDate()->format('z') < $now->format('z') || 
-								($event->getStartDate()->format('z') == $now->format('z') && $event->getStartDate()->format('h') < $firstHour)
+								($event->getStartDate()->format('z') == $now->format('z') && $event->getStartDate()->format('H') < $firstHour)
 						) {
 							//event started before today
 							$ev->addValue('row', 2);
@@ -426,7 +431,7 @@
 								$ev->addValue('from_to', $event->getStartDate()->format('d.m. H:i') .' - '. $event->getEndDate()->format('d.m. H:i'));
 							}
 							
-							
+							$length = max(1, $length);
 							$mask = array_fill(0, $length, 1);
 							$todaysEvents[] = array(
 								'view' => $ev,
@@ -437,7 +442,7 @@
 							//event starts today
 							$ev->addValue('row', dateToRow($event->getStartDate()) + 2);
 							$from = dateToRow($event->getStartDate()) * 2;
-								
+														
 							if($event->getEndDate()->format('z') == $now->format('z')){
 								$ev->addValue('height', max(.5, dateToRow($event->getEndDate()) - dateToRow($event->getStartDate())));
 								$ev->addValue('from_to', $event->getStartDate()->format('H:i') .'-'. $event->getEndDate()->format('H:i'));
@@ -459,7 +464,7 @@
 								$length = 48 - $from;
 							}
 							
-							
+							$length = max(1, $length);
 							if($length > 0) $mask = array_fill($from, $length, 1);
 							$todaysEvents[] = array(
 								'view' => $ev,
@@ -542,6 +547,7 @@
 						
 					$footer = $view->showSubView('footer');
 					$footer->addValue('event_duration', $user->getUserData()->opt('set.event_duration', '30')->getValue());
+					$footer->addValue('start_hour', $firstHour);
 				}
 				
 				return $view->render();

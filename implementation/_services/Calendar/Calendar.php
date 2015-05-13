@@ -376,7 +376,7 @@
 					//seperate event types
 					while($event = array_pop($events)) {
 						if($event->getStartDate()->format('z') > $now->format('z') && 
-							($event->getStartDate()->format('z') - 1 != $now->format('z') || $event->getStartDate()->format('H') >= $firstHour)
+							($event->getStartDate()->format('z') - 1 != $now->format('z') || $event->getStartDate()->format('H') >= $firstHour || $event->getWholeDay())
 						) {
 							//future event
 							$events[] = $event;

@@ -115,7 +115,7 @@
 		* @return int
 		*/
 		public static function getContactCount($insertSQL = ''){
-			$count = ServiceProvider::getInstance()->db->fetchRow('SELECT COUNT(*) as count FROM '.ServiceProvider::getInstance()->db->prefix.'contacts AS c '.$insertSQL.';');
+			$count = ServiceProvider::getInstance()->db->fetchRow('SELECT SUM(s.count) AS count FROM (SELECT COUNT(*) as count FROM '.ServiceProvider::getInstance()->db->prefix.'contacts AS c '.$insertSQL.') AS s;');
 			if($count && isset($count['count'])){
 				return $count['count'];
 			} else {

@@ -37,13 +37,17 @@
 			$tags = false;
 			$contacts = false;
 				
-			if(isset($args['search']) && strlen($args['search']) > 2){
+			if(isset($args['search']) && strlen($args['search']) >= 2){
 				$args['search'] = $sp->db->escape($args['search']);
 			
 				//TODO tagging still hacky
 				$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Bookie\' LEFT JOIN '.$sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
 				//$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'bookie_categories c ON e.category_id = c.id '.$whereSQL;
-				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\' )';
+				$inv_search = 'OR inv.number LIKE \''.$args['search'].'%\'';
+				if(substr($args['search'], 0, 1) == '#'){
+					$inv_search = 'OR inv.number LIKE \'%'.substr($args['search'], 1).'\'';
+				}
+				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\' '.$inv_search.' )';
 				$tags = true;
 			}
 				
@@ -494,9 +498,10 @@
 				//Reisekosten Ausland - 19
 				//Anschaffung PKW - 20
 				//Privatentnahme - 21
+				//Kilometergeld - 22
 				
 				if($user->getUserData()->opt('set.taxes', '0')->getValue() == '1' || $user->getUserData()->opt('set.uid', '')->getValue() != ''){ 
-					if(!in_array($entry->getCategoryId(), array(5,6,8,9,10,12,14,19,20,21))){
+					if(!in_array($entry->getCategoryId(), array(5,6,8,9,10,12,14,19,20,21,22))){
 						if(isset($args['tax_country'])) $entry->setTaxCountry($args['tax_country']);
 						if($entry->getTaxCountry() == 0){
 							if(isset($args['tax_type'])) $entry->setTaxType($args['tax_type']);

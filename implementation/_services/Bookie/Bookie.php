@@ -570,11 +570,12 @@
 						if($inv->getNumber() == '') $inv->setNumber($user->getUserData()->opt('set.invoice_prefix', 'WMR_')->getValue().date('Y').'_'.str_pad($invcount, 6, "0", STR_PAD_LEFT));
 						
 						$inv->save();
-						$nettoSum = 0;
+						$nettoSum = $entry->getNetto();
 						
 						//handle invoice parts
 						if(isset($args['parts'])){
 							$oldParts = InvoicePart::getPartsForInvoice($inv->getId());
+							$nettoSum = 0;
 							foreach($args['parts'] as $part){
 								$netto = $part['amount'];
 								$brutto = $part['amount'];

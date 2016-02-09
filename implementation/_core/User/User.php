@@ -649,11 +649,11 @@
          		model\UserDataField::getUserDataFieldByName('set.parent_user') &&
          		$user &&
          		$user->getUserData()->opt('set.parent_user', 0)->getValue() > 0
-         	){
-         		$this->superUserForLoggedInUser = model\User::getUser($user->getUserData()->opt('set.parent_user', 0));
-         	} else {
+         	){ 
+         		$this->superUserForLoggedInUser = model\User::getUser($user->getUserData()->opt('set.parent_user', 0)->getValue());
+         	} else if (!$this->superUserForLoggedInUser) {
          		$this->superUserForLoggedInUser = $user;
-         	}
+         	}         	
          	return $this->superUserForLoggedInUser;
          }
          

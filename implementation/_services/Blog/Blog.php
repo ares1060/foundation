@@ -89,7 +89,7 @@
 
 			$view = new core\Template\ViewDescriptor('_services/Blog/post_list');	
 			if($rows < 0) $rows = max(1, count($posts));
-			$pages =  ceil(Post::getPostCount($whereSQL) / $rows);
+			$pages = ceil(Post::getPostCount($whereSQL) / $rows);
 			$view->addValue('pages', $pages);
 			if(isset($args['mode']) && $args['mode'] == 'wrapped'){
 				$header = $view->showSubView('header');

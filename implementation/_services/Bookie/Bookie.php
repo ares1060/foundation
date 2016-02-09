@@ -207,7 +207,7 @@
 			
 			$totals = Entry::getEntrySums($whereSQL);
 			
-			$subValuesView = $view->showSubView('sub_values'.($user->getUserData()->opt('set.taxes', false, false)->getValue()?'':'_notax'));
+			$subValuesView = $view->showSubView('sub_values'.(($user->getUserData()->opt('set.taxes', false, false)->getValue() || $user->getUserData()->opt('set.uid', '', false)->getValue() != '')?'':'_notax'));
 			
 			$subValuesView->addValue('total_in', number_format($totals['brutto_in'], 2, ',', '.'));
 			$subValuesView->addValue('total_out', number_format($totals['brutto_out'], 2, ',', '.'));
@@ -238,18 +238,13 @@
 				$sv->addValue('include', ($entry->getInclude())?'':'moot');
 				$sv->addValue('notes', nl2br($entry->getNotes()));
 				
-				if($entry->getTaxValue() > 0 && $entry->getTaxCountry() == 0){
-					$svt = $sv->showSubView('taxinfo');
-					$svt->addValue('tax_label', ($entry->getTaxType() == 'Umsatzsteuer')?'USt.':(($entry->getTaxType() == 'Vorsteuer')?'VSt.':$entry->getTaxType()));
-					$svt->addValue('tax_amount', number_format($entry->getTaxAmount(), 2, ',', '.'));
-				}
-				
 				if($entry->getBrutto() <= 0 && $entry->getCategoryId() > 0){
 					$csv = $sv->showSubView('category');
 					$csv->addValue('category', $entry->getCategory()->getName());
 				}
 				
 				//check if invoice
+				$taxAmount = 0;
 				$inv = Invoice::getInvoicesForEntry($entry->getId());
 				if($inv && count($inv) > 0){
 					$sv->hideSubView('action_delete');
@@ -281,11 +276,27 @@
 							}
 						}
 					}
+					
+					$parts = InvoicePart::getPartsForInvoice($inv->getId());
+					foreach($parts as $part){
+						if($part->getTaxValue() >= 0 && $part->getNetto() != 0) {
+							$taxAmount += $part->getBrutto() - $part->getNetto() ;
+						} else {
+							$taxAmount += $part->getBrutto() * $entry->getTaxValue() / (1+$entry->getTaxValue());
+						}
+					}
+					
 				} else {
 					//if($entry->getAccountId() == 2 && $entry->getDate()->diff(new DateTime())->days != 0) $sv->hideSubView('action_delete');
 					$sv->showSubView('action_delete');
+					$taxAmount = $entry->getTaxAmount();
 				}
-					
+				
+				if($taxAmount && $entry->getTaxCountry() == 0){
+					$svt = $sv->showSubView('taxinfo');
+					$svt->addValue('tax_label', ($entry->getTaxType() == 'Umsatzsteuer' || $taxAmount > 0)?'USt.':(($entry->getTaxType() == 'Vorsteuer' || $taxAmount < 0)?'VSt.':$entry->getTaxType()));
+					$svt->addValue('tax_amount', number_format($taxAmount, 2, ',', '.'));
+				}	
 			}
 			
 			return $view->render();

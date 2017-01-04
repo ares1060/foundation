@@ -2,6 +2,7 @@
 	require_once($GLOBALS['config']['root'].'_services/Blog/model/Post.php');
 
 	use at\foundation\core;
+	use at\foundation\core\ServiceProvider;
 	
 	class Blog extends core\AbstractService implements core\IService {
 		
@@ -22,42 +23,65 @@
 			}
 		}
 		
-		private function handleViewList($args){
-			$user = $this->sp->user->getSuperUserForLoggedInUser();
+		public static function buildWhereSQLQuery($args){
+			$sp = ServiceProvider::getInstance();
+			$user = $sp->user->getSuperUserForLoggedInUser();
+			$settings = $sp->ref('Blog')->settings;
 			$whereSQL = 'WHERE 1=1';
 			$tags = false;
 			$contacts = false;
-			
-			if($this->settings->journal_mode == "private"){
+				
+			if($settings->journal_mode == "private"){
 				if(!$user) return '';
-				if(isset($args['author']) && in_array($args['author'], explode(',', $this->settings->public_authors))){
-					$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($args['author']).'\'';
+				if(isset($args['author']) && in_array($args['author'], explode(',', $settings->public_authors))){
+					$whereSQL .= ' AND p.user_id = \''.$sp->db->escape($args['author']).'\'';
 				} else {
-					$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($user->getId()).'\'';
+					$whereSQL .= ' AND p.user_id = \''.$sp->db->escape($user->getId()).'\'';
 				}
 			} else if(isset($args['author'])){
-				$whereSQL .= ' AND p.user_id = \''.$this->sp->db->escape($args['author']).'\'';
+				$whereSQL .= ' AND p.user_id = \''.$sp->db->escape($args['author']).'\'';
 			}
-			
-			if(isset($args['search']) && strlen($args['search']) > 2){
-				$args['search'] = $this->sp->db->escape($args['search']);
 				
+			if(isset($args['search']) && strlen($args['search']) > 2){
+				$args['search'] = $sp->db->escape($args['search']);
+			
 				//TODO tagging still hacky
-				$whereSQL = 'LEFT JOIN '.$this->sp->db->prefix.'tag_links tl ON p.id = tl.param AND tl.service = \'Blog\' LEFT JOIN '.$this->sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
+				$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'tag_links tl ON p.id = tl.param AND tl.service = \'Blog\' LEFT JOIN '.$sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
 				$whereSQL .= ' AND (`title` LIKE \'%'.$args['search'].'%\' OR `text` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\')';
 				$tags = true;
 			}
-			
+				
 			if(isset($args['date_from']) && $args['date_from'] != ''){
-				$args['date_from'] = $this->sp->db->escape($args['date_from']);
+				$args['date_from'] = $sp->db->escape($args['date_from']);
 				$whereSQL .= ' AND p.date >= \''.$args['date_from'].'\'';
 			}
-				
+			
 			if(isset($args['date_to']) && $args['date_to'] != ''){
-				$args['date_to'] = $this->sp->db->escape($args['date_to']);
+				$args['date_to'] = $sp->db->escape($args['date_to']);
 				$whereSQL .= ' AND p.date <= \''.$args['date_to'].'\'';
 			}
-			
+				
+			//TODO: generalize this so that services can infuse filter criteria generically
+			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
+				$values = '';
+				foreach($args['contact_filter'] as $val){
+					$values .= $sp->db->escape($val).',';
+				}
+				$values = substr($values, 0, -1);
+				$whereSQL = 'JOIN '.$sp->db->prefix.'blog_posts_contacts AS c ON c.entry_id = p.id '.$whereSQL;
+				$whereSQL .= ' AND c.contact_id IN ('.$values.')';
+				$contacts = true;
+			}
+				
+			if($tags || $contacts) $whereSQL.= ' GROUP BY p.id';
+				
+			$whereSQL .= ' ORDER BY p.date DESC, p.id DESC';
+			return $whereSQL;
+		}
+		
+		private function handleViewList($args){
+			$user = $this->sp->user->getSuperUserForLoggedInUser();
+			$whereSQL = Blog::buildWhereSQLQuery($args);
 			
 			$from = 0;
 			if(isset($args['from']) && $args['from'] > 0) {
@@ -69,22 +93,6 @@
 				$rows = $this->sp->db->escape($args['rows']);
 			}
 			
-			//TODO: generalize this so that services can infuse filter criteria generically
-			if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0){
-				$values = '';
-				foreach($args['contact_filter'] as $val){
-					$values .= $this->sp->db->escape($val).',';
-				}
-				$values = substr($values, 0, -1);
-				$whereSQL = 'JOIN '.$this->sp->db->prefix.'blog_posts_contacts AS c ON c.entry_id = p.id '.$whereSQL;
-				$whereSQL .= ' AND c.contact_id IN ('.$values.')';
-				$contacts = true;
-			}
-			
-			if($tags || $contacts) $whereSQL.= ' GROUP BY p.id';
-			
-			$whereSQL .= ' ORDER BY p.date DESC, p.id DESC';
-			
 			$posts = Post::getPosts($whereSQL, $from, $rows);
 
 			$view = new core\Template\ViewDescriptor('_services/Blog/post_list');	
@@ -93,7 +101,7 @@
 			$view->addValue('pages', $pages);
 			if(isset($args['mode']) && $args['mode'] == 'wrapped'){
 				$header = $view->showSubView('header');
-				if($contacts) $header->showSubView('filter_contacts');
+				if(isset($args['contact_filter']) && is_array($args['contact_filter']) && count($args['contact_filter']) > 0) $header->showSubView('filter_contacts');
 				
 				$footer = $view->showSubView('footer');
 				$footer->addValue('current_page', '0');

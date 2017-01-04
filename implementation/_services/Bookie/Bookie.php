@@ -33,21 +33,46 @@
 			$sp = ServiceProvider::getInstance();
 			$user = $sp->user->getSuperUserForLoggedInUser();
 			
-			$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'bookie_invoices inv ON e.id = inv.entry_id WHERE e.user_id = \''.$user->getId().'\' AND e.deleted != \'1\'';
+			$joinSQL = 'LEFT JOIN '.$sp->db->prefix.'bookie_invoices inv ON e.id = inv.entry_id';
+			$whereSQL = 'WHERE e.user_id = \''.$user->getId().'\' AND e.deleted != \'1\'';
 			$tags = false;
 			$contacts = false;
 				
+			/* slow query
+			 * 
+			 * SELECT *, e.id as id, e.user_id as user_id FROM pp_bookie_entries AS e LEFT JOIN pp_bookie_invoices
+ inv ON e.id = inv.entry_id LEFT JOIN pp_tag_links tl ON e
+.id = tl.param AND tl.service = 'Bookie' LEFT JOIN pp_tags t ON t.id = tl.tag_id WHERE e.user_id = 67 AND e.deleted != '1' AND (`notes` LIKE '%Heilmassage
+%' OR t.name LIKE 'Heilmassagen%' OR inv.number LIKE 'Heilmassagen%' ) AND ((`date` >= '2016-01-01' AND
+ (inv.pay_date IS NULL OR inv.pay_date = '0000-00-00')) OR (inv.pay_date >= '2016-01-01' AND inv.pay_date
+ != '0000-00-00')) GROUP BY e.id ORDER BY e.date DESC, e.id DESC  LIMIT 0,8
+			 * */
+			
+			/* faster query -> possible doubles
+SELECT *, e.id as id, e.user_id as user_id FROM pp_bookie_entries AS e LEFT JOIN pp_bookie_invoices AS
+ inv ON e.id = inv.entry_id WHERE e.user_id = 67 AND e.deleted != '1' AND (`notes` LIKE '%Heilmassage%' OR inv.number LIKE 'Heilmassage%' OR  e.id IN (SELECT tl.param FROM pp_tag_links AS tl LEFT JOIN pp_tags AS t ON t.id = tl.tag_id AND t.name LIKE 'Heilmassagen%' WHERE e
+.id = tl.param AND tl.service = 'Bookie') ) AND ((`date` >= '2016-01-01' AND
+ (inv.pay_date IS NULL OR inv.pay_date = '0000-00-00')) OR (inv.pay_date >= '2016-01-01' AND inv.pay_date
+ != '0000-00-00')) ORDER BY e.date DESC, e.id DESC 
+			 */
+			
+			/* faster no doubles
+SELECT *, e.id as id, e.user_id as user_id FROM pp_bookie_entries AS e LEFT JOIN pp_bookie_invoices AS
+ inv ON e.id = inv.entry_id WHERE e.user_id = 67 AND e.deleted != '1' AND (`notes` LIKE '%Heilmassage%' OR inv.number LIKE 'Heilmassage%' OR e.id IN (SELECT tl.param FROM pp_tag_links AS tl LEFT JOIN pp_tags AS t ON t.id = tl.tag_id WHERE tl.service = 'Bookie' AND t.name LIKE 'Heilmassagen%' ) ) AND ((`date` >= '2016-01-01' AND
+ (inv.pay_date IS NULL OR inv.pay_date = '0000-00-00')) OR (inv.pay_date >= '2016-01-01' AND inv.pay_date
+ != '0000-00-00')) ORDER BY e.date DESC, e.id DESC 			 */
+			
 			if(isset($args['search']) && strlen($args['search']) >= 2){
 				$args['search'] = $sp->db->escape($args['search']);
 			
 				//TODO tagging still hacky
-				$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'tag_links tl ON e.id = tl.param AND tl.service = \'Bookie\' LEFT JOIN '.$sp->db->prefix.'tags t ON t.id = tl.tag_id '.$whereSQL;
+				$tagSQL = 'SELECT tl.param FROM '.$sp->db->prefix.'tag_links tl LEFT JOIN '.$sp->db->prefix.'tags t ON t.id = tl.tag_id WHERE tl.service = \'Bookie\' AND t.name LIKE \''.$args['search'].'%\' ';
 				//$whereSQL = 'LEFT JOIN '.$sp->db->prefix.'bookie_categories c ON e.category_id = c.id '.$whereSQL;
 				$inv_search = 'OR inv.number LIKE \''.$args['search'].'%\'';
 				if(substr($args['search'], 0, 1) == '#'){
 					$inv_search = 'OR inv.number LIKE \'%'.substr($args['search'], 1).'\'';
 				}
-				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR t.name LIKE \''.$args['search'].'%\' '.$inv_search.' )';
+				$whereSQL .= ' AND (`notes` LIKE \'%'.$args['search'].'%\' OR e.id IN ('.$tagSQL.') '.$inv_search.' )';
 				$tags = true;
 			}
 				
@@ -120,16 +145,16 @@
 					$values .= $sp->db->escape($val).',';
 				}
 				$values = substr($values, 0, -1);
-				$whereSQL = 'JOIN '.$sp->db->prefix.'bookie_entries_contacts AS c ON c.entry_id = e.id '.$whereSQL;
+				$joinSQL .= ' JOIN '.$sp->db->prefix.'bookie_entries_contacts AS c ON c.entry_id = e.id ';
 				$whereSQL .= ' AND contact_id IN ('.$values.')';
 				$contacts = true;
 			}
 				
-			if($tags || $contacts) $whereSQL.= ' GROUP BY e.id';
+			if($contacts) $whereSQL.= ' GROUP BY e.id';
 				
 			$whereSQL .= ' ORDER BY e.date DESC, e.id DESC';
 			
-			return $whereSQL;
+			return $joinSQL.' '.$whereSQL;
 		}
 		
 		private function handleViewList($args){

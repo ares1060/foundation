@@ -52,7 +52,7 @@
 			$tags = false;
 			$contacts = false;
 			$firstHour = explode(':', $user->getUserData()->opt('set.first_hour', '6')->getValue());
-			$firstHour = $firstHour[0] * 1;
+			$firstHour = round($firstHour[0] * 1);
 			
 			$whereSQL = 'WHERE e.owner_id = \''.$sp->db->escape($user->getId()).'\'';
 			
@@ -192,14 +192,21 @@
 					else $dayView->addValue('day', $this->sp->txtfun->fixDateLoc($dayTime->format('l')));
 									
 					$dayView->addValue('date', $this->sp->txtfun->fixDateLoc($dayTime->format('d. F Y')));
-
+					$dayYz = $this->dayInYear($dayTime);
+									
 					$tMultiDay = array();
 					foreach($multiDay as $mEvent){
 					
 						$mDate = $mEvent->getStartDate();
-						$mDateTo = $mEvent->getEndDate();
+						$mDateTo = $mEvent->getEndDate();				
 					
-					
+						if( $this->dayInYear($mDate) > $dayYz || $this->dayInYear($mDateTo) < $dayYz) {
+							if($this->dayInYear($mDate) > $dayYz) {
+								$tMultiDay[] = $mEvent;
+							}
+							continue;
+						}
+						
 						$ev = $dayView->showSubView('event');
 						$ev->addValue('id', $mEvent->getId());
 						$ev->addValue('title', $mEvent->getText());
@@ -230,10 +237,10 @@
 							$tv = new SubViewDescriptor('tag');
 							$tv->addValue('color', $mEvent->getColor());
 							$ev->addSubView($tv);
-						}
+						}												
 					}
 					$multiDay = $tMultiDay;
-					
+										
 					foreach($singleDay as $event){
 						$date = clone $event->getStartDate();
 						
@@ -271,6 +278,10 @@
 		
 		private function maxDate($d1, $d2){
 			return ($d1->diff($d2)->format('%r') == '-') ? $d1 : $d2;
+		}
+		
+		private function dayInYear($date) {
+			return $date->format('Y') . str_pad($date->format('z'), 3, "0", STR_PAD_LEFT);
 		}
 		
 		private function handleViewWeek($args){
@@ -404,13 +415,13 @@
 							$ev->addValue('height', $parallelMultiDayEvents ? 1 / $parallelMultiDayEvents : 1);
 							
 							for($m = 0; $m < $parallelMultiDayEvents; $m++){
-								if(!$usedMultidayLevels[$m] || $usedMultidayLevels[$m] < $event->getStartDate()->format('Yz')) {
+								if(!$usedMultidayLevels[$m] || $usedMultidayLevels[$m] < $this->dayInYear($event->getStartDate())) {
 									if($multidayLevelsZIndex[$m] > 0) {
 										$multidayLevelsZIndex[$m]--;
 										$ev->addValue('zindex', $multidayLevelsZIndex[$m]);
 									} else $multidayLevelsZIndex[$m] = count($events) + 1;
 									$ev->addValue('row', 1 + $m / $parallelMultiDayEvents);
-									$usedMultidayLevels[$m] = $event->getEndDate()->format('Yz');
+									$usedMultidayLevels[$m] = $this->dayInYear($event->getEndDate());
 									break;
 								}
 							}
